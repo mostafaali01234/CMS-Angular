@@ -1,0 +1,97 @@
+<div class="ui-page narrow">
+  <div class="ui-page-header">
+    <h2 class="ui-title">{{ id() ? 'تعديل بيانات عميل' : 'اضافة عميل جديد' }}</h2>
+  </div>
+
+  @if (loading()) {
+    <p class="ui-muted">جاري التحميل...</p>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="save()" class="ui-card">
+      <div class="ui-card-body">
+        <div class="ui-grid">
+
+          <div class="ui-field">
+            <label class="ui-label" for="name">اسم العميل</label>
+            <input id="name" class="ui-input" formControlName="name" [class.is-invalid]="invalid('name')" />
+            @if (invalid('name')) { <span class="ui-error-text">الرجاء ادخال اسم العميل</span> }
+          </div>
+
+          <div class="ui-field">
+            <label class="ui-label" for="phone">رقم الهاتف</label>
+            <input id="phone" class="ui-input" formControlName="phone" [class.is-invalid]="invalid('phone')" />
+            @if (invalid('phone')) { <span class="ui-error-text">الرجاء ادخال رقم الهاتف</span> }
+          </div>
+
+          <div class="ui-field">
+            <label class="ui-label" for="phone_2">رقم هاتف بديل</label>
+            <input id="phone_2" class="ui-input" formControlName="phone_2" />
+          </div>
+
+          <div class="ui-field">
+            <label class="ui-label" for="phone_3">رقم هاتف بديل</label>
+            <input id="phone_3" class="ui-input" formControlName="phone_3" />
+          </div>
+
+          <!-- <div class="ui-field">
+            <label class="ui-label" for="state_id">المحافظة</label>
+            <input id="state_id" type="number" class="ui-input" formControlName="state_id" />
+          </div>
+
+          <div class="ui-field">
+            <label class="ui-label" for="city_id">المدينة</label>
+            <input id="city_id" type="number" class="ui-input" formControlName="city_id" [class.is-invalid]="invalid('city_id')" />
+            @if (invalid('city_id')) { <span class="ui-error-text">اختر مدينة</span> }
+          </div> -->
+          <app-state-city-select formControlName="city_id" [invalid]="invalid('city_id')" />
+
+          <!-- <div class="ui-field">
+            <label class="ui-label" for="seller_id">البائع</label>
+            <input id="seller_id" type="number" class="ui-input" formControlName="seller_id" [class.is-invalid]="invalid('seller_id')" />
+            @if (invalid('seller_id')) { <span class="ui-error-text">اختر البائع</span> }
+          </div> -->
+          <app-employee-select
+            formControlName="seller_id"
+            label="البائع"
+            placeholder="اختر البائع"
+            error="اختر البائع"
+            [invalid]="invalid('seller_id')" />
+
+          <div class="ui-field full">
+            <label class="ui-label" for="address">تفاصيل العنوان</label>
+            <input id="address" class="ui-input" formControlName="address" />
+          </div>
+        @if (auth.hasRole('Admin') || auth.hasRole('SuperAdmin')){
+            <div class="ui-field">
+              <label class="ui-label" for="opening_balance">الرصيد الافتتاحي</label>
+              <input id="opening_balance" type="number" step="0.01" class="ui-input" formControlName="opening_balance" />
+            </div>
+  
+            <div class="ui-field" style="justify-content: flex-end">
+              <label class="ui-check">
+                <input type="checkbox" formControlName="regular_customer" />
+                <span>عميل دائم؟</span>
+              </label>
+            </div>
+        }
+
+          <div class="ui-field full">
+            <label class="ui-label" for="notes">ملاحظات</label>
+            <textarea id="notes" rows="3" class="ui-input" formControlName="notes"></textarea>
+          </div>
+
+        </div>
+
+        @if (error()) {
+          <div class="ui-alert" style="margin-top: 16px">{{ error() }}</div>
+        }
+      </div>
+
+      <div class="ui-card-footer">
+        <a routerLink="/customers" class="ui-btn ui-btn-outline">الغاء</a>
+        <button type="submit" class="ui-btn ui-btn-primary" [disabled]="saving()">
+          {{ saving() ? 'جاري الحفظ...' : 'اضافة' }}
+        </button>
+      </div>
+    </form>
+  }
+</div>

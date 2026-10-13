@@ -1,0 +1,45 @@
+<main class="auth">
+  <section class="card">
+    <header class="card-header">
+      <h2>تسجيل الدخول</h2>
+      <p class="subtitle"></p>
+    </header>
+
+    <form (submit)="submit($event)" novalidate>
+      <div class="field">
+        <label for="email">الايميل</label>
+        <input id="email" type="email" placeholder="you@example.com"
+               autocomplete="email"
+               [class.invalid]="touched() && emailError()"
+               [value]="email()" (input)="email.set($any($event.target).value)" />
+        @if (touched() && emailError()) {
+          <p class="error">{{ emailError() }}</p>
+        }
+      </div>
+
+      <div class="field">
+        <label for="password">كلمة المرور</label>
+        <input id="password" type="password" placeholder="••••••••"
+               autocomplete="current-password"
+               [class.invalid]="touched() && passwordError()"
+               [value]="password()" (input)="password.set($any($event.target).value)" />
+        @if (touched() && passwordError()) {
+          <p class="error">{{ passwordError() }}</p>
+        }
+      </div>
+
+      @if (serverErrors().length) {
+        <div class="alert" role="alert">
+          @for (e of serverErrors(); track e) { <p>{{ e }}</p> }
+        </div>
+      }
+
+      <button type="submit" class="btn" [disabled]="loading()">
+        @if (loading()) { <span class="spinner"></span> }
+        {{ loading() ? 'جاري الدخول...' : 'دخول' }}
+      </button>
+    </form>
+
+    <p class="footer"><a routerLink="/register">تسجيل حساب جديد</a></p>
+  </section>
+</main>

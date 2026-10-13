@@ -1,0 +1,133 @@
+<h2>بيانات الحساب</h2>
+
+@if (loading()) {
+<p>جاري التحميل...</p>
+} @else if (loadError()) {
+<p class="msg error">{{ loadError() }}</p>
+} @else {
+
+<div class="row">
+    <section class="col-lg-5 col-md-12 card" style="margin-left:2rem;">
+        <h3>الملف الشخصي</h3>
+        <form (submit)="saveProfile($event)">
+            <label>
+                الايميل
+                <input type="email" [value]="email()" disabled />
+                <small hidden>Your email is your login and can't be changed here.</small>
+            </label>
+
+            <label style="display: none;">
+                Full name
+                <input [value]="fullName()" (input)="onInput(fullName, $event)" />
+                @if (profileTouched() && fullNameError()) {
+                <small class="error">{{ fullNameError() }}</small>
+                }
+            </label>
+
+            <label>
+                الهاتف الشخصي <span class="optional">(اختياري)</span>
+                <input type="tel" [value]="phone()" (input)="onInput(phone, $event)" />
+            </label>
+
+            @for (e of profileErrors(); track e) { <p class="msg error">{{ e }}</p> }
+            @if (profileSaved()) { <p class="msg success">تم الحفظ بنجاح</p> }
+
+            <button type="submit" [disabled]="profileSaving()">
+                {{ profileSaving() ? 'جاري الحفظ...' : 'حفظ' }}
+            </button>
+        </form>
+    </section>
+    
+    <!-- <div class="col-1"></div> -->
+
+    <section class="col-lg-6 col-md-12 card">
+        <h3>تغيير كلمة المرور</h3>
+        <form (submit)="changePassword($event)">
+            <label>
+                كلمة المرور الحالية
+                <input type="password" autocomplete="current-password" [value]="currentPassword()"
+                    (input)="onInput(currentPassword, $event)" />
+                @if (passwordTouched() && passwordFieldErrors().current) {
+                <small class="error">{{ passwordFieldErrors().current }}</small>
+                }
+            </label>
+
+            <label>
+                كلمة المرور الجديدة
+                <input type="password" autocomplete="new-password" [value]="newPassword()"
+                    (input)="onInput(newPassword, $event)" />
+                @if (passwordTouched() && passwordFieldErrors().next) {
+                <small class="error">{{ passwordFieldErrors().next }}</small>
+                }
+            </label>
+
+            <label>
+                تأكيد كلمة المرور الجديدة
+                <input type="password" autocomplete="new-password" [value]="confirmPassword()"
+                    (input)="onInput(confirmPassword, $event)" />
+                @if (passwordTouched() && passwordFieldErrors().confirm) {
+                <small class="error">{{ passwordFieldErrors().confirm }}</small>
+                }
+            </label>
+
+            @for (e of passwordErrors(); track e) { <p class="msg error">{{ e }}</p> }
+            @if (passwordSaved()) { <p class="msg success">تم تغيير كلمة المرور بنجاح</p> }
+
+            <button type="submit" [disabled]="passwordSaving()">
+                {{ passwordSaving() ? 'جاري الحفظ...' : 'تم الحفظ بنجاح' }}
+            </button>
+        </form>
+    </section>
+</div>
+
+@if (auth.hasRole('SuperAdmin')) {
+  <div class="ui-page narrow">
+
+    @if (resetMessage(); as msg) {
+      <div class="ui-alert" [class.success]="msg.type === 'success'" role="alert" style="margin-bottom: 16px">
+        <span>{{ msg.text }}</span>
+        <button type="button" class="ui-alert-close" (click)="resetMessage.set(null)" aria-label="إغلاق">×</button>
+      </div>
+    }
+
+    <div class="ui-page-header">
+      <h2 class="ui-title">بيانات الحسابات</h2>
+    </div>
+
+    <div class="ui-card">
+      <div class="ui-table-wrap" style="max-height: 550px; overflow-y: auto">
+        <table class="ui-table">
+          <thead>
+            <tr>
+              <th>الموظف</th>
+              <th>الايميل</th>
+              <th>اعادة تعيين كلمة المرور الي "P&#64;ssw0rd"</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (user of userList(); track user.userId) {
+              <tr>
+                <td class="strong">{{ user.fullName }}</td>
+                <td>{{ user.email }}</td>
+                <td>
+                  <button class="ui-btn ui-btn-danger sm"
+                          [disabled]="resettingUserId() === user.userId"
+                          (click)="resetPasswordAdmin(user)">
+                    {{ resettingUserId() === user.userId ? 'جاري التعيين...' : 'اعادة تعيين' }}
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="3" class="center ui-muted" style="padding: 28px">No users found.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+}
+
+}

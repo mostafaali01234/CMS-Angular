@@ -1,0 +1,112 @@
+<h2><p class="">اهلا {{ userName() }}</p></h2>
+
+
+@if (loading()) {
+  <p>جاري التحميل.....</p>
+} @else if (error()) {
+  <p class="error">{{ error() }}</p>
+} @else {
+  <div class="cards">
+    <div class="card">
+      <span class="label">عدد الاوردرات (اليوم)</span>
+      <span class="value">{{ totalOrdersToday() }}</span>
+    </div>
+    <div class="card">
+      <span class="label">عدد الاوردرات (هذا الشهر)</span>
+      <span class="value">{{ totalOrdersMonthly() }}</span>
+    </div>
+    <div class="card">
+      <span class="label">الاوردرات التامة (اليوم)</span>
+      <span class="value">{{ finishedOrdersMonthly() }}</span>
+    </div>
+    <div class="card">
+      <span class="label">الاوردرات التامة (هذا الشهر)</span>
+      <span class="value">{{ finishedOrdersMonthly() }}</span>
+    </div>
+    <div class="card">
+      <span class="label">الاوردرات الملغية (اليوم)</span>
+      <span class="value">{{ finishedOrdersMonthly() }}</span>
+    </div>
+    <div class="card">
+      <span class="label">الاوردرات الملغية (هذا الشهر)</span>
+      <span class="value">{{ finishedOrdersMonthly() }}</span>
+    </div>
+    
+    <span></span>
+    <span></span>
+    
+    <!-- @if (auth.hasRole('Sales')) {
+      <div class="card">
+        <span class="label">Sales</span>
+      </div>
+    }
+    @if (auth.hasRole('Admin') || auth.hasRole('SuperAdmin')) {
+      <div class="card">
+        <span class="label">Admin</span>
+      </div>
+    } -->
+  </div>
+  <h2>اختصارات</h2>
+  <div class="row holographic-container">
+    <a href="" class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
+      <div class="cards">
+       <div class="holographic-card">
+          <span class="label">اوردر جديد</span>
+        </div>
+      </div>
+    </a>
+    <a href="" class="col-lg-3 col-md-4 col-sm-6 col-12">
+      <div class="cards">
+         <div class="holographic-card">
+          <span class="label">صيانة جديدة</span>
+        </div>
+      </div>
+    </a>
+    <a href="" class="col-lg-3 col-md-4 col-sm-6 col-12">
+      <div class="cards">
+         <div class="holographic-card">
+          <span class="label">الاوردرات اليومية</span>
+        </div>
+      </div>
+    </a>
+
+    @if (auth.hasRole('Admin') || auth.hasRole('SuperAdmin')) {
+      <a href="" class="col-lg-3 col-md-4 col-sm-6 col-12">
+        <div class="cards">
+          <div class="holographic-card">
+            <span class="label">المأموريات</span>
+          </div>
+        </div>
+      </a>
+      <a href="" class="col-lg-3 col-md-4 col-sm-6 col-12">
+        <div class="cards">
+          <div class="holographic-card">
+            <span class="label">المأموريات باليوم</span>
+          </div>
+        </div>
+      </a>
+    } 
+    
+    <a href="" class="col-lg-3 col-md-4 col-sm-6 col-12">
+      <div class="cards">
+         <div class="holographic-card">
+          <span class="label">كشف حسابي</span>
+        </div>
+      </div>
+    </a>
+    <a href="" class="col-lg-3 col-md-4 col-sm-6 col-12">
+      <div class="cards">
+         <div class="holographic-card">
+          <span class="label">حساب مرتبي</span>
+        </div>
+      </div>
+    </a>
+    <a href="" class="col-lg-3 col-md-4 col-sm-6 col-12">
+      <div class="cards">
+         <div class="holographic-card">
+          <span class="label">خزنتي</span>
+        </div>
+      </div>
+    </a>
+  </div>
+}

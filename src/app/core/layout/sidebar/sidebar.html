@@ -1,0 +1,44 @@
+<aside class="sidebar" [class.collapsed]="collapsed()">
+  <nav>
+    @for (item of navItems(); track item.label) {
+
+      @if (item.children) {
+        <!-- group -->
+        <button type="button" class="group-btn"
+                [class.group-active]="isGroupActive(item)"
+                [attr.aria-expanded]="isOpen(item) && !collapsed()"
+                [title]="item.label"
+                (click)="toggleGroup(item)">
+          <span class="icon">{{ item.icon }}</span>
+          @if (!collapsed()) {
+            <span class="label">{{ item.label }}</span>
+            <svg class="chevron" [class.open]="isOpen(item)" viewBox="0 0 24 24" width="16" height="16"
+                 fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M15 6l-6 6 6 6"/>
+            </svg>
+          }
+        </button>
+
+        @if (isOpen(item) && !collapsed()) {
+          <div class="submenu">
+            @for (child of item.children; track child.path) {
+              <a [routerLink]="child.path" routerLinkActive="active"
+                 [routerLinkActiveOptions]="{ exact: true }">
+                <span class="label">{{ child.label }}</span>
+              </a>
+            }
+          </div>
+        }
+
+      } @else {
+        <!-- single link -->
+        <a [routerLink]="item.path" routerLinkActive="active" [title]="item.label">
+          <span class="icon">{{ item.icon }}</span>
+          @if (!collapsed()) { <span class="label">{{ item.label }}</span> }
+        </a>
+      }
+
+    }
+  </nav>
+</aside>

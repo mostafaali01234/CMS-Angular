@@ -1,0 +1,103 @@
+:host { display: block; }
+
+.welcome { color: grey; margin-bottom: 1.5rem; }
+
+.cards {
+  display: grid;
+  /* grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); */
+  grid-template-columns: auto auto;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid #e2e2e2;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.card2 {
+  height: 4rem;
+  width: 50%;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.card .label { font-size: 1rem; font-weight: 600; color: #666; }
+.card .value { font-size: 1.75rem; font-weight: 600; color:black; }
+
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 0.6rem 0.75rem; border-bottom: 1px solid #eee; }
+th { font-size: 0.85rem; color: #666; }
+
+.error { color: #c0392b; }
+
+
+.holographic-container {
+  display: flex;
+  /* justify-content: center; */
+  align-items: center;
+  flex-wrap: wrap;
+  /* height: 100vh; */
+  /* background: #000; */
+}
+
+.holographic-card {
+  width: 300px;
+  height: 200px;
+  background: White;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  border-radius: 15px;
+  transition: all 0.5s ease;
+  font-size: 2rem;
+  color:black;
+  font-weight: bold;
+  border: 1px solid grey;
+}
+
+.holographic-card h2 {
+  /* color: #0ff; */
+  color: #4f46e5;
+  font-size: 2rem;
+  position: relative;
+  z-index: 2;
+}
+
+.holographic-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    0deg, 
+    transparent, 
+    transparent 30%, 
+    /* rgba(0,255,255,0.3) */
+    #4f46e5
+  );
+  transform: rotate(-45deg);
+  transition: all 0.5s ease;
+  opacity: 0;
+}
+
+.holographic-card:hover {
+  transform: scale(1.05);
+  /* box-shadow: 0 0 20px rgba(0,255,255,0.5); */
+  box-shadow: #4f46e5;
+}
+
+.holographic-card:hover::before {
+  opacity: 1;
+  transform: rotate(-45deg) translateY(100%);
+}

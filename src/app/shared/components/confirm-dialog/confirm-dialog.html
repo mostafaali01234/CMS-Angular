@@ -1,0 +1,23 @@
+<!-- shared/components/confirm-dialog/confirm-dialog.html -->
+@if (state(); as s) {
+  <div class="ui-backdrop" (click)="close(false)">
+    <div class="ui-dialog" role="alertdialog" aria-modal="true"
+         aria-labelledby="confirm-title" aria-describedby="confirm-msg"
+         (click)="$event.stopPropagation()">
+      <h3 id="confirm-title" class="ui-dialog-title">{{ s.title ?? 'تأكيد' }}</h3>
+      <p id="confirm-msg" class="ui-dialog-msg">{{ s.message }}</p>
+
+      <div class="ui-dialog-actions">
+        <button #cancelBtn type="button" class="ui-btn ui-btn-outline" (click)="close(false)">
+          {{ s.cancelText ?? 'الغاء' }}
+        </button>
+        <button type="button" class="ui-btn"
+                [class.ui-btn-danger-solid]="s.danger"
+                [class.ui-btn-primary]="!s.danger"
+                (click)="close(true)">
+          {{ s.confirmText ?? 'تأكيد' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

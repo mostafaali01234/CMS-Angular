@@ -1,0 +1,67 @@
+<main class="auth">
+  <section class="card">
+    <header class="card-header">
+      <h2>اضافة حساب جديد</h2>
+      <p class="subtitle"></p>
+    </header>
+
+    <form (submit)="submit($event)" novalidate>
+      <div class="field">
+        <label for="fullName">اسم الموظف</label>
+        <input id="fullName" type="text" placeholder="احمد محمد"
+               autocomplete="name"
+               [class.invalid]="touched() && errors().userName"
+               [value]="userName()" (input)="userName.set($any($event.target).value)" />
+        @if (touched() && errors().userName) {
+          <p class="error">{{ errors().userName }}</p>
+        }
+      </div>
+
+      <div class="field">
+        <label for="email">الايميل</label>
+        <input id="email" type="email" placeholder="you@example.com"
+               autocomplete="email"
+               [class.invalid]="touched() && errors().email"
+               [value]="email()" (input)="email.set($any($event.target).value)" />
+        @if (touched() && errors().email) {
+          <p class="error">{{ errors().email }}</p>
+        }
+      </div>
+
+      <div class="field">
+        <label for="password">كلمة المرور</label>
+        <input id="password" type="password" placeholder="8 حروف مع ارقام ورموز وحرف واحد كبير علي الاقل"
+               autocomplete="new-password"
+               [class.invalid]="touched() && errors().password"
+               [value]="password()" (input)="password.set($any($event.target).value)" />
+        @if (touched() && errors().password) {
+          <p class="error">{{ errors().password }}</p>
+        }
+      </div>
+
+      <div class="field">
+        <label for="confirm">تأكيد كلمة المرور</label>
+        <input id="confirm" type="password" placeholder="كرر كلمة المرور"
+               autocomplete="new-password"
+               [class.invalid]="touched() && errors().confirm"
+               [value]="confirm()" (input)="confirm.set($any($event.target).value)" />
+        @if (touched() && errors().confirm) {
+          <p class="error">{{ errors().confirm }}</p>
+        }
+      </div>
+
+      @if (serverErrors().length) {
+        <div class="alert" role="alert">
+          @for (e of serverErrors(); track e) { <p>{{ e }}</p> }
+        </div>
+      }
+
+      <button type="submit" class="btn" [disabled]="loading()">
+        @if (loading()) { <span class="spinner"></span> }
+        {{ loading() ? 'جاري التسجيل...' : 'تسجيل' }}
+      </button>
+    </form>
+
+    <p class="footer">لديك حساب? <a routerLink="/auth/login">دخول</a></p>
+  </section>
+</main>

@@ -1,0 +1,30 @@
+<!-- shared/components/state-city-select/state-city-select.html -->
+<div class="ui-field">
+  <label class="ui-label" [for]="'state-' + uid">{{ stateLabel() }}</label>
+  <select [id]="'state-' + uid" class="ui-input"
+          [ngModel]="stateId()" (ngModelChange)="onStateChange($event)"
+          [ngModelOptions]="{ standalone: true }"
+          [disabled]="disabled()" (blur)="touched()"
+          [class.is-invalid]="invalid() && !stateId()">
+    <option [ngValue]="0">اختر المحافظة</option>
+    @for (s of states(); track s.id) {
+      <option [ngValue]="s.id">{{ s.name }}</option>
+    }
+  </select>
+  @if (invalid() && !stateId()) { <span class="ui-error-text">{{ stateError() }}</span> }
+</div>
+
+<div class="ui-field">
+  <label class="ui-label" [for]="'city-' + uid">{{ cityLabel() }}</label>
+  <select [id]="'city-' + uid" class="ui-input"
+          [ngModel]="cityId()" (ngModelChange)="onCityChange($event)"
+          [ngModelOptions]="{ standalone: true }"
+          [disabled]="disabled() || !stateId()" (blur)="touched()"
+          [class.is-invalid]="invalid() && !!stateId()">
+    <option [ngValue]="0">{{ stateId() ? 'اختر المدينة' : 'اختر المحافظة أولاً' }}</option>
+    @for (c of filteredCities(); track c.id) {
+      <option [ngValue]="c.id">{{ c.name }}</option>
+    }
+  </select>
+  @if (invalid() && !!stateId()) { <span class="ui-error-text">{{ cityError() }}</span> }
+</div>

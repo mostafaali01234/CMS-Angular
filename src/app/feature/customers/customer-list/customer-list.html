@@ -1,0 +1,67 @@
+<div class="ui-page">
+  <div class="ui-page-header">
+    <h2 class="ui-title">العملاء</h2>
+    <a routerLink="/customers/new" class="ui-btn ui-btn-primary">عميل جديد +</a>
+  </div>
+
+  <input
+    type="search"
+    class="ui-input"
+    style="margin-bottom: 16px"
+    placeholder="بحث بالاسم/رقم الهاتف/المدينة ..."
+    [ngModel]="search()"
+    (ngModelChange)="search.set($event)" />
+
+  @if (loading()) {
+    <p class="ui-muted">جاري التحميل...</p>
+  } @else if (error()) {
+    <div class="ui-alert">
+      <span>{{ error() }}</span>
+      <button class="ui-btn ui-btn-danger sm" (click)="load()">اعادة المحاولة</button>
+    </div>
+  } @else {
+    <div class="ui-card">
+      <div class="ui-table-wrap">
+        <table class="ui-table">
+          <thead>
+            <tr>
+              <th>الاسم</th>
+              <th>رقم الهاتف</th>
+              <th>المدينة</th>
+              <th>البائع</th>
+              <th class="end">الرصيد</th>
+              <th class="center">عميل دائم؟</th>
+              <th class="end"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of filtered(); track c.id) {
+              <tr>
+                <td class="strong">{{ c.name }}</td>
+                <td>{{ c.phone }}</td>
+                <td>{{ c.city_name }}</td>
+                <td>{{ c.seller_name }}</td>
+                <td class="end">{{ c.opening_balance | number: '1.2-2' }}</td>
+                <td class="center">
+                  <span class="ui-badge" [class.on]="c.regular_customer">
+                    {{ c.regular_customer ? 'نعم' : 'لا' }}
+                  </span>
+                </td>
+                <td class="end nowrap">
+                  <a [routerLink]="['/customers', c.id, 'edit']" class="ui-btn ui-btn-outline sm">تعديل</a>
+                  <button class="ui-btn ui-btn-danger sm"
+                            [disabled]="deletingId() === c.id"
+                            (click)="remove(c)">
+                    {{ deletingId() === c.id ? 'جاري الحذف...' : 'حذف' }}
+                    </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="7" class="center ui-muted" style="padding: 28px">لا يوجد عملاء</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,63 @@
+<header class="nav">
+  <div class="nav-inner">
+    <div class="nav-left">
+      @if (auth.isLoggedIn()) {
+        <button class="icon-btn sidebar-toggle" type="button"
+                aria-label="Toggle sidebar" (click)="toggle()">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 6h18M3 12h18M3 18h18"/>
+          </svg>
+        </button>
+      }
+      <a class="brand" routerLink="/">
+        <span class="brand-mark">C</span>
+        <span class="brand-name">CMS</span>
+      </a>
+    </div>
+
+    <div class="nav-right">
+      <nav class="links" [class.open]="menuOpen()" (click)="menuOpen.set(false)">
+        @if (auth.isLoggedIn()) {
+          <a routerLink="/settings" routerLinkActive="active">
+            <span class="user">
+              <span class="avatar">{{ initial() }}</span>
+              {{ userName() }}
+            </span>
+          </a>
+          <button type="button" class="btn-outline" (click)="auth.logout()">تسجيل خروج</button>
+        } @else {
+          <a routerLink="/auth/login" routerLinkActive="active">تسجيل دخول</a>
+          <a routerLink="/auth/register" class="btn-solid">تسجيل جديد</a>
+        }
+      </nav>
+
+      <button class="icon-btn" type="button"
+              [attr.aria-label]="theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
+              [title]="theme() === 'dark' ? 'Light theme' : 'Dark theme'"
+              (click)="toggleTheme()">
+        @if (theme() === 'dark') {
+          <!-- sun -->
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4"/>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+          </svg>
+        } @else {
+          <!-- moon -->
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>
+          </svg>
+        }
+      </button>
+
+      <button class="menu-toggle" type="button"
+              aria-label="Toggle menu"
+              [attr.aria-expanded]="menuOpen()"
+              (click)="menuOpen.set(!menuOpen())">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>

@@ -1,0 +1,14 @@
+:host { display: block; direction: rtl; }
+
+/* Layout under the navbar */
+.layout {
+  display: flex;
+  min-height: calc(100vh - 64px);
+}
+
+.content {
+  flex: 1;
+  min-width: 0;          /* lets wide tables scroll instead of stretching the page */
+  padding: 1.5rem;
+  background: var(--bg);
+}
