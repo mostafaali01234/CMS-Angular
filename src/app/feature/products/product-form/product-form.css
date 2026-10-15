@@ -1,0 +1,27 @@
+.commission-card {
+  margin-bottom: 8px;
+}
+
+.commission-card .ui-card-body {
+  padding: 10px 12px;
+}
+
+.commission-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr)); /* more fields per row */
+  gap: 8px;
+}
+
+.commission-grid .ui-label {
+  font-size: 12px;
+  margin-bottom: 2px;
+}
+
+.commission-grid .ui-input {
+  height: 32px;
+  padding: 4px 8px;
+  font-size: 13px;
+}
+
+.commission-actions {
+  align-self: end;
+}

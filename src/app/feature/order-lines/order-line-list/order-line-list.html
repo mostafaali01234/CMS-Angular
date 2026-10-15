@@ -1,0 +1,71 @@
+<!-- order-line-list/order-line-list.html -->
+<div class="ui-page">
+  <div class="ui-page-header">
+    <h2 class="ui-title">خطوط الاوردرات</h2>
+    <a routerLink="/order-lines/new" class="ui-btn ui-btn-primary">+ خط طلب جديد</a>
+  </div>
+
+  <input
+    type="search"
+    class="ui-input"
+    style="margin-bottom: 16px"
+    placeholder="ابحث بالاسم أو الملاحظات أو المدير..."
+    [ngModel]="search()"
+    (ngModelChange)="search.set($event)" />
+
+  @if (actionError()) {
+    <div class="ui-alert" role="alert" style="margin-bottom: 16px">
+      <span>{{ actionError() }}</span>
+      <button type="button" class="ui-alert-close" (click)="actionError.set(null)" aria-label="إغلاق">×</button>
+    </div>
+  }
+
+  @if (loading()) {
+    <p class="ui-muted">جاري التحميل...</p>
+  } @else if (error()) {
+    <div class="ui-alert">
+      <span>{{ error() }}</span>
+      <button class="ui-btn ui-btn-danger sm" (click)="load()">اعادة المحاولة</button>
+    </div>
+  } @else {
+    <div class="ui-card">
+      <div class="ui-table-wrap">
+        <table class="ui-table">
+          <thead>
+            <tr>
+              <th>الاسم</th>
+              <th>المدير</th>
+              <th>المدن</th>
+              <th>التصنيفات</th>
+              <th>ملاحظات</th>
+              <th class="end">الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (l of filtered(); track l.id) {
+              <tr>
+                <td class="strong">{{ l.name }}</td>
+                <td>{{ l.manager?.name }}</td>
+                <td class="ui-muted">{{ names(l.cities) }}</td>
+                <td class="ui-muted">{{ names(l.productCategories) }}</td>
+                <td class="ui-muted">{{ l.notes }}</td>
+                <td class="end nowrap">
+                  <a [routerLink]="['/order-lines', l.id, 'edit']" class="ui-btn ui-btn-outline sm">تعديل</a>
+                  <button class="ui-btn ui-btn-danger sm"
+                          [disabled]="deletingId() === l.id"
+                          (click)="remove(l)">
+                    {{ deletingId() === l.id ? 'جاري الحذف...' : 'حذف' }}
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6" class="center ui-muted" style="padding: 28px">لا توجد خطوط طلبات.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</div>

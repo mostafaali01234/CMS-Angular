@@ -1,7 +1,7 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import { AccountService, UserList } from '../../services/auth/AccountService/account';
-import { AuthService } from '../../services/auth/AuthService/auth';
+import { AccountService, UserList } from '../../core/services/AccountService/account';
+import { AuthService } from '../../core/services/AuthService/auth';
 import { ConfirmService } from '../../shared/services/confirm.service';
 
 

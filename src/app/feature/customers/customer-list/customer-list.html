@@ -8,7 +8,7 @@
     type="search"
     class="ui-input"
     style="margin-bottom: 16px"
-    placeholder="بحث بالاسم/رقم الهاتف/المدينة ..."
+    placeholder="بحث بالاسم/رقم الهاتف/البائع/المدينة ..."
     [ngModel]="search()"
     (ngModelChange)="search.set($event)" />
 
@@ -29,8 +29,10 @@
               <th>رقم الهاتف</th>
               <th>المدينة</th>
               <th>البائع</th>
-              <th class="end">الرصيد</th>
-              <th class="center">عميل دائم؟</th>
+              @if(this.auth.hasRole("Admin") || this.auth.hasRole("SuperAdmin")){
+                <th class="end">الرصيد الافتتاحي</th>
+                <th class="center">عميل دائم؟</th>
+              }
               <th class="end"></th>
             </tr>
           </thead>
@@ -41,19 +43,23 @@
                 <td>{{ c.phone }}</td>
                 <td>{{ c.city_name }}</td>
                 <td>{{ c.seller_name }}</td>
-                <td class="end">{{ c.opening_balance | number: '1.2-2' }}</td>
-                <td class="center">
-                  <span class="ui-badge" [class.on]="c.regular_customer">
-                    {{ c.regular_customer ? 'نعم' : 'لا' }}
-                  </span>
-                </td>
+                 @if(this.auth.hasRole("Admin") || this.auth.hasRole("SuperAdmin")){
+                   <td class="end">{{ c.opening_balance | number: '1.2-2' }}</td>
+                   <td class="center">
+                     <span class="ui-badge" [class.on]="c.regular_customer">
+                       {{ c.regular_customer ? 'نعم' : 'لا' }}
+                     </span>
+                   </td>
+                 }
                 <td class="end nowrap">
                   <a [routerLink]="['/customers', c.id, 'edit']" class="ui-btn ui-btn-outline sm">تعديل</a>
-                  <button class="ui-btn ui-btn-danger sm"
-                            [disabled]="deletingId() === c.id"
-                            (click)="remove(c)">
-                    {{ deletingId() === c.id ? 'جاري الحذف...' : 'حذف' }}
-                    </button>
+                  @if(this.auth.hasRole('Admin') || this.auth.hasRole('SuperAdmin')){
+                    <button class="ui-btn ui-btn-danger sm"
+                              [disabled]="deletingId() === c.id"
+                              (click)="remove(c)">
+                      {{ deletingId() === c.id ? 'جاري الحذف...' : 'حذف' }}
+                      </button>
+                  }
                 </td>
               </tr>
             } @empty {

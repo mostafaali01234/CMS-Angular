@@ -2,7 +2,7 @@ import { Component, inject, computed, model, signal, effect } from '@angular/cor
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { filter, map, startWith } from 'rxjs';
-import { AuthService } from '../../../services/auth/AuthService/auth';
+import { AuthService } from '../../services/AuthService/auth';
 
 interface NavItem {
   label: string;
@@ -33,9 +33,8 @@ export class Sidebar {
     {
       label: 'العملاء', icon: '🏬',
       children: [
-        { label: 'عملائي', icon: '•', path: '/customers' },
-        { label: 'كل العملاء', role: 'Admin,SuperAdmin', icon: '•', path: '/customers' },
-        { label: 'العملاء الدائمين', icon: '•', path: '/shifts' }
+        // { label: 'عملائي', icon: '•', path: '/customers?sellerid=' + this.auth.employeeId() },
+        { label: 'كل العملاء', icon: '•', path: '/customers' }
       ]
     },
     {
@@ -45,7 +44,7 @@ export class Sidebar {
         { label: 'صيانة جديدة',  icon: '•', path: '/bookings/new' },
         { label: 'الاوردرات اليومية', icon: '•', path: '/bookings' },
         { label: 'اوردرات الفني', icon: '•', path: '/bookings' },
-        { label: 'خطوط الاوردرات', icon: '•', path: '/bookings' }
+        { label: 'خطوط الاوردرات', icon: '•', path: '/order-lines' }
       ]
     },
     {
@@ -116,9 +115,8 @@ export class Sidebar {
     {
       label: 'المنتجات', icon: '🏬', role: 'Admin,SuperAdmin',
       children: [
-        { label: 'منتج جديد', icon: '•', path: '/branches' },
-        { label: 'كشف المنتجات', icon: '•', path: '/shifts' },
-        { label: 'تصنيفات المنتجات', icon: '•', path: '/floors' },
+        { label: 'كشف المنتجات', icon: '•', path: '/products' },
+        { label: 'تصنيفات المنتجات', icon: '•', path: '/product-categories' },
         { label: 'حركة المنتجات', icon: '•', path: '/shifts' }
       ]
     },

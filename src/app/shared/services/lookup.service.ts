@@ -1,46 +1,58 @@
+// shared/services/lookup.service.ts
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { map, Observable, shareReplay } from 'rxjs';
 import { environment } from '../../../environments/environment.development';
 import { ApiResponse } from '../models/api-response.model';
-import { City, CountryState, EmployeeOption } from '../models/lookup.model';
+import {
+  City, CountryState, EmployeeOption, LookupItem, ProductCategoryOption,
+} from '../models/lookup.model';
 import { unwrap } from '../utils/api';
+
+export type LookupKey = 'states' | 'cities' | 'employees' | 'productCategories' | 'customers' | 'units';
+
+const byName = <T extends LookupItem>(list: T[]) =>
+  [...list].sort((a, b) => a.name.localeCompare(b.name, 'ar'));
 
 @Injectable({ providedIn: 'root' })
 export class LookupService {
   private http = inject(HttpClient);
-  private states$?: Observable<CountryState[]>;
-  private cities$?: Observable<City[]>;
-  private employees$?: Observable<EmployeeOption[]>;
+  private cache = new Map<LookupKey, Observable<unknown>>();
 
-
-  getStates(): Observable<CountryState[]> {
-    return (this.states$ ??= this.http
-      .get<ApiResponse<CountryState[]>>(`${environment.apiUrl}/countryState`)
-      .pipe(
-        map(unwrap),
-        map(list => [...list].sort((a, b) => a.order_number - b.order_number)),
-        shareReplay(1),
-      ));
+  /** Fetches `api/<path>` once per session, unwraps the envelope, optionally transforms. */
+  private cached<T>(
+    key: LookupKey,
+    path: string,
+    transform: (list: T[]) => T[] = list => list,
+  ): Observable<T[]> {
+    let source = this.cache.get(key) as Observable<T[]> | undefined;
+    if (!source) {
+      source = this.http
+        .get<ApiResponse<T[]>>(`${environment.apiUrl}/${path}`)
+        .pipe(map(unwrap), map(transform), shareReplay(1));
+      this.cache.set(key, source);
+    }
+    return source;
   }
 
-  getCities(): Observable<City[]> {
-    return (this.cities$ ??= this.http
-      .get<ApiResponse<City[]>>(`${environment.apiUrl}/city`)
-      .pipe(map(unwrap), shareReplay(1)));
+  /** Drop a cached list so the next dropdown refetches it. */
+  clear(key: LookupKey) {
+    this.cache.delete(key);
   }
 
-  getEmployees(): Observable<EmployeeOption[]> {
-  return (this.employees$ ??= this.http
-    .get<ApiResponse<EmployeeOption[]>>(`${environment.apiUrl}/employee`)
-    .pipe(
-      map(unwrap),
-      map(list => [...list].sort((a, b) => a.name.localeCompare(b.name, 'ar'))),
-      shareReplay(1),
-    ));
-}
-/** Call after creating/editing an employee so the next dropdown refetches. */
-clearEmployeesCache() {
-  this.employees$ = undefined;
-}
+  // used by StateCitySelect
+  getStates() {
+    return this.cached<CountryState>('states', 'countryState',
+      list => [...list].sort((a, b) => a.order_number - b.order_number));
+  }
+  getCities() {
+    return this.cached<City>('cities', 'city');
+  }
+
+  // ---- loaders for <app-lookup-select> ----
+  readonly customers = () => this.cached<LookupItem>('customers', 'customer', byName);
+  readonly employees = () => this.cached<EmployeeOption>('employees', 'employee', byName);
+  readonly productCategories = () =>
+    this.cached<ProductCategoryOption>('productCategories', 'productCategory', byName);
+  readonly units = () => this.cached<LookupItem>('units', 'productUnit');
 }

@@ -49,8 +49,11 @@
             <input id="seller_id" type="number" class="ui-input" formControlName="seller_id" [class.is-invalid]="invalid('seller_id')" />
             @if (invalid('seller_id')) { <span class="ui-error-text">اختر البائع</span> }
           </div> -->
-          <app-employee-select
+          
+          <app-lookup-select
             formControlName="seller_id"
+            [loader]="lookup.employees"
+            [filter]="activeOnly"
             label="البائع"
             placeholder="اختر البائع"
             error="اختر البائع"

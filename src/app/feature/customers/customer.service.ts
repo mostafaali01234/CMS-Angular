@@ -11,8 +11,8 @@ export class CustomerService {
   private http = inject(HttpClient);
   private baseUrl = `${environment.apiUrl}/customer`;
 
-  getAll(): Observable<Customer[]> {
-    return this.http.get<ApiResponse<Customer[]>>(this.baseUrl).pipe(map(unwrap));
+  getAll(sellerId: number): Observable<Customer[]> {
+    return this.http.get<ApiResponse<Customer[]>>(this.baseUrl + "?sellerId=" + sellerId).pipe(map(unwrap));
   }
 
   getById(id: number): Observable<Customer> {

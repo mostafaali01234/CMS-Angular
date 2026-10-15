@@ -1,6 +1,6 @@
 import { Component, computed, effect, inject, model, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { AuthService } from '../../../services/auth/AuthService/auth';
+import { AuthService } from '../../services/AuthService/auth';
 
 type Theme = 'light' | 'dark';
 

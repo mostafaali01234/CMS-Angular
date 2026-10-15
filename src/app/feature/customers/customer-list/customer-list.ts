@@ -7,6 +7,7 @@ import { Customer } from '../customer.model';
 import { DecimalPipe } from '@angular/common';
 import { apiError } from '../../../shared/utils/api';
 import { ConfirmService } from '../../../shared/services/confirm.service';
+import { AuthService } from '../../../core/services/AuthService/auth';
 
 
 @Component({
@@ -16,7 +17,8 @@ import { ConfirmService } from '../../../shared/services/confirm.service';
 })
 export class CustomerList implements OnInit {
   private service = inject(CustomerService);
-
+  auth = inject(AuthService);
+  
   customers = signal<Customer[]>([]);
   search = signal('');
   loading = signal(true);
@@ -33,6 +35,7 @@ export class CustomerList implements OnInit {
       c.phone.includes(q) ||
       c.phone_2?.includes(q) ||
       c.phone_3?.includes(q) ||
+      c.seller_name?.includes(q) ||
       (c.city_name ?? '').toLowerCase().includes(q)
     );
   });
@@ -44,7 +47,7 @@ export class CustomerList implements OnInit {
   load() {
     this.loading.set(true);
     this.error.set(null);
-    this.service.getAll().subscribe({
+    this.service.getAll(this.auth.hasRole('Admin') || this.auth.hasRole('SuperAdmin') ? 0 : Number(this.auth.employeeId())).subscribe({
       next: data => {
         this.customers.set(data);
         this.loading.set(false);

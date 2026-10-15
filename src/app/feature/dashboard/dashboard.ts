@@ -1,6 +1,6 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 // import { DatePipe } from '@angular/common';
-import { AuthService } from '../../services/auth/AuthService/auth';
+import { AuthService } from '../../core/services/AuthService/auth';
 
 @Component({
   selector: 'app-dashboard',

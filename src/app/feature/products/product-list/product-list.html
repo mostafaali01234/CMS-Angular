@@ -1,0 +1,73 @@
+<!-- product-list/product-list.html -->
+<div class="ui-page">
+  <div class="ui-page-header">
+    <h2 class="ui-title">المنتجات</h2>
+    <a routerLink="/products/new" class="ui-btn ui-btn-primary">+ منتج جديد</a>
+  </div>
+
+  <input type="search" class="ui-input" style="margin-bottom: 16px"
+         placeholder="ابحث بالاسم أو الباركود أو التصنيف..."
+         [ngModel]="search()" (ngModelChange)="search.set($event)" />
+
+  @if (actionError()) {
+    <div class="ui-alert" role="alert" style="margin-bottom: 16px">
+      <span>{{ actionError() }}</span>
+      <button type="button" class="ui-alert-close" (click)="actionError.set(null)" aria-label="إغلاق">×</button>
+    </div>
+  }
+
+  @if (loading()) {
+    <p class="ui-muted">جاري التحميل...</p>
+  } @else if (error()) {
+    <div class="ui-alert">
+      <span>{{ error() }}</span>
+      <button class="ui-btn ui-btn-danger sm" (click)="load()">اعادة المحاولة</button>
+    </div>
+  } @else {
+    <div class="ui-card">
+      <div class="ui-table-wrap">
+        <table class="ui-table">
+          <thead>
+            <tr>
+              <th>الاسم</th>
+              <th>الباركود</th>
+              <th>التصنيف</th>
+              <th>سعر الشراء</th>
+              <th>سعر البيع</th>
+              <th>نوع التخزين</th>
+              <th>نوع المنتج</th>
+              <th>نشط</th>
+              <th class="end">الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of filtered(); track p.id) {
+              <tr>
+                <td class="strong">{{ p.name }}</td>
+                <td class="ui-muted">{{ p.barcode }}</td>
+                <td>{{ p.category_name }}</td>
+                <td>{{ p.buy_price | number:'1.2-2' }}</td>
+                <td>{{ p.sale_price | number:'1.2-2' }}</td>
+                <td>{{ p.storage_type }}</td>
+                <td>{{ p.product_type }}</td>
+                <td>{{ p.active ? 'نعم' : 'لا' }}</td>
+                <td class="end nowrap">
+                  <a [routerLink]="['/products', p.id, 'edit']" class="ui-btn ui-btn-outline sm">تعديل</a>
+                  <button class="ui-btn ui-btn-danger sm"
+                          [disabled]="deletingId() === p.id"
+                          (click)="remove(p)">
+                    {{ deletingId() === p.id ? 'جاري الحذف...' : 'حذف' }}
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="7" class="center ui-muted" style="padding: 28px">لا توجد منتجات.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</div>

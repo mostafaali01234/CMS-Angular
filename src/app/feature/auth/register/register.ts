@@ -1,7 +1,7 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
-import { AuthService } from '../../../services/auth/AuthService/auth';
+import { AuthService } from '../../../core/services/AuthService/auth';
 
 @Component({
   selector: 'app-register',

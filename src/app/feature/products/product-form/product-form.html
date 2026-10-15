@@ -1,0 +1,240 @@
+<!-- product-form/product-form.html -->
+<div class="ui-page narrow">
+    <div class="ui-page-header">
+        <h2 class="ui-title">{{ id() ? 'تعديل منتج' : 'اضافة منتج جديد' }}</h2>
+    </div>
+
+    @if (loading()) {
+    <p class="ui-muted">جاري التحميل...</p>
+    } @else {
+    <form [formGroup]="form" (ngSubmit)="save()" class="ui-card">
+        <div class="ui-card-body">
+            <div class="ui-grid">
+
+                <div class="ui-field full">
+                    <label class="ui-label" for="name">اسم المنتج</label>
+                    <input id="name" class="ui-input" formControlName="name" [class.is-invalid]="invalid('name')" />
+                    @if (invalid('name')) { <span class="ui-error-text">الرجاء ادخال اسم المنتج (حتى 150 حرفا)</span> }
+                </div>
+
+                <div class="ui-field">
+                    <label class="ui-label" for="barcode">الباركود</label>
+                    <input id="barcode" class="ui-input" formControlName="barcode" />
+                </div>
+
+                <app-lookup-select formControlName="category_id" [loader]="lookup.productCategories" label="التصنيف"
+                    placeholder="اختر التصنيف" error="اختر التصنيف" [invalid]="invalid('category_id')" />
+
+                <div class="ui-field">
+                    <label class="ui-label" for="buy_price">سعر الشراء</label>
+                    <input id="buy_price" type="number" step="0.01" class="ui-input" formControlName="buy_price"
+                        [class.is-invalid]="invalid('buy_price')" />
+                </div>
+
+                <div class="ui-field">
+                    <label class="ui-label" for="sale_price">سعر البيع</label>
+                    <input id="sale_price" type="number" step="0.01" class="ui-input" formControlName="sale_price"
+                        [class.is-invalid]="invalid('sale_price')" />
+                </div>
+
+                <div class="ui-field">
+                    <label class="ui-label" for="storage_type">نوع التخزين</label>
+                    <select id="storage_type" class="ui-input" formControlName="storage_type">
+                        @for (o of storageTypes; track o.value) {
+                        <option [ngValue]="o.value">{{ o.label }}</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="ui-field">
+                    <label class="ui-label" for="product_type">نوع المنتج</label>
+                    <select id="product_type" class="ui-input" formControlName="product_type">
+                        @for (o of productTypes; track o.value) {
+                        <option [ngValue]="o.value">{{ o.label }}</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="ui-field">
+                    <label class="ui-label" for="arrange_order">ترتيب العرض</label>
+                    <input id="arrange_order" type="number" class="ui-input" formControlName="arrange_order" />
+                </div>
+
+                <div class="ui-field">
+                    <label class="ui-label" for="inspection">نسبة خصم عمولة الفحص (%)</label>
+                    <input id="inspection" type="number" class="ui-input"
+                        formControlName="inspection_commission_deduction_percent"
+                        [class.is-invalid]="invalid('inspection_commission_deduction_percent')" />
+                    @if (invalid('inspection_commission_deduction_percent')) {
+                    <span class="ui-error-text">القيمة بين 0 و 100</span>
+                    }
+                </div>
+
+                <div class="ui-field full">
+                    <label class="ui-label" for="description">الوصف</label>
+                    <textarea id="description" rows="3" class="ui-input" formControlName="description"></textarea>
+                </div>
+
+                <div class="ui-field full">
+                    <label><input type="checkbox" formControlName="active" /> نشط</label>
+                    <label><input type="checkbox" formControlName="has_serial" /> له رقم تسلسلي</label>
+                    <label><input type="checkbox" formControlName="enable_counter" /> تفعيل العداد</label>
+                    <label><input type="checkbox" formControlName="enable_add_order" /> تفعيل اضافة الطلب</label>
+                </div>
+
+            </div>
+
+            <h3 class="ui-title" style="margin: 24px 0 12px">عمولات الوحدات</h3>
+
+
+            @for (g of commissions.controls; track g; let i = $index) {
+            <div class="ui-card commission-card" [formGroup]="g">
+                <div class="ui-card-body">
+                    <div class="ui-grid commission-grid">
+
+                        <app-lookup-select formControlName="unit_id" [loader]="lookup.units" label="الاوردر"
+                            placeholder="اختر الوحدة" error="اختر الوحدة" [invalid]="invalidAt(i, 'unit_id')" />
+
+                        <div class="ui-field">
+                            <label class="ui-label">عمولة البائع جملة (%)</label>
+                            <input type="number" step="0.01" class="ui-input"
+                                formControlName="sales_wholesale_comm_percent"
+                                [class.is-invalid]="invalidAt(i, 'sales_wholesale_comm_percent')" />
+                        </div>
+
+                        <div class="ui-field">
+                            <label class="ui-label">عمولة البائع نصف جملة (%)</label>
+                            <input type="number" step="0.01" class="ui-input"
+                                formControlName="sales_half_wholesale_comm_percent"
+                                [class.is-invalid]="invalidAt(i, 'sales_half_wholesale_comm_percent')" />
+                        </div>
+
+                        <div class="ui-field">
+                            <label class="ui-label">عمولة البائع تركيب (%)</label>
+                            <input type="number" step="0.01" class="ui-input"
+                                formControlName="sales_retail_comm_percent"
+                                [class.is-invalid]="invalidAt(i, 'sales_retail_comm_percent')" />
+                        </div>
+
+                        <div class="ui-field">
+                            <label class="ui-label">عمولة الفني</label>
+                            <input type="number" step="0.01" class="ui-input" formControlName="tech_comm"
+                                [class.is-invalid]="invalidAt(i, 'tech_comm')" />
+                        </div>
+
+                        <div class="ui-field">
+                            <label class="ui-label">عمولة المساعد 1</label>
+                            <input type="number" step="0.01" class="ui-input" formControlName="assistant_1_comm"
+                                [class.is-invalid]="invalidAt(i, 'assistant_1_comm')" />
+                        </div>
+
+                        <div class="ui-field">
+                            <label class="ui-label">عمولة المساعد 2</label>
+                            <input type="number" step="0.01" class="ui-input" formControlName="assistant_2_comm"
+                                [class.is-invalid]="invalidAt(i, 'assistant_2_comm')" />
+                        </div>
+
+                        <div class="ui-field">
+                            <label class="ui-label">عمولة المساعد 3</label>
+                            <input type="number" step="0.01" class="ui-input" formControlName="assistant_3_comm"
+                                [class.is-invalid]="invalidAt(i, 'assistant_3_comm')" />
+                        </div>
+
+                        <div class="ui-field commission-actions">
+                            <button type="button" class="ui-btn ui-btn-danger sm" (click)="removeCommission(i)">
+                                حذف
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            } @empty {
+            <p class="ui-muted">لا توجد عمولات وحدات.</p>
+            }
+
+
+
+            <!-- @for (g of commissions.controls; track g; let i = $index) {
+          <div class="ui-card" style="margin-bottom: 12px" [formGroup]="g">
+            <div class="ui-card-body">
+              <div class="ui-grid">
+
+                <app-lookup-select
+                  formControlName="unit_id"
+                  [loader]="lookup.units"
+                  label="الاوردر"
+                  placeholder="اختر الوحدة"
+                  error="اختر الوحدة"
+                  [invalid]="invalidAt(i, 'unit_id')" />
+
+                <div class="ui-field">
+                  <label class="ui-label">عمولة البائع جملة (%)</label>
+                  <input type="number" step="0.01" class="ui-input"
+                         formControlName="sales_wholesale_comm_percent"
+                         [class.is-invalid]="invalidAt(i, 'sales_wholesale_comm_percent')" />
+                </div>
+
+                <div class="ui-field">
+                  <label class="ui-label">عمولة البائع نصف جملة (%)</label>
+                  <input type="number" step="0.01" class="ui-input"
+                         formControlName="sales_half_wholesale_comm_percent"
+                         [class.is-invalid]="invalidAt(i, 'sales_half_wholesale_comm_percent')" />
+                </div>
+
+                <div class="ui-field">
+                  <label class="ui-label">عمولة البائع تركيب (%)</label>
+                  <input type="number" step="0.01" class="ui-input"
+                         formControlName="sales_retail_comm_percent"
+                         [class.is-invalid]="invalidAt(i, 'sales_retail_comm_percent')" />
+                </div>
+
+                <div class="ui-field">
+                  <label class="ui-label">عمولة الفني</label>
+                  <input type="number" step="0.01" class="ui-input"
+                         formControlName="tech_comm" [class.is-invalid]="invalidAt(i, 'tech_comm')" />
+                </div>
+
+                <div class="ui-field">
+                  <label class="ui-label">عمولة المساعد 1</label>
+                  <input type="number" step="0.01" class="ui-input"
+                         formControlName="assistant_1_comm" [class.is-invalid]="invalidAt(i, 'assistant_1_comm')" />
+                </div>
+
+                <div class="ui-field">
+                  <label class="ui-label">عمولة المساعد 2</label>
+                  <input type="number" step="0.01" class="ui-input"
+                         formControlName="assistant_2_comm" [class.is-invalid]="invalidAt(i, 'assistant_2_comm')" />
+                </div>
+
+                <div class="ui-field">
+                  <label class="ui-label">عمولة المساعد 3</label>
+                  <input type="number" step="0.01" class="ui-input"
+                         formControlName="assistant_3_comm" [class.is-invalid]="invalidAt(i, 'assistant_3_comm')" />
+                </div>
+
+              </div>
+              <button type="button" class="ui-btn ui-btn-danger sm" style="margin-top: 12px"
+                      (click)="removeCommission(i)">حذف الوحدة</button>
+            </div>
+          </div>
+        } @empty {
+          <p class="ui-muted">لا توجد عمولات وحدات.</p>
+        } -->
+
+            <button type="button" class="ui-btn ui-btn-outline" (click)="addCommission()">+ اضافة وحدة</button>
+
+            @if (error()) {
+            <div class="ui-alert" role="alert" style="margin-top: 16px">{{ error() }}</div>
+            }
+        </div>
+
+        <div class="ui-card-footer">
+            <a routerLink="/products" class="ui-btn ui-btn-outline">الغاء</a>
+            <button type="submit" class="ui-btn ui-btn-primary" [disabled]="saving()">
+                {{ saving() ? 'جاري الحفظ...' : (id() ? 'حفظ' : 'اضافة') }}
+            </button>
+        </div>
+    </form>
+    }
+</div>

@@ -18,6 +18,23 @@ export const routes: Routes = [
     loadChildren: () => import('./feature/customers/customers.routes').then(m => m.CUSTOMER_ROUTES),
   },
   {
+    path: 'products',
+    canActivate: [authGuard],
+    loadChildren: () => import('./feature/products/products.routes').then(m => m.PRODUCT_ROUTES),
+  },
+  {
+    path: 'product-categories',
+    canActivate: [authGuard],
+    loadChildren: () =>
+      import('./feature/product-categories/product-categories.routes').then(m => m.PRODUCT_CATEGORY_ROUTES),
+  },
+  {
+    path: 'order-lines',
+    canActivate: [authGuard],
+    loadChildren: () =>
+      import('./feature/order-lines/order-lines.routes').then(m => m.ORDER_LINE_ROUTES),
+  },
+  {
     path: 'settings',
     canActivate: [authGuard],
     loadComponent: () => import('./feature/user-account-settings/user-account-settings').then(m => m.UserAccountSettings)

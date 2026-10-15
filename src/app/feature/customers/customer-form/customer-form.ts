@@ -5,15 +5,18 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CustomerService } from '../customer.service';
 import { Customer } from '../customer.model';
 import { Observable } from 'rxjs';
-import { AuthService } from '../../../services/auth/AuthService/auth';
+import { AuthService } from '../../../core/services/AuthService/auth';
 import { StateCitySelect } from '../../../shared/components/state-city-select/state-city-select';
 import { apiError } from '../../../shared/utils/api';
-import { EmployeeSelect } from '../../../shared/components/employee-select/employee-select';
+import { LookupService } from '../../../shared/services/lookup.service';
+import { activeOnly } from '../../../shared/models/lookup.model';
+import { LookupSelect } from '../../../shared/components/lookup-select/lookup-select';
+
 
 
 @Component({
   selector: 'app-customer-form',
-  imports: [ReactiveFormsModule, RouterLink, StateCitySelect, EmployeeSelect],
+  imports: [ReactiveFormsModule, RouterLink, StateCitySelect, LookupSelect],
   templateUrl: './customer-form.html',
 })
 export class CustomerForm implements OnInit {
@@ -27,6 +30,9 @@ export class CustomerForm implements OnInit {
   loading = signal(false);
   saving = signal(false);
   error = signal<string | null>(null);
+
+  lookup = inject(LookupService);
+  activeOnly = activeOnly;
 
   form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(200)]],

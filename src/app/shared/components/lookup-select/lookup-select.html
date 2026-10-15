@@ -1,18 +1,20 @@
-<!-- shared/components/employee-select/employee-select.html -->
+<!-- shared/components/lookup-select/lookup-select.html -->
 <div class="ui-field">
-  <label class="ui-label" [for]="'emp-' + uid">{{ label() }}</label>
-  <select [id]="'emp-' + uid" class="ui-input"
+  @if (label()) {
+    <label class="ui-label" [for]="'lookup-' + uid">{{ label() }}</label>
+  }
+  <select [id]="'lookup-' + uid" class="ui-input"
           [ngModel]="value()" (ngModelChange)="select($event)"
           [ngModelOptions]="{ standalone: true }"
           [disabled]="disabled()" (blur)="touched()"
           [class.is-invalid]="invalid() || loadFailed()">
     <option [ngValue]="0">{{ placeholder() }}</option>
-    @for (e of options(); track e.id) {
-      <option [ngValue]="e.id">{{ e.name }}</option>
+    @for (o of options(); track o.id) {
+      <option [ngValue]="o.id">{{ display()(o) }}</option>
     }
   </select>
   @if (loadFailed()) {
-    <span class="ui-error-text">تعذر تحميل قائمة الموظفين</span>
+    <span class="ui-error-text">تعذر تحميل القائمة</span>
   } @else if (invalid()) {
     <span class="ui-error-text">{{ error() }}</span>
   }
