@@ -1,0 +1,183 @@
+<!-- order-maintenance/order-maintenance.html -->
+<div class="ui-page">
+  <div class="ui-page-header">
+    <h2 class="ui-title">انشاء طلب صيانة</h2>
+  </div>
+
+  <div class="ui-card" style="margin-bottom: 16px">
+    <div class="ui-card-body">
+      <div class="ui-grid">
+
+        <app-search-select
+          [ngModel]="customerId()"
+          (ngModelChange)="onCustomer($event)"
+          [loader]="lookup.customers"
+          [display]="customerText"
+          label="العميل"
+          placeholder="ابحث بالاسم أو رقم الهاتف..." />
+
+        @if (customerId()) {
+        @if (ordersLoading()) {
+            <p class="ui-muted">جاري التحميل...</p>
+        } @else if (ordersError()) {
+            <div class="ui-alert">{{ ordersError() }}</div>
+        } @else if (orders().length === 0) {
+            <p class="ui-muted">لا توجد طلبات منتهية لهذا العميل.</p>
+        } @else {
+            <app-search-select
+            [ngModel]="orderId()"
+            (ngModelChange)="onOrder($event)"
+            [loader]="orderLoader"
+            [searchText]="orderSearch"
+            label="طلب العميل"
+            placeholder="ابحث برقم الطلب أو التاريخ أو المدينة أو المنتج..." />
+        }
+        }
+      </div>
+    </div>
+  </div>
+
+  @if (selected(); as o) {
+    <h3 class="ui-title" style="margin: 0 0 8px">بيانات الطلب #{{ o.id }}</h3>
+    <div class="ui-card" style="margin-bottom: 16px">
+      <div class="ui-table-wrap">
+        <table class="ui-table">
+          <thead>
+            <tr>
+              <th>تاريخ الطلب</th>
+              <th>تاريخ التركيب</th>
+              <th>النوع</th>
+              <th>التصنيف</th>
+              <th>الحالة</th>
+              <th>المحافظة</th>
+              <th>المدينة</th>
+              <!-- <th>الخط</th> -->
+              <!-- <th>الفني</th> -->
+              <!-- <th>البائع</th> -->
+              <th>الاجمالي</th>
+              <!-- <th>الخصم</th> -->
+              <!-- <th>الصافي</th> -->
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>{{ o.created_at_utc | date:'yyyy-MM-dd' }}</td>
+              <td>{{ o.installation_date | date:'yyyy-MM-dd' }}</td>
+              <td>{{ label(o.type) }}</td>
+              <td>{{ label(o.items_category) }}</td>
+              <td>{{ label(o.status) }}</td>
+              <td>{{ o.country_state_name }}</td>
+              <td>{{ o.city_name }}</td>
+              <!-- <td>{{ o.line_name }}</td> -->
+              <!-- <td>{{ o.tech_name }}</td> -->
+              <!-- <td>{{ o.seller_name }}</td> -->
+              <!-- <td>{{ o.total | number:'1.2-2' }}</td> -->
+              <!-- <td>{{ o.discount | number:'1.2-2' }}</td> -->
+              <td class="strong">{{ o.net_total | number:'1.2-2' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="ui-card" style="margin-bottom: 16px" hidden>
+      <div class="ui-table-wrap">
+        <table class="ui-table">
+          <thead>
+            <tr>
+              <th>المنتج</th>
+              <th>السعر</th>
+              <th>الكمية</th>
+              <th>الخصم</th>
+              <th>الصافي</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (i of o.items; track i.id) {
+              <tr>
+                <td class="strong">{{ i.product_name }}</td>
+                <td>{{ i.product_price | number:'1.2-2' }}</td>
+                <td>{{ i.product_quantity }}</td>
+                <td>{{ i.product_discount | number:'1.2-2' }}</td>
+                <td>{{ i.product_net_total | number:'1.2-2' }}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="5" class="center ui-muted" style="padding: 20px">لا توجد منتجات.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <h3 class="ui-title" style="margin: 0 0 8px">طلبات الصيانة السابقة لهذا الطلب</h3>
+    @if (hasOpenMaintenance()) {
+      <div class="ui-alert" style="margin-bottom: 8px">يوجد طلب صيانة مفتوح لهذا الطلب بالفعل.</div>
+    }
+    <div class="ui-card" style="margin-bottom: 16px">
+      @if (maintLoading()) {
+        <p class="ui-muted" style="padding: 16px">جاري التحميل...</p>
+      } @else if (maintError()) {
+        <div class="ui-alert">{{ maintError() }}</div>
+      } @else {
+        <div class="ui-table-wrap">
+          <table class="ui-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>التاريخ</th>
+                <th>الحالة</th>
+                <!-- <th>الفني</th> -->
+                <th>الصافي</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (m of maintenance(); track m.id) {
+                <tr>
+                  <td class="strong">{{ m.id }}</td>
+                  <td>{{ m.installation_date | date:'yyyy-MM-dd' }}</td>
+                  <td>{{ label(m.status) }}</td>
+                  <!-- <td>{{ m.tech_name }}</td> -->
+                  <td>{{ m.net_total | number:'1.2-2' }}</td>
+                </tr>
+              } @empty {
+                <tr><td colspan="5" class="center ui-muted" style="padding: 20px">لا توجد طلبات صيانة سابقة.</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+
+    @if (canMaintain()) {
+        <div class="ui-card">
+        <div class="ui-card-body">
+            <div class="ui-field full">
+            <label class="ui-label" for="notes">سبب طلب الصيانة</label>
+            <textarea id="notes" rows="3" maxlength="2000" class="ui-input"
+                        [ngModel]="notes()" (ngModelChange)="notes.set($event)"></textarea>
+            </div>
+
+            @if (error()) {
+            <div class="ui-alert" role="alert" style="margin-top: 16px">{{ error() }}</div>
+            }
+        </div>
+
+        <div class="ui-card-footer">
+            <a routerLink="/orders" class="ui-btn ui-btn-outline">الغاء</a>
+            <button type="button" class="ui-btn ui-btn-primary" 
+                    [disabled]="!canSubmit()" (click)="submit()">
+            {{ saving() ? 'جاري الحفظ...' : 'انشاء طلب صيانة' }}
+            </button>
+        </div>
+        </div>
+    }
+    @else if (hasOpenMaintenance()) {
+        <div class="ui-alert" style="margin-bottom: 8px">
+            يوجد طلب صيانة مفتوح لهذا الطلب، لا يمكن انشاء طلب صيانة جديد حتى يتم اغلاقه.
+        </div>
+    }
+    @else {
+       <div class="ui-alert" role="alert">لا يمكن عمل صيانة لاوردر جملة</div>
+    }
+  }
+</div>

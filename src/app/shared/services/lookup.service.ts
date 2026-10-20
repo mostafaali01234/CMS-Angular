@@ -6,10 +6,11 @@ import { environment } from '../../../environments/environment.development';
 import { ApiResponse } from '../models/api-response.model';
 import {
   City, CountryState, EmployeeOption, LookupItem, ProductCategoryOption,
+  ProductOption,
 } from '../models/lookup.model';
 import { unwrap } from '../utils/api';
 
-export type LookupKey = 'states' | 'cities' | 'employees' | 'productCategories' | 'customers' | 'units';
+export type LookupKey = 'states' | 'cities' | 'employees' | 'productCategories' | 'customers' | 'units' | 'products';
 
 const byName = <T extends LookupItem>(list: T[]) =>
   [...list].sort((a, b) => a.name.localeCompare(b.name, 'ar'));
@@ -52,7 +53,9 @@ export class LookupService {
   // ---- loaders for <app-lookup-select> ----
   readonly customers = () => this.cached<LookupItem>('customers', 'customer', byName);
   readonly employees = () => this.cached<EmployeeOption>('employees', 'employee', byName);
+  readonly products = () => this.cached<ProductOption>('products', 'product', byName);
   readonly productCategories = () =>
     this.cached<ProductCategoryOption>('productCategories', 'productCategory', byName);
   readonly units = () => this.cached<LookupItem>('units', 'productUnit');
+  readonly states = () => this.cached<LookupItem>('states', 'countryState');
 }

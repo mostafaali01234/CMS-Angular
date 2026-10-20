@@ -1,0 +1,232 @@
+<!-- order-list/order-list.html -->
+<div class="ui-page" style="max-width: none;">
+    <div class="ui-page-header">
+        <h2 class="ui-title">الطلبات</h2>
+        <div>
+            <a routerLink="/orders/new" class="ui-btn ui-btn-primary">+ طلب جديد</a>
+            <a routerLink="/orders/maintenance" class="ui-btn ui-btn-outline">+ طلب صيانة</a>
+        </div>
+    </div>
+
+    <form style="margin-bottom: 16px" (ngSubmit)="doSearch()">
+        <div class="row mb-3">
+            <div class="col-12">
+                <input type="search" name="search" class="ui-input"
+                    placeholder="ابحث برقم الطلب أو العميل أو الموبايل أو المدينة أو الخط أو البائع أو الفني..."
+                    [ngModel]="search()" (ngModelChange)="search.set($event)" />
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <label class="col-6 col-md-3">من
+                <input type="date" name="dateFrom" class="ui-input" [ngModel]="dateFrom()"
+                    (ngModelChange)="dateFrom.set($event)" />
+            </label>
+            <label class="col-6 col-md-3">الى
+                <input type="date" name="dateTo" class="ui-input" [ngModel]="dateTo()"
+                    (ngModelChange)="dateTo.set($event)" />
+            </label>
+            <label class="col-6 col-md-3">الحالة
+                <select name="status" class="ui-input" [ngModel]="status()" (ngModelChange)="status.set($event)">
+                    <option value="">الكل</option>
+                    @for (s of statuses; track s) { <option [value]="s">{{ label(s) }}</option> }
+                </select>
+            </label>
+            <label class="col-6 col-md-3">النوع
+                <select name="type" class="ui-input" [ngModel]="type()" (ngModelChange)="type.set($event)">
+                    <option value="">الكل</option>
+                    @for (t of types; track t) { <option [value]="t">{{ label(t) }}</option> }
+                </select>
+            </label>
+        </div>
+
+        <div class="row mb-3">
+            <label class="col-6 col-md-3">المصدر
+                <select name="source" class="ui-input" [ngModel]="source()" (ngModelChange)="source.set($event)">
+                    <option value="">الكل</option>
+                    @for (s of sources; track s) { <option [value]="s">{{ label(s) }}</option> }
+                </select>
+            </label>
+            <label class="col-6 col-md-3">التصنيف
+                <input name="itemsCategory" class="ui-input" [ngModel]="itemsCategory()"
+                    (ngModelChange)="itemsCategory.set($event)" />
+            </label>
+            <div class="col-6 col-md-3">البائع
+                <app-lookup-select name="seller" [ngModel]="sellerId()" (ngModelChange)="sellerId.set($event)"
+                    [loader]="lookup.employees" [filter]="activeOnly" placeholder="الكل" />
+            </div>
+            <div class="col-6 col-md-3">الفني
+                <app-lookup-select name="techFilter" [ngModel]="techFilterId()"
+                    (ngModelChange)="techFilterId.set($event)" [loader]="lookup.employees" [filter]="activeOnly"
+                    placeholder="الكل" />
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-6 col-md-3">المحافظة
+                <app-lookup-select name="state" [ngModel]="stateId()" (ngModelChange)="stateId.set($event)"
+                    [loader]="lookup.states" placeholder="الكل" />
+            </div>
+            <div class="col-6 col-md-3">نوع التصنيف
+                <select name="categoryType" class="ui-input"
+                        [ngModel]="categoryFilter()" (ngModelChange)="categoryFilter.set($event)">
+                    @for (c of categoryFilters; track c.value) {
+                    <option [value]="c.value">{{ c.label }}</option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        <div style="display:flex; gap:8px; align-items:center">
+            <button type="submit" class="ui-btn ui-btn-primary" [disabled]="loading()">بحث</button>
+            <button type="button" class="ui-btn ui-btn-outline" (click)="clearFilters()">مسح الفلاتر</button>
+            @if (usingDefaultDate) { <span class="ui-muted">يتم عرض طلبات اليوم فقط. اختر تاريخاً لعرض غيرها.</span> }
+        </div>
+    </form>
+
+    @if (actionError()) {
+    <div class="ui-alert" role="alert" style="margin-bottom: 16px">
+        <span>{{ actionError() }}</span>
+        <button type="button" class="ui-alert-close" (click)="actionError.set(null)" aria-label="إغلاق">×</button>
+    </div>
+    }
+
+    @if (loading()) {
+    <p class="ui-muted">جاري التحميل...</p>
+    } @else if (error()) {
+    <div class="ui-alert">
+        <span>{{ error() }}</span>
+        <button class="ui-btn ui-btn-danger sm" (click)="load()">اعادة المحاولة</button>
+    </div>
+    } @else {
+    <div class="ui-card">
+        <div class="ui-table-wrap">
+            <table class="ui-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>رقم</th>
+                        <th>تاريخ الاضافة</th>
+                        <th>الحالة</th>
+                        <th>الفني</th>
+                        <th>النوع</th>
+                        <th>المحافظة</th>
+                        <th>المدينة</th>
+                        <th>العميل</th>
+                        <th>الموبايل</th>
+                        <th>التصنيف</th>
+                        <th>البائع</th>
+                        <th>الخط</th>
+                        <th>اجمالي السعر</th>
+                        <th>رقم الاوردر القديم</th>
+                        <th class="end">الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (o of orders(); track o.id; let i = $index) {
+                    <tr>
+                        <td class="strong">{{ (page() - 1) * pageSize() + i + 1 }}</td>
+                        <td class="strong">{{ o.id }}</td>
+                        <td>{{ o.created_at_utc | date:'yyyy-MM-dd' }}</td>
+                        <td>{{ label(o.status) }}</td>
+                        <td>
+                            @if (canManage) {
+                            <app-lookup-select [ngModel]="o.tech_id ?? 0" (ngModelChange)="changeTech(o, $event)"
+                                [disabled]="busyId() === o.id" [loader]="lookup.employees" [filter]="activeOnly"
+                                placeholder="اختر الفني" />
+                            } @else {
+                            <span class="ui-muted">{{ o.tech_name }}</span>
+                            }
+                        </td>
+                        <td>{{ label(o.type) }}</td>
+                        <td>{{ o.country_state_name }}</td>
+                        <td>{{ o.city_name }}</td>
+                        <td>{{ o.customer_name }}</td>
+                        <td>{{ o.customer_phone }}</td>
+                        <td>{{ o.items_category }}</td>
+                        <td class="ui-muted">{{ o.seller_name }}</td>
+                        <td class="ui-muted">{{ o.line_name }}</td>
+                        <td>{{ o.net_total | number:'1.2-2' }}</td>
+                        <td>{{ o.old_order_id }}</td>
+                        <td class="end nowrap">
+                            <a [routerLink]="['/orders', o.id, 'edit']" class="ui-btn ui-btn-outline sm"
+                                     [hidden]="label(o.status) == 'تام' || label(o.status) == 'مؤجل' || label(o.status) == 'ملغي' || label(o.status) == 'محذوف'"
+                                     >تعديل</a>
+                            <button class="ui-btn ui-btn-outline sm" (click)="toggleNotes(o)">
+                                ملاحظات ({{ noteCount(o) }})
+                            </button>
+                            @if (canManage) {
+                                @if (o.status !== 'ملغي') {
+                                    <button class="ui-btn ui-btn-outline sm" [disabled]="busyId() === o.id" [hidden]="label(o.status) == 'محذوف' || label(o.status) == 'تام'"
+                                        (click)="cancel(o)">الغاء</button>
+                                }
+                            <button class="ui-btn ui-btn-danger sm" [disabled]="busyId() === o.id" [hidden]="label(o.status) == 'محذوف' || label(o.status) == 'تام'"
+                                (click)="remove(o)">حذف</button>
+                            }
+                        </td>
+                    </tr>
+
+                    @if (expandedId() === o.id) {
+                    <tr>
+                        <td colspan="16" style="padding: 16px">
+                            <strong>ملاحظات الطلب #{{ o.id }}</strong>
+
+                            <div style="display: flex; gap: 8px; margin: 12px 0">
+                                <input class="ui-input" style="flex: 1" placeholder="اكتب ملاحظة جديدة..."
+                                    [ngModel]="newNote()" (ngModelChange)="newNote.set($event)"
+                                    (keydown.enter)="addNote(o)" />
+                                <button type="button" class="ui-btn ui-btn-primary"
+                                    [disabled]="savingNote() || !newNote().trim()" (click)="addNote(o)">
+                                    {{ savingNote() ? 'جاري الحفظ...' : 'اضافة' }}
+                                </button>
+                            </div>
+
+                            @if (notesError()) {
+                            <div class="ui-alert" role="alert" style="margin-bottom: 12px">{{ notesError() }}</div>
+                            }
+
+                            @if (notesLoading() && !notes()[o.id]) {
+                            <p class="ui-muted">جاري التحميل...</p>
+                            } @else {
+                            @for (n of sortedNotes(o.id); track n.id) {
+                            <div style="padding: 8px 0; border-top: 1px solid rgba(128,128,128,.25)">
+                                <div>{{ n.notes }}</div>
+                                <small class="ui-muted">
+                                    {{ n.created_by }} · {{ n.created_at_utc | date:'yyyy-MM-dd HH:mm' }}
+                                </small>
+                            </div>
+                            } @empty {
+                            <p class="ui-muted">لا توجد ملاحظات.</p>
+                            }
+                            }
+                        </td>
+                    </tr>
+                    }
+                    } @empty {
+                    <tr>
+                        <td colspan="11" class="center ui-muted" style="padding: 28px">لا توجد طلبات.</td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div
+            style="display:flex; justify-content:space-between; align-items:center; padding:12px; flex-wrap:wrap; gap:8px">
+            <span class="ui-muted">الإجمالي: {{ totalCount() }} طلب</span>
+
+            <div style="display:flex; gap:6px; align-items:center">
+                <button class="ui-btn ui-btn-outline sm" [disabled]="page() === 1"
+                    (click)="goTo(page() - 1)">السابق</button>
+                <span>{{ page() }} / {{ totalPages() }}</span>
+                <button class="ui-btn ui-btn-outline sm" [disabled]="page() >= totalPages()"
+                    (click)="goTo(page() + 1)">التالي</button>
+            </div>
+
+            <select class="ui-input" style="width:auto" [ngModel]="pageSize()"
+                (ngModelChange)="onPageSizeChange($event)">
+                @for (s of pageSizes; track s) { <option [value]="s">{{ s }} / صفحة</option> }
+            </select>
+        </div>
+    </div>
+    }
+</div>

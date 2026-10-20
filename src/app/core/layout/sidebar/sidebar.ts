@@ -40,10 +40,10 @@ export class Sidebar {
     {
       label: 'الاوردرات', icon: '📅',
       children: [
-        { label: 'اوردر جديد',  icon: '•', path: '/bookings/new' },
-        { label: 'صيانة جديدة',  icon: '•', path: '/bookings/new' },
-        { label: 'الاوردرات اليومية', icon: '•', path: '/bookings' },
-        { label: 'اوردرات الفني', icon: '•', path: '/bookings' },
+        { label: 'اوردر جديد',  icon: '•', path: '/orders/new' },
+        { label: 'صيانة جديدة',  icon: '•', path: '/orders/maintenance' },
+        { label: 'الاوردرات اليومية', icon: '•', path: '/orders' },
+        // { label: 'اوردرات الفني', icon: '•', path: '/bookings' },
         { label: 'خطوط الاوردرات', icon: '•', path: '/order-lines' }
       ]
     },

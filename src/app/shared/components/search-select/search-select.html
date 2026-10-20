@@ -1,0 +1,39 @@
+<!-- shared/components/search-select/search-select.html -->
+<div class="ui-field">
+  @if (label()) {
+    <label class="ui-label" [for]="'ss-' + uid">{{ label() }}</label>
+  }
+  <div class="ss-box">
+    <input [id]="'ss-' + uid" class="ui-input" type="text" autocomplete="off"
+           role="combobox" [attr.aria-expanded]="open()"
+           [placeholder]="placeholder()" [disabled]="disabled()"
+           [value]="shown()"
+           (focus)="openList()" (blur)="close()"
+           (input)="onInput($any($event.target).value)"
+           (keydown)="onKey($event)"
+           [class.is-invalid]="invalid() || loadFailed()" />
+
+    @if (value() && !disabled()) {
+      <button type="button" class="ss-clear" aria-label="مسح"
+              (mousedown)="$event.preventDefault(); clear()">×</button>
+    }
+
+    @if (open()) {
+      <ul class="ss-list" role="listbox">
+        @for (o of results(); track o.id; let i = $index) {
+          <li role="option" [class.active]="i === active()"
+              (mousedown)="$event.preventDefault(); choose(o)"
+              (mouseenter)="active.set(i)">{{ display()(o) }}</li>
+        } @empty {
+          <li class="ss-empty">لا توجد نتائج</li>
+        }
+      </ul>
+    }
+  </div>
+
+  @if (loadFailed()) {
+    <span class="ui-error-text">تعذر تحميل القائمة</span>
+  } @else if (invalid()) {
+    <span class="ui-error-text">{{ error() }}</span>
+  }
+</div>
