@@ -64,6 +64,19 @@ export class StateCitySelect implements ControlValueAccessor, OnInit {
     this.cityId.set(0);   // previous city belongs to another state
     this.onChange(0);
   }
+  
+  setLocation(stateId: number, cityId: number) {
+    // if the customer has no state, derive it from the city
+    const state = stateId || this.cities().find(c => c.id === cityId)?.state_id || 0;
+
+    this.stateId.set(state);   // 1. state first: the city list for this state is built
+    this.cityId.set(0);
+
+    setTimeout(() => {         // 2. once the cities have rendered, select the customer's city
+      this.cityId.set(cityId);
+      this.onChange(cityId);   // also updates the form's city_id
+    });
+  }
 
   onCityChange(id: number) {
     this.cityId.set(id);

@@ -1,0 +1,118 @@
+<!-- money-safe-list/money-safe-list.html -->
+<div class="ui-page">
+  <div class="ui-page-header">
+    <h2 class="ui-title">الخزائن</h2>
+    <a routerLink="/money-safes/new" class="ui-btn ui-btn-primary">+ خزينة جديدة</a>
+  </div>
+
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px">
+    <input type="search" class="ui-input" style="flex: 1 1 240px"
+           placeholder="ابحث بالكود أو الاسم أو المدير أو التصنيف..."
+           [ngModel]="search()" (ngModelChange)="search.set($event)" />
+
+    <select class="ui-input" style="flex: 0 0 200px"
+            [ngModel]="typeId()" (ngModelChange)="typeId.set($event)">
+      @for (t of types(); track t.id) {
+        <option [ngValue]="t.id">{{ t.name }}</option>
+      }
+    </select>
+
+    <select class="ui-input" style="flex: 0 0 140px"
+            [ngModel]="activeFilter()" (ngModelChange)="activeFilter.set($event)">
+      <option value="all">الكل</option>
+      <option value="active">نشط</option>
+      <option value="inactive">غير نشط</option>
+    </select>
+
+    @if (search() || typeId() !== defaultTypeId() || activeFilter() !== 'all') {
+      <button type="button" class="ui-btn ui-btn-outline sm" (click)="clearFilters()">مسح الفلاتر</button>
+    }
+  </div>
+
+  @if (actionError()) {
+    <div class="ui-alert" role="alert" style="margin-bottom: 16px">
+      <span>{{ actionError() }}</span>
+      <button type="button" class="ui-alert-close" (click)="actionError.set(null)" aria-label="إغلاق">×</button>
+    </div>
+  }
+
+  @if (loading() || !typesReady()) {
+    <p class="ui-muted">جاري التحميل...</p>
+  } @else if (error()) {
+    <div class="ui-alert">
+      <span>{{ error() }}</span>
+      <button class="ui-btn ui-btn-danger sm" (click)="load()">اعادة المحاولة</button>
+    </div>
+  } @else {
+    @for (g of groups(); track g.key) {
+      <h3 class="ui-title" style="margin: 20px 0 8px">
+        {{ g.name }} <span class="ui-muted">({{ g.items.length }})</span>
+      </h3>
+
+      <div class="ui-card">
+        <div class="ui-table-wrap">
+          <table class="ui-table">
+            <thead>
+              <tr>
+                <th>الكود</th>
+                <th>الاسم</th>
+                <th>المدير</th>
+                <th>الرصيد الافتتاحي</th>
+                <th>الرصيد</th>
+                <th>الرصيد بالعملة</th>
+                <th>الحالة</th>
+                <th class="end">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (s of g.items; track s.id) {
+                <tr>
+                  <td>{{ s.cod }}</td>
+                  <td class="strong">{{ s.name }}</td>
+                  <td class="ui-muted">{{ s.manager_name }}</td>
+                  <td>{{ s.opening_balance | number:'1.2-2' }}</td>
+                  <td class="strong">{{ s.balance | number:'1.2-2' }}</td>
+                  <td>
+                    @if (s.is_multi_currency) { {{ s.balance_currency | number:'1.2-2' }} }
+                    @else { <span class="ui-muted">—</span> }
+                  </td>
+                  <td>{{ s.active ? 'نشط' : 'غير نشط' }}</td>
+                  <td class="end nowrap">
+                    <a [routerLink]="['/money-safes', s.id, 'edit']" class="ui-btn ui-btn-success sm">تعديل</a>
+                    <a [routerLink]="['/money-safes', s.id, 'moves']" class="ui-btn ui-btn-info sm">عمليات الخزنة</a>
+                    <button class="ui-btn ui-btn-danger sm"
+                            [disabled]="deletingId() === s.id"
+                            (click)="remove(s)">
+                      {{ deletingId() === s.id ? 'جاري الحذف...' : 'حذف' }}
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+            <tfoot>
+              <tr style="font-weight: 600">
+                <td colspan="4">اجمالي {{ g.name }}</td>
+                <td>{{ g.total | number:'1.2-2' }}</td>
+                <td>{{ g.totalCurrency | number:'1.2-2' }}</td>
+                <td colspan="2"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    } @empty {
+      <p class="ui-muted" style="padding: 28px; text-align: center">لا توجد خزائن.</p>
+    }
+
+    @if (groups().length) {
+      <div class="ui-card" style="margin-top: 20px">
+        <div class="ui-card-body"
+             style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px">
+          <strong>اجمالي {{ selectedTypeName() }}</strong>
+          <span>الرصيد: <strong>{{ grandTotal() | number:'1.2-2' }}</strong></span>
+          <span>الرصيد بالعملة: <strong>{{ grandTotalCurrency() | number:'1.2-2' }}</strong></span>
+        </div>
+      </div>
+    }
+  }
+</div>

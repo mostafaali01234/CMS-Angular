@@ -5,7 +5,7 @@ import { map, Observable } from 'rxjs';
 import { environment } from '../../../environments/environment.development';
 import { ApiResponse } from '../../shared/models/api-response.model';
 import { unwrap } from '../../shared/utils/api';
-import { CancelOrder, ChangeOrderTech, Order, OrderFilter, OrderNote, Paged, PagedResponse, SaveMaintenance, SaveOrder, SaveOrderNote } from './order.model';
+import { CancelOrder, ChangeOrderTech, Order, OrderFilter, OrderNote, OrderStats, Paged, PagedResponse, SaveMaintenance, SaveOrder, SaveOrderNote } from './order.model';
 
 @Injectable({ providedIn: 'root' })
 export class OrderService {
@@ -66,5 +66,9 @@ export class OrderService {
 
     createMaintenance(body: SaveMaintenance): Observable<Order> {
         return this.http.post<ApiResponse<Order>>(`${this.baseUrl}/Maintenance`, body).pipe(map(unwrap));
+    }
+
+    getStats(): Observable<OrderStats> {
+        return this.http.get<ApiResponse<OrderStats>>(`${this.baseUrl}/stats`).pipe(map(unwrap));
     }
 }

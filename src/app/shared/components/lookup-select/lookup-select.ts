@@ -34,6 +34,7 @@ export class LookupSelect<T extends LookupItem = LookupItem> implements ControlV
   value = signal(0);
   disabled = signal(false);
   loadFailed = signal(false);
+  showPlaceholder = input(true);
 
   // the currently selected item stays visible even if the filter would hide it
   options = computed(() => {

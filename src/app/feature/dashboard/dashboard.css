@@ -2,9 +2,9 @@
 
 .welcome { color: grey; margin-bottom: 1.5rem; }
 
+/* ---------- generic cards (kept in case other parts of the page use them) ---------- */
 .cards {
   display: grid;
-  /* grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); */
   grid-template-columns: auto auto;
   gap: 1rem;
   margin-bottom: 2rem;
@@ -13,6 +13,7 @@
 .card {
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   gap: 0.25rem;
   padding: 1rem 1.25rem;
   border: 1px solid #e2e2e2;
@@ -20,84 +21,195 @@
   background: #fff;
 }
 
-.card2 {
-  height: 4rem;
-  width: 50%;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
 .card .label { font-size: 1rem; font-weight: 600; color: #666; }
-.card .value { font-size: 1.75rem; font-weight: 600; color:black; }
+.card .value { font-size: 1.75rem; font-weight: 600; color: black; }
 
+/* ---------- table ---------- */
 table { width: 100%; border-collapse: collapse; }
-th, td { text-align: left; padding: 0.6rem 0.75rem; border-bottom: 1px solid #eee; }
+th, td { text-align: start; padding: 0.6rem 0.75rem; border-bottom: 1px solid #eee; }
 th { font-size: 0.85rem; color: #666; }
 
 .error { color: #c0392b; }
 
+/* ---------- shared tone colors ---------- */
+.stat-card,
+.shortcut-group {
+  --tone: #3b82f6;
+  --tone-bg: #eff6ff;
+}
 
-.holographic-container {
+.stat-card[data-tone='primary'],
+.shortcut-group[data-tone='primary'] { --tone: #3b82f6; --tone-bg: #eff6ff; }
+
+.stat-card[data-tone='success'],
+.shortcut-group[data-tone='success'] { --tone: #16a34a; --tone-bg: #f0fdf4; }
+
+.stat-card[data-tone='danger'],
+.shortcut-group[data-tone='danger']  { --tone: #dc2626; --tone-bg: #fef2f2; }
+
+.stat-card[data-tone='warning'],
+.shortcut-group[data-tone='warning'] { --tone: #d97706; --tone-bg: #fffbeb; }
+
+/* ---------- summary stats ---------- */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-inline-start: 4px solid var(--tone); /* flips correctly in RTL */
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.stat-card:hover {
+  box-shadow: 0 6px 16px rgb(0 0 0 / 0.08);
+  transform: translateY(-2px);
+}
+
+.stat-card__head {
   display: flex;
-  /* justify-content: center; */
   align-items: center;
-  flex-wrap: wrap;
-  /* height: 100vh; */
-  /* background: #000; */
+  gap: 0.75rem;
+  margin-block-end: 1rem;
 }
 
-.holographic-card {
-  width: 300px;
-  height: 200px;
-  background: White;
+.stat-card__icon {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 10px;
+  background: var(--tone-bg);
+  font-size: 1.1rem;
+}
+
+.stat-card__title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.stat-card__title small {
+  display: block;
+  font-weight: 400;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.stat-card__body {
   display: flex;
-  justify-content: center;
+  gap: 1.5rem;
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+}
+
+.metric + .metric {
+  padding-inline-start: 1.5rem;
+  border-inline-start: 1px solid #e5e7eb; /* divider between today / month */
+}
+
+.metric__value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--tone);
+  font-variant-numeric: tabular-nums;
+}
+
+.metric__label {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+/* ---------- shortcuts ---------- */
+.shortcut-section { margin-bottom: 2rem; }
+
+.section-title {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.shortcut-group { margin-bottom: 1.25rem; }
+
+.shortcut-group__title {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #6b7280;
+}
+
+.shortcut-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 0.75rem;
+}
+
+.shortcut {
+  display: flex;
   align-items: center;
-  position: relative;
-  overflow: hidden;
-  border-radius: 15px;
-  transition: all 0.5s ease;
-  font-size: 2rem;
-  color:black;
-  font-weight: bold;
-  border: 1px solid grey;
+  gap: 0.875rem;
+  padding: 0.75rem 1rem;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  color: #111827;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
 }
 
-.holographic-card h2 {
-  /* color: #0ff; */
-  color: #4f46e5;
-  font-size: 2rem;
-  position: relative;
-  z-index: 2;
+.shortcut:hover {
+  transform: translateY(-2px);
+  border-color: var(--tone);
+  box-shadow: 0 6px 16px rgb(0 0 0 / 0.08);
 }
 
-.holographic-card::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(
-    0deg, 
-    transparent, 
-    transparent 30%, 
-    /* rgba(0,255,255,0.3) */
-    #4f46e5
-  );
-  transform: rotate(-45deg);
-  transition: all 0.5s ease;
-  opacity: 0;
+.shortcut:focus-visible {
+  outline: 2px solid var(--tone);
+  outline-offset: 2px;
 }
 
-.holographic-card:hover {
-  transform: scale(1.05);
-  /* box-shadow: 0 0 20px rgba(0,255,255,0.5); */
-  box-shadow: #4f46e5;
+.shortcut__icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 10px;
+  background: var(--tone-bg);
+  font-size: 1.25rem;
+  transition: background 0.2s;
 }
 
-.holographic-card:hover::before {
-  opacity: 1;
-  transform: rotate(-45deg) translateY(100%);
+.shortcut:hover .shortcut__icon { background: var(--tone); }
+
+.shortcut__label {
+  flex: 1;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.shortcut__arrow {
+  color: #9ca3af;
+  transition: transform 0.2s, color 0.2s;
+}
+
+.shortcut:hover .shortcut__arrow {
+  color: var(--tone);
+  transform: translateX(-4px); /* forward direction in RTL */
 }

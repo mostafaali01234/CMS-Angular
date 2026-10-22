@@ -44,6 +44,17 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./feature/user-account-settings/user-account-settings').then(m => m.UserAccountSettings)
   },
+  {
+    path: 'money-safe-categories',
+    canActivate: [authGuard],
+    loadChildren: () =>
+      import('./feature/money-safe-categories/money-safe-categories.routes').then(m => m.MONEY_SAFE_CATEGORY_ROUTES),
+  },
+  {
+    path: 'money-safes',
+    canActivate: [authGuard],
+    loadChildren: () => import('./feature/money-safes/money-safes.routes').then(m => m.MONEY_SAFE_ROUTES),
+  },
   { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
   { path: '**', redirectTo: 'dashboard' }
 ];

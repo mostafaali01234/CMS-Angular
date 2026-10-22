@@ -10,12 +10,9 @@ import { LookupService } from '../../../shared/services/lookup.service';
 import { EmployeeOption } from '../../../shared/models/lookup.model';
 import { AuthService } from '../../../core/services/AuthService/auth';
 import { apiError } from '../../../shared/utils/api';
-import { take } from 'rxjs';
+import { map, take, Subject } from 'rxjs';
 import { activeOnly } from '../../../shared/models/lookup.model';
 import { LookupSelect } from '../../../shared/components/lookup-select/lookup-select';
-import { Subject, debounceTime } from 'rxjs';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { DestroyRef } from '@angular/core';
 
 
 
@@ -30,7 +27,6 @@ export class OrderList implements OnInit {
     private lookup = inject(LookupService);
     private auth = inject(AuthService);
     private search$ = new Subject<void>();
-    private destroyRef = inject(DestroyRef);
     private applied = signal<OrderFilter | null>(null);
     private buildFilter(): OrderFilter {
         return {
@@ -41,12 +37,13 @@ export class OrderList implements OnInit {
             status: this.status(), 
             type: this.type(), 
             source: this.source(),
-            seller_id: this.sellerId(), 
+            seller_id: this.canManage ? this.sellerId() : this.myId(),
             tech_id: this.techFilterId(), 
             country_state_id: this.stateId(),
             category_type: this.categoryFilter(),
         };
     }
+    private myId = computed(() => Number(this.auth.employeeId()) || 0);
 
 
     activeOnly = activeOnly;
@@ -72,6 +69,10 @@ export class OrderList implements OnInit {
     stateId = signal(0);
 
     employees = signal<EmployeeOption[]>([]);
+    filterEmployees = () =>
+        this.canManage
+            ? this.lookup.employees()
+            : this.lookup.employees().pipe(map(list => list.filter(e => e.id === this.myId())));
 
     // notes panel (one row open at a time)
     expandedId = signal<number | null>(null);
@@ -82,7 +83,7 @@ export class OrderList implements OnInit {
     savingNote = signal(false);
     categoryFilters = CATEGORY_FILTERS;
     categoryFilter = signal('');
-
+    
     // paging
     page = signal(1);
     pageSize = signal(20);
@@ -93,14 +94,13 @@ export class OrderList implements OnInit {
     statuses = ['جديد', 'قيد_التنفيذ', 'تام', 'مؤجل', 'ملغي', 'محذوف', 'تم_التركيب'];
     types = ['جملة', 'تركيب', 'نص_جملة'];
     sources = ['Facebook_صفحة', 'WhatsApp', 'اتصال_مباشر', 'Market_place'];
-    // categories = ['تركيب', 'شحن', 'صيانة', 'معاينة'];
-
 
 
     /** change tech, cancel and delete are Admin/SuperAdmin on the server */
     get canManage() {
         return this.auth.hasRole('Admin') || this.auth.hasRole('SuperAdmin');
     }
+    get colCount() { return this.canManage ? 16 : 15; }
 
     filtered = computed(() => {
         const q = this.search().trim().toLowerCase();
@@ -125,6 +125,7 @@ export class OrderList implements OnInit {
     ngOnInit() {
         // this.search$.pipe(debounceTime(400), takeUntilDestroyed(this.destroyRef))
         //     .subscribe(() => this.applyFilters());
+        if (!this.canManage) this.sellerId.set(this.myId());
         this.load();
         if (this.canManage) {
             this.lookup.employees().subscribe({ next: list => this.employees.set(list) });
@@ -150,9 +151,17 @@ export class OrderList implements OnInit {
     onPageSizeChange(size: number) { this.pageSize.set(+size); this.doSearch(); }
 
     clearFilters() {
-        this.dateFrom.set(''); this.dateTo.set(''); this.search.set('');
-        this.itemsCategory.set(''); this.status.set(''); this.type.set(''); this.source.set('');
-        this.sellerId.set(0); this.techFilterId.set(0); this.stateId.set(0); this.categoryFilter.set('');
+        this.dateFrom.set(''); 
+        this.dateTo.set(''); 
+        this.search.set('');
+        this.itemsCategory.set(''); 
+        this.status.set(''); 
+        this.type.set(''); 
+        this.source.set('');
+        this.sellerId.set(this.canManage ? 0 : this.myId());
+        this.techFilterId.set(0); 
+        this.stateId.set(0); 
+        this.categoryFilter.set('');
         this.doSearch();
     }
 

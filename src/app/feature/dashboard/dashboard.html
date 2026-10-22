@@ -1,112 +1,56 @@
-<h2><p class="">اهلا {{ userName() }}</p></h2>
+<h2>
+  <p class="">اهلا {{ userName() }}</p>
+</h2>
 
 
 @if (loading()) {
-  <p>جاري التحميل.....</p>
+<p>جاري التحميل.....</p>
 } @else if (error()) {
-  <p class="error">{{ error() }}</p>
+<p class="error">{{ error() }}</p>
 } @else {
-  <div class="cards">
-    <div class="card">
-      <span class="label">عدد الاوردرات (اليوم)</span>
-      <span class="value">{{ totalOrdersToday() }}</span>
-    </div>
-    <div class="card">
-      <span class="label">عدد الاوردرات (هذا الشهر)</span>
-      <span class="value">{{ totalOrdersMonthly() }}</span>
-    </div>
-    <div class="card">
-      <span class="label">الاوردرات التامة (اليوم)</span>
-      <span class="value">{{ finishedOrdersMonthly() }}</span>
-    </div>
-    <div class="card">
-      <span class="label">الاوردرات التامة (هذا الشهر)</span>
-      <span class="value">{{ finishedOrdersMonthly() }}</span>
-    </div>
-    <div class="card">
-      <span class="label">الاوردرات الملغية (اليوم)</span>
-      <span class="value">{{ finishedOrdersMonthly() }}</span>
-    </div>
-    <div class="card">
-      <span class="label">الاوردرات الملغية (هذا الشهر)</span>
-      <span class="value">{{ finishedOrdersMonthly() }}</span>
-    </div>
-    
-    <span></span>
-    <span></span>
-    
-    <!-- @if (auth.hasRole('Sales')) {
-      <div class="card">
-        <span class="label">Sales</span>
-      </div>
-    }
-    @if (auth.hasRole('Admin') || auth.hasRole('SuperAdmin')) {
-      <div class="card">
-        <span class="label">Admin</span>
-      </div>
-    } -->
-  </div>
-  <h2>اختصارات</h2>
-  <div class="row holographic-container">
-    <a href="" class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
-      <div class="cards">
-       <div class="holographic-card">
-          <span class="label">اوردر جديد</span>
-        </div>
-      </div>
-    </a>
-    <a href="" class="col-lg-3 col-md-4 col-sm-6 col-12">
-      <div class="cards">
-         <div class="holographic-card">
-          <span class="label">صيانة جديدة</span>
-        </div>
-      </div>
-    </a>
-    <a href="" class="col-lg-3 col-md-4 col-sm-6 col-12">
-      <div class="cards">
-         <div class="holographic-card">
-          <span class="label">الاوردرات اليومية</span>
-        </div>
-      </div>
-    </a>
+<section class="stats" dir="rtl">
+  @for (g of statGroups(); track g.key) {
+  <article class="stat-card" [attr.data-tone]="g.tone">
+    <header class="stat-card__head">
+      <span class="stat-card__icon" aria-hidden="true">{{ g.icon }}</span>
+      <h3 class="stat-card__title">
+        {{ g.title }}<small>{{ userText() }}</small>
+      </h3>
+    </header>
 
-    @if (auth.hasRole('Admin') || auth.hasRole('SuperAdmin')) {
-      <a href="" class="col-lg-3 col-md-4 col-sm-6 col-12">
-        <div class="cards">
-          <div class="holographic-card">
-            <span class="label">المأموريات</span>
-          </div>
-        </div>
+    <div class="stat-card__body">
+      @if (g.today !== null) {
+      <div class="metric">
+        <span class="metric__value">{{ g.today }}</span>
+        <span class="metric__label">اليوم</span>
+      </div>
+      }
+      <div class="metric">
+        <span class="metric__value">{{ g.month }}</span>
+        <span class="metric__label">هذا الشهر</span>
+      </div>
+    </div>
+  </article>
+  }
+</section>
+
+<section class="shortcut-section" dir="rtl">
+  <h2 class="">اختصارات</h2>
+
+  @for (g of shortcutGroups(); track g.title) {
+  <div class="shortcut-group" [attr.data-tone]="g.tone">
+    <h3 class="shortcut-group__title">{{ g.title }}</h3>
+
+    <div class="shortcut-grid">
+      @for (s of g.items; track s.label) {
+      <a class="shortcut" [routerLink]="s.link">
+        <span class="shortcut__icon" aria-hidden="true">{{ s.icon }}</span>
+        <span class="shortcut__label">{{ s.label }}</span>
+        <span class="shortcut__arrow" aria-hidden="true">←</span>
       </a>
-      <a href="" class="col-lg-3 col-md-4 col-sm-6 col-12">
-        <div class="cards">
-          <div class="holographic-card">
-            <span class="label">المأموريات باليوم</span>
-          </div>
-        </div>
-      </a>
-    } 
-    
-    <a href="" class="col-lg-3 col-md-4 col-sm-6 col-12">
-      <div class="cards">
-         <div class="holographic-card">
-          <span class="label">كشف حسابي</span>
-        </div>
-      </div>
-    </a>
-    <a href="" class="col-lg-3 col-md-4 col-sm-6 col-12">
-      <div class="cards">
-         <div class="holographic-card">
-          <span class="label">حساب مرتبي</span>
-        </div>
-      </div>
-    </a>
-    <a href="" class="col-lg-3 col-md-4 col-sm-6 col-12">
-      <div class="cards">
-         <div class="holographic-card">
-          <span class="label">خزنتي</span>
-        </div>
-      </div>
-    </a>
+      }
+    </div>
   </div>
+  }
+</section>
 }

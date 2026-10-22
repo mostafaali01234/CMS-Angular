@@ -51,13 +51,23 @@
                 <input name="itemsCategory" class="ui-input" [ngModel]="itemsCategory()"
                     (ngModelChange)="itemsCategory.set($event)" />
             </label>
-            <div class="col-6 col-md-3">البائع
+            <!-- <div class="col-6 col-md-3">البائع
                 <app-lookup-select name="seller" [ngModel]="sellerId()" (ngModelChange)="sellerId.set($event)"
                     [loader]="lookup.employees" [filter]="activeOnly" placeholder="الكل" />
             </div>
             <div class="col-6 col-md-3">الفني
                 <app-lookup-select name="techFilter" [ngModel]="techFilterId()"
                     (ngModelChange)="techFilterId.set($event)" [loader]="lookup.employees" [filter]="activeOnly"
+                    placeholder="الكل" />
+            </div> -->
+            <div class="col-6 col-md-3">البائع
+                <app-lookup-select name="seller" [ngModel]="sellerId()" (ngModelChange)="sellerId.set($event)"
+                    [loader]="filterEmployees" [filter]="activeOnly"
+                    [showPlaceholder]="canManage" placeholder="الكل" />
+            </div>
+            <div class="col-6 col-md-3">الفني
+                <app-lookup-select name="techFilter" [ngModel]="techFilterId()"
+                    (ngModelChange)="techFilterId.set($event)" [loader]="filterEmployees" [filter]="activeOnly"
                     placeholder="الكل" />
             </div>
         </div>
@@ -108,7 +118,7 @@
                         <th>رقم</th>
                         <th>تاريخ الاضافة</th>
                         <th>الحالة</th>
-                        <th>الفني</th>
+                        @if (canManage) { <th>الفني</th> }
                         <th>النوع</th>
                         <th>المحافظة</th>
                         <th>المدينة</th>
@@ -129,15 +139,17 @@
                         <td class="strong">{{ o.id }}</td>
                         <td>{{ o.created_at_utc | date:'yyyy-MM-dd' }}</td>
                         <td>{{ label(o.status) }}</td>
-                        <td>
-                            @if (canManage) {
-                            <app-lookup-select [ngModel]="o.tech_id ?? 0" (ngModelChange)="changeTech(o, $event)"
-                                [disabled]="busyId() === o.id" [loader]="lookup.employees" [filter]="activeOnly"
-                                placeholder="اختر الفني" />
-                            } @else {
-                            <span class="ui-muted">{{ o.tech_name }}</span>
-                            }
-                        </td>
+                        @if (canManage) {
+                            <td>
+                                @if (canManage) {
+                                <app-lookup-select [ngModel]="o.tech_id ?? 0" (ngModelChange)="changeTech(o, $event)"
+                                    [disabled]="busyId() === o.id" [loader]="lookup.employees" [filter]="activeOnly"
+                                    placeholder="اختر الفني" />
+                                } @else {
+                                <span class="ui-muted">{{ o.tech_name }}</span>
+                                }
+                            </td>
+                        }
                         <td>{{ label(o.type) }}</td>
                         <td>{{ o.country_state_name }}</td>
                         <td>{{ o.city_name }}</td>
@@ -168,7 +180,7 @@
 
                     @if (expandedId() === o.id) {
                     <tr>
-                        <td colspan="16" style="padding: 16px">
+                        <td [attr.colspan]="colCount"  style="padding: 16px">
                             <strong>ملاحظات الطلب #{{ o.id }}</strong>
 
                             <div style="display: flex; gap: 8px; margin: 12px 0">
@@ -191,8 +203,10 @@
                             @for (n of sortedNotes(o.id); track n.id) {
                             <div style="padding: 8px 0; border-top: 1px solid rgba(128,128,128,.25)">
                                 <div>{{ n.notes }}</div>
-                                <small class="ui-muted">
-                                    {{ n.created_by }} · {{ n.created_at_utc | date:'yyyy-MM-dd HH:mm' }}
+                                <small class="ui-muted d-flex">
+                                    <span class="m-1">{{ n.auditor_name }}</span> 
+                                    __ <span class="m-1">{{ n.created_by }}</span> 
+                                    __ <span class="m-1">{{ n.created_at_utc | date:'yyyy-MM-dd HH:mm' }}</span>
                                 </small>
                             </div>
                             } @empty {
@@ -204,7 +218,7 @@
                     }
                     } @empty {
                     <tr>
-                        <td colspan="11" class="center ui-muted" style="padding: 28px">لا توجد طلبات.</td>
+                        <td [attr.colspan]="colCount" class="center ui-muted" style="padding: 28px">لا توجد طلبات.</td>
                     </tr>
                     }
                 </tbody>

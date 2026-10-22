@@ -21,10 +21,27 @@ export const activeOnly = (item: { active: boolean }) => item.active;
 
 export interface CustomerOption extends LookupItem {
   phone?: string | null;
+  city_id?: number | null;
+  state_id?: number | null;
+}
+export interface MoneySafeCategoryOption extends LookupItem {
+  orderNumber?: number;
 }
 
 export interface ProductOption extends LookupItem {
   barcode?: string | null;
   sale_price: number;
   active: boolean;
+}
+
+export interface MoneySafeTypeOption extends LookupItem {
+  cod: number;
+}
+
+export interface MoneySafeOption extends LookupItem {
+  cod: number;
+  active: boolean;
+  is_multi_currency: boolean;
+  type_id?: number | null;
+  category_id?: number | null;
 }

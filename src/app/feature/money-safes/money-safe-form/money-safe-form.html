@@ -1,0 +1,84 @@
+<!-- money-safe-form/money-safe-form.html -->
+<div class="ui-page narrow">
+  <div class="ui-page-header">
+    <h2 class="ui-title">{{ id() ? 'تعديل خزينة' : 'اضافة خزينة جديدة' }}</h2>
+  </div>
+
+  @if (loading()) {
+    <p class="ui-muted">جاري التحميل...</p>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="save()" class="ui-card">
+      <div class="ui-card-body">
+        <div class="ui-grid">
+
+          <div class="ui-field">
+            <label class="ui-label" for="cod">الكود</label>
+            <input id="cod" type="number" class="ui-input" formControlName="cod" [class.is-invalid]="invalid('cod')" />
+            @if (invalid('cod')) { <span class="ui-error-text">الرجاء ادخال كود اكبر من صفر</span> }
+          </div>
+
+          <div class="ui-field">
+            <label class="ui-label" for="name">اسم الخزينة</label>
+            <input id="name" class="ui-input" formControlName="name" [class.is-invalid]="invalid('name')" />
+            @if (invalid('name')) { <span class="ui-error-text">الرجاء ادخال الاسم (حتى 150 حرفا)</span> }
+          </div>
+
+          <app-lookup-select
+            formControlName="type_id"
+            [loader]="lookup.moneySafeTypes"
+            label="النوع"
+            placeholder="بدون نوع" />
+
+          <app-lookup-select
+            formControlName="category_id"
+            [loader]="lookup.moneySafeCategories"
+            label="التصنيف"
+            placeholder="بدون تصنيف" />
+
+          <app-lookup-select
+            formControlName="manager_id"
+            [loader]="lookup.employees"
+            [filter]="activeOnly"
+            label="المدير"
+            placeholder="بدون مدير" />
+
+          <div class="ui-field">
+            <label class="ui-label" for="opening_balance">الرصيد الافتتاحي</label>
+            <input id="opening_balance" type="number" step="0.01" class="ui-input"
+                   formControlName="opening_balance" [class.is-invalid]="invalid('opening_balance')" />
+          </div>
+
+          <div class="ui-field full">
+            <label><input type="checkbox" formControlName="is_multi_currency" /> متعددة العملات</label>
+            <label><input type="checkbox" formControlName="active" /> نشطة</label>
+          </div>
+
+          @if (form.controls.is_multi_currency.value) {
+            <div class="ui-field">
+              <label class="ui-label" for="opening_balance_currency">الرصيد الافتتاحي بالعملة</label>
+              <input id="opening_balance_currency" type="number" step="0.01" class="ui-input"
+                     formControlName="opening_balance_currency" />
+            </div>
+          }
+
+          <div class="ui-field full">
+            <label class="ui-label" for="notes">ملاحظات</label>
+            <textarea id="notes" rows="3" class="ui-input" formControlName="notes"></textarea>
+          </div>
+
+        </div>
+
+        @if (error()) {
+          <div class="ui-alert" role="alert" style="margin-top: 16px">{{ error() }}</div>
+        }
+      </div>
+
+      <div class="ui-card-footer">
+        <a routerLink="/money-safes" class="ui-btn ui-btn-outline">الغاء</a>
+        <button type="submit" class="ui-btn ui-btn-primary" [disabled]="saving()">
+          {{ saving() ? 'جاري الحفظ...' : (id() ? 'حفظ' : 'اضافة') }}
+        </button>
+      </div>
+    </form>
+  }
+</div>

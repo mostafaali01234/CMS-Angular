@@ -1,5 +1,5 @@
 // order-form/order-form.ts
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, viewChild  } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormBuilder, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -107,6 +107,12 @@ export class OrderForm implements OnInit {
   }
   get netTotal() {
     return round2(this.total - this.discount);
+  }
+  private locationPicker = viewChild(StateCitySelect);
+
+  onCustomerPicked(c: CustomerOption) {
+    if (!c.state_id && !c.city_id) return;                     // customer has no location saved
+    this.locationPicker()?.setLocation(c.state_id ?? 0, c.city_id ?? 0);
   }
 
   ngOnInit() {

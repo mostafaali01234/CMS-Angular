@@ -6,6 +6,9 @@
   --muted: #6b7388;
   --border: #d9deea;
   --primary: #4f46e5;
+  --success: #16a34a;
+  --info:    #0284c7;
+  --warning: #d97706;
   --primary-hover: #4338ca;
   --danger: #dc2626;
   --danger-bg: #fef2f2;
@@ -74,6 +77,35 @@ body {
 
 .ui-btn-danger { background: transparent; color: var(--danger); border-color: var(--danger); }
 .ui-btn-danger:hover:not(:disabled) { background: var(--danger); color: #fff; }
+/* Color variants (outline, fill on hover) */
+.ui-btn-success { --c: var(--success); --c-fg: #fff; }
+.ui-btn-info    { --c: var(--info);    --c-fg: #fff; }
+.ui-btn-warning { --c: var(--warning); --c-fg: #1f1300; } /* dark text: white is hard to read on amber */
+
+.ui-btn-success,
+.ui-btn-info,
+.ui-btn-warning {
+  background: transparent;
+  color: var(--c);
+  border-color: var(--c);
+}
+
+.ui-btn-success:hover:not(:disabled),
+.ui-btn-info:hover:not(:disabled),
+.ui-btn-warning:hover:not(:disabled) {
+  background: var(--c);
+  color: var(--c-fg);
+}
+
+.ui-btn-success:focus-visible,
+.ui-btn-info:focus-visible,
+.ui-btn-warning:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 30%, transparent);
+}
+
+/* Optional: always-filled version, add the `solid` class to any color variant */
+.ui-btn.solid { background: var(--c); color: var(--c-fg); }
+.ui-btn.solid:hover:not(:disabled) { filter: brightness(0.92); }
 
 /* Inputs */
 .ui-field { display: flex; flex-direction: column; gap: 6px; }
@@ -97,6 +129,7 @@ textarea.ui-input { resize: vertical; }
 .ui-check { display: flex; align-items: center; gap: 8px; cursor: pointer; }
 .ui-check input { width: 18px; height: 18px; accent-color: var(--primary); }
 
+.ui-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .ui-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
 @media (max-width: 640px) { .ui-grid { grid-template-columns: 1fr; } }
 

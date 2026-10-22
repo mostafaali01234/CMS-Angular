@@ -8,7 +8,10 @@
           [ngModelOptions]="{ standalone: true }"
           [disabled]="disabled()" (blur)="touched()"
           [class.is-invalid]="invalid() || loadFailed()">
-    <option [ngValue]="0">{{ placeholder() }}</option>
+    @if (showPlaceholder()) {
+      <option [ngValue]="0">{{ placeholder() }}</option>
+    }
+    <!-- <option [ngValue]="0">{{ placeholder() }}</option> -->
     @for (o of options(); track o.id) {
       <option [ngValue]="o.id">{{ display()(o) }}</option>
     }

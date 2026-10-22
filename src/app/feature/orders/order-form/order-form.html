@@ -5,11 +5,11 @@
   </div>
 
   @if (loading()) {
-    <p class="ui-muted">جاري التحميل...</p>
+  <p class="ui-muted">جاري التحميل...</p>
   } @else {
-    <form [formGroup]="form" (ngSubmit)="save()" class="ui-card">
-      <div class="ui-card-body">
-        <div class="ui-grid">
+  <form [formGroup]="form" (ngSubmit)="save()" class="ui-card">
+    <div class="ui-card-body">
+      <div class="ui-grid">
 
           <app-search-select
             formControlName="customer_id"
@@ -18,47 +18,42 @@
             label="العميل"
             placeholder="ابحث بالاسم أو رقم الهاتف..."
             error="اختر العميل"
-            [invalid]="invalid('customer_id')" />
+            [invalid]="invalid('customer_id')"
+            (picked)="onCustomerPicked($event)" />
 
-          <div class="ui-field">
-            <label class="ui-label" for="installation_date">تاريخ التركيب</label>
-            <input id="installation_date" type="date" class="ui-input"
-                   formControlName="installation_date" [class.is-invalid]="invalid('installation_date')" />
-          </div>
+        <div class="ui-field">
+          <label class="ui-label" for="installation_date">تاريخ التركيب</label>
+          <input id="installation_date" type="date" class="ui-input" formControlName="installation_date"
+            [class.is-invalid]="invalid('installation_date')" />
+        </div>
 
-          <!-- <app-lookup-select
+        <!-- <app-lookup-select
             formControlName="city_id"
             [loader]="lookup.getCities"
             label="المدينة"
             placeholder="اختر المدينة"
             error="اختر المدينة"
             [invalid]="invalid('city_id')" /> -->
-             <app-state-city-select formControlName="city_id"  [invalid]="invalid('city_id')" />
+        <app-state-city-select formControlName="city_id" [invalid]="invalid('city_id')" />
 
-          <div class="ui-field">
-            <label class="ui-label" for="source">المصدر</label>
-            <select id="source" class="ui-input" formControlName="source">
-              @for (s of sources; track s) { <option [ngValue]="s">{{ label(s) }}</option> }
-            </select>
-          </div>
+        <div class="ui-field">
+          <label class="ui-label" for="source">المصدر</label>
+          <select id="source" class="ui-input" formControlName="source">
+            @for (s of sources; track s) { <option [ngValue]="s">{{ label(s) }}</option> }
+          </select>
+        </div>
 
-          <div class="ui-field">
-            <label class="ui-label" for="type">نوع الطلب</label>
-            <select id="type" class="ui-input" formControlName="type">
-              @for (t of types; track t) { <option [ngValue]="t">{{ label(t) }}</option> }
-            </select>
-          </div>
+        <div class="ui-field">
+          <label class="ui-label" for="type">نوع الطلب</label>
+          <select id="type" class="ui-input" formControlName="type">
+            @for (t of types; track t) { <option [ngValue]="t">{{ label(t) }}</option> }
+          </select>
+        </div>
 
-          <app-lookup-select
-            formControlName="seller_id"
-            [loader]="lookup.employees"
-            [filter]="activeOnly"
-            label="البائع"
-            placeholder="اختر البائع"
-            error="اختر البائع"
-            [invalid]="invalid('seller_id')" />
+        <app-lookup-select formControlName="seller_id" [loader]="lookup.employees" [filter]="activeOnly" label="البائع"
+          placeholder="اختر البائع" error="اختر البائع" [invalid]="invalid('seller_id')" />
 
-          <!-- <app-lookup-select
+        <!-- <app-lookup-select
             formControlName="auditor_id"
             [loader]="lookup.employees"
             [filter]="activeOnly"
@@ -67,85 +62,87 @@
             error="اختر المدقق"
             [invalid]="invalid('auditor_id')" /> -->
 
-          <div class="ui-field full">
-            <label><input type="checkbox" formControlName="shipping" /> شحن</label>
-          </div>
-
-          <div class="ui-field full">
-            <label class="ui-label" for="location_notes">ملاحظات الموقع</label>
-            <textarea id="location_notes" rows="2" class="ui-input" formControlName="location_notes"></textarea>
-          </div>
+        <div class="ui-field full">
+          <label><input type="checkbox" formControlName="shipping" /> شحن</label>
         </div>
 
-        <h3 class="ui-title" style="margin: 24px 0 12px">المنتجات</h3>
+        <div class="ui-field full">
+          <label class="ui-label" for="location_notes">ملاحظات الموقع</label>
+          <textarea id="location_notes" rows="2" class="ui-input" formControlName="location_notes"></textarea>
+        </div>
+      </div>
 
-        @for (g of items.controls; track g; let i = $index) {
-          <div class="ui-card" style="margin-bottom: 12px" [formGroup]="g">
-            <div class="ui-card-body">
-              <div class="ui-grid">
+      <h3 class="ui-title" style="margin: 24px 0 12px">المنتجات</h3>
 
-                <app-search-select
-                  formControlName="product_id"
-                  [loader]="lookup.products"
-                  [filter]="activeOnly"
-                  [display]="productText"
-                  label="المنتج"
-                  placeholder="ابحث بالاسم أو الباركود..."
-                  error="اختر المنتج"
-                  [invalid]="invalidAt(i, 'product_id')"
-                  (picked)="onProductPicked(g, $event)" />
+      @for (g of items.controls; track g; let i = $index) {
+      <div class="ui-card" style="margin-bottom: 12px" [formGroup]="g">
+        <div class="ui-card-body">
+          <div class="ui-grid-4">
 
-                <div class="ui-field">
-                  <label class="ui-label">السعر</label>
-                  <input type="number" step="0.01" class="ui-input"
-                         formControlName="product_price" [class.is-invalid]="invalidAt(i, 'product_price')" min="0" />
-                </div>
+            <app-search-select formControlName="product_id" [loader]="lookup.products" [filter]="activeOnly"
+              [display]="productText" label="المنتج" placeholder="ابحث بالاسم أو الباركود..." error="اختر المنتج"
+              [invalid]="invalidAt(i, 'product_id')" (picked)="onProductPicked(g, $event)" />
 
-                <div class="ui-field">
-                  <label class="ui-label">الكمية</label>
-                  <input type="number" step="any" class="ui-input"
-                         formControlName="product_quantity" [class.is-invalid]="invalidAt(i, 'product_quantity')" min="0"  />
-                </div>
+            <div class="ui-field">
+              <label class="ui-label">السعر</label>
+              <input type="number" step="0.01" class="ui-input" formControlName="product_price"
+                [class.is-invalid]="invalidAt(i, 'product_price')" min="0" />
+            </div>
 
-                <div class="ui-field">
-                  <label class="ui-label">الخصم</label>
-                  <input type="number" step="0.01" class="ui-input"
-                         formControlName="product_discount" [class.is-invalid]="invalidAt(i, 'product_discount')" min="0"  />
-                </div>
+            <div class="ui-field">
+              <label class="ui-label">الكمية</label>
+              <input type="number" step="any" class="ui-input" formControlName="product_quantity"
+                [class.is-invalid]="invalidAt(i, 'product_quantity')" min="0" />
+            </div>
 
-                <div class="ui-field">
-                  <span class="ui-label">الصافي</span>
-                  <strong>{{ lineNet(g) | number:'1.2-2' }}</strong>
-                </div>
-              </div>
+            <div class="ui-field">
+              <label class="ui-label">الخصم</label>
+              <input type="number" step="0.01" class="ui-input" formControlName="product_discount"
+                [class.is-invalid]="invalidAt(i, 'product_discount')" min="0" />
+            </div>
 
-              <button type="button" class="ui-btn ui-btn-danger sm" style="margin-top: 12px"
-                      (click)="removeItem(i)">حذف المنتج</button>
+            <div class="ui-field">
+              <span class="ui-label">الصافي</span>
+              <strong>{{ lineNet(g) | number:'1.2-2' }}</strong>
+            </div>
+
+            <div class="ui-field">
+            </div>
+
+            <div class="ui-field">
+            </div>
+
+            <div class="ui-field">
+              <button type="button" class="ui-btn ui-btn-danger sm" style="margin-top: 12px" (click)="removeItem(i)">حذف
+                المنتج</button>
             </div>
           </div>
-        } @empty {
-          <p class="ui-muted">لا توجد منتجات.</p>
-        }
 
-        <button type="button" class="ui-btn ui-btn-outline" (click)="addItem()">+ اضافة منتج</button>
-
-        <div style="margin-top: 20px">
-          <div>الاجمالي: <strong>{{ total | number:'1.2-2' }}</strong></div>
-          <div>الخصم: <strong>{{ discount | number:'1.2-2' }}</strong></div>
-          <div>الصافي: <strong>{{ netTotal | number:'1.2-2' }}</strong></div>
         </div>
+      </div>
+      } @empty {
+      <p class="ui-muted">لا توجد منتجات.</p>
+      }
 
-        @if (error()) {
-          <div class="ui-alert" role="alert" style="margin-top: 16px">{{ error() }}</div>
-        }
+      <button type="button" class="ui-btn ui-btn-outline" (click)="addItem()">+ اضافة منتج</button>
+
+      <div style="margin-top: 20px">
+        <div>الاجمالي: <strong>{{ total | number:'1.2-2' }}</strong></div>
+        <div>الخصم: <strong>{{ discount | number:'1.2-2' }}</strong></div>
+        <div>الصافي: <strong>{{ netTotal | number:'1.2-2' }}</strong></div>
       </div>
 
-      <div class="ui-card-footer">
-        <a routerLink="/orders" class="ui-btn ui-btn-outline">الغاء</a>
-        <button type="submit" class="ui-btn ui-btn-primary" [disabled]="saving()">
-          {{ saving() ? 'جاري الحفظ...' : (id() ? 'حفظ' : 'اضافة') }}
-        </button>
-      </div>
-    </form>
+      @if (error()) {
+      <div class="ui-alert" role="alert" style="margin-top: 16px">{{ error() }}</div>
+      }
+    </div>
+
+    <div class="ui-card-footer">
+      <a routerLink="/orders" class="ui-btn ui-btn-outline">الغاء</a>
+      <button type="submit" class="ui-btn ui-btn-primary" [disabled]="saving()">
+        {{ saving() ? 'جاري الحفظ...' : (id() ? 'حفظ' : 'اضافة') }}
+      </button>
+    </div>
+  </form>
   }
 </div>

@@ -77,6 +77,7 @@ export const enumLabel = (v?: string | null) => (v ?? '').replace(/_/g, ' ');
 export interface OrderNote {
   id: number;
   notes: string;
+  auditor_name: string;
   created_at_utc?: string | null;
   created_by?: string;
 }
@@ -131,3 +132,14 @@ export const CATEGORY_FILTERS = [
   { value: 'شحن', label: 'شحن' },
   { value: 'صيانة', label: 'صيانة' },
 ];
+
+export interface OrderStats {
+  total_today: number; 
+  total_month: number;
+  completed_today: number; 
+  completed_month: number;
+  cancelled_today: number; 
+  cancelled_month: number;
+  maintenance_month: number;
+  maintenance_completed_month: number;
+}
