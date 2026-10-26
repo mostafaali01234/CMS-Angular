@@ -31,6 +31,7 @@ export interface MoneySafeCategoryOption extends LookupItem {
 export interface ProductOption extends LookupItem {
   barcode?: string | null;
   sale_price: number;
+  buy_price: number;
   active: boolean;
 }
 
@@ -44,4 +45,14 @@ export interface MoneySafeOption extends LookupItem {
   is_multi_currency: boolean;
   type_id?: number | null;
   category_id?: number | null;
+}
+
+export interface StoreOption extends LookupItem {
+  active: boolean;
+  city_id: number;
+  manager_id: number;
+}
+
+export interface SupplierOption extends LookupItem {
+  phone?: string | null;
 }

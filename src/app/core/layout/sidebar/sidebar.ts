@@ -96,20 +96,18 @@ export class Sidebar {
     {
       label: 'فواتير الشراء', icon: '🧾', role: 'Admin,SuperAdmin',
       children: [
-        { label: 'كشف فواتير الشراء', icon: '•', path: '/branches' },
-        { label: 'فاتورة شراء جديدة', icon: '•', path: '/shifts' },
-        { label: 'كشف مرتجعات الشراء', icon: '•', path: '/shifts' },
-        { label: 'مرتجع شراء جديد', icon: '•', path: '/floors' },
+        { label: 'فاتورة شراء جديدة', icon: '•', path: '/buy-invoices/new' },
+        { label: 'مرتجع شراء جديد', icon: '•', path: '/buy-invoices/returns/new' },
+        { label: 'كشف فواتير/مرتجعات الشراء', icon: '•', path: '/buy-invoices' },
       ]
     },
     {
       label: 'فواتير البيع', icon: '🏷️', role: 'Admin,SuperAdmin',
       children: [
-        { label: 'كشف فواتير البيع', icon: '•', path: '/branches' },
-        { label: 'فاتورة بيع جديدة', icon: '•', path: '/shifts' },
-        { label: 'تسديد فواتير البيع', icon: '•', path: '/floors' },
-        { label: 'كشف مرتجعات البيع', icon: '•', path: '/shifts' },
-        { label: 'مرتجع بيع جديد', icon: '•', path: '/floors' },
+        { label: 'فاتورة بيع جديدة', icon: '•', path: '/sale-invoices/new' },
+        { label: 'مرتجع بيع جديد', icon: '•', path: '/sale-invoices/returns/new' },
+        { label: 'كشف فواتير/مرتجعات البيع', icon: '•', path: '/sale-invoices' },
+        { label: 'تسديد فواتير البيع', icon: '•', path: '/customer-payments' },
       ]
     },
     {
@@ -130,11 +128,11 @@ export class Sidebar {
     {
       label: 'الموردين', icon: '🤝', role: 'Admin,SuperAdmin',
       children: [
-        { label: 'مورد جديد', icon: '•', path: '/shifts' },
-        { label: 'كشف الموردين', icon: '•', path: '/branches' },
-        { label: 'فواتير الموردين', icon: '•', path: '/branches' },
-        { label: 'دفعات الموردين', icon: '•', path: '/branches' },
-        { label: 'الارصدة الافتتاحية للموردين', icon: '•', path: '/branches' },
+        { label: 'مورد جديد', icon: '•', path: '/suppliers/new' },
+        { label: 'كشف الموردين', icon: '•', path: '/suppliers' },
+        { label: 'فواتير الموردين', icon: '•', path: '/suppliers/invoices' },
+        { label: 'دفعات الموردين', icon: '•', path: '/supplier-payments' },
+        { label: 'الارصدة الافتتاحية للموردين', icon: '•', path: '/suppliers/opening-balance' },
       ]
     },
     {

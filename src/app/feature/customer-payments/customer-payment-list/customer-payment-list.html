@@ -1,0 +1,84 @@
+<!-- customer-payment-list/customer-payment-list.html -->
+<div class="ui-page">
+  <div class="ui-page-header">
+    <h2 class="ui-title">دفعات العملاء</h2>
+    <a routerLink="/customer-payments/new" class="ui-btn ui-btn-primary">+ دفعة جديدة</a>
+  </div>
+
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px">
+    <input type="search" class="ui-input" style="flex: 1 1 200px" placeholder="رقم الفاتورة أو العميل أو الخزينة أو الملاحظات..."
+           [ngModel]="search()" (ngModelChange)="search.set($event)" />
+    <input type="search" class="ui-input" style="flex: 0 0 130px" placeholder="رقم الطلب"
+           [ngModel]="orderSearch()" (ngModelChange)="orderSearch.set($event)" />
+    <label>من <input type="date" class="ui-input" [ngModel]="dateFrom()" (ngModelChange)="dateFrom.set($event)" /></label>
+    <label>الى <input type="date" class="ui-input" [ngModel]="dateTo()" (ngModelChange)="dateTo.set($event)" /></label>
+    <div style="flex: 0 0 240px">
+      <app-search-select [ngModel]="customerId()" (ngModelChange)="customerId.set($event)"
+                         [loader]="lookup.customers" [display]="customerText" placeholder="كل العملاء" />
+    </div>
+    <select class="ui-input" style="flex: 0 0 150px" [ngModel]="typeFilter()" (ngModelChange)="typeFilter.set($event)">
+      <option value="all">كل الأنواع</option>
+      @for (t of types; track t.value) { <option [value]="t.value">{{ t.label }}</option> }
+    </select>
+    <button type="button" class="ui-btn ui-btn-outline sm" (click)="clearFilters()">مسح الفلاتر</button>
+  </div>
+
+  @if (actionError()) {
+    <div class="ui-alert" role="alert" style="margin-bottom: 16px">
+      <span>{{ actionError() }}</span>
+      <button type="button" class="ui-alert-close" (click)="actionError.set(null)" aria-label="إغلاق">×</button>
+    </div>
+  }
+
+  @if (loading()) {
+    <p class="ui-muted">جاري التحميل...</p>
+  } @else if (error()) {
+    <div class="ui-alert"><span>{{ error() }}</span><button class="ui-btn ui-btn-danger sm" (click)="load()">اعادة المحاولة</button></div>
+  } @else {
+    <div class="ui-card">
+      <div class="ui-table-wrap">
+        <table class="ui-table">
+          <thead>
+            <tr><th>التاريخ</th><th>النوع</th><th>العميل</th><th>الطلب</th><th>الفاتورة</th><th>الخزينة</th>
+                <th>المبلغ</th><th>بالعملة</th><th>ملاحظات</th><th>المسجل</th><th class="end">الإجراءات</th></tr>
+          </thead>
+          <tbody>
+            @for (p of filtered(); track p.id) {
+              <tr>
+                <td>{{ p.date | date:'yyyy-MM-dd' }}</td>
+                <td>{{ typeLabel(p.type) }}</td>
+                <td class="strong">{{ p.customer_name }}</td>
+                <td>{{ p.invoice_order_id ?? p.advance_payment_order_id ?? '' }}</td>
+                <td>
+                  @if (p.invoice_id) {
+                    <a [routerLink]="p.type === 'Refund_Payment' ? ['/sale-invoices', 'returns', p.invoice_id, 'edit'] : ['/sale-invoices', p.invoice_id, 'edit']">#{{ p.invoice_number }}</a>
+                  } @else { <span class="ui-muted">{{ p.type === 'Advance_Payment' ? 'مقدمة' : 'رصيد العميل' }}</span> }
+                </td>
+                <td>{{ p.money_safe_name }}</td>
+                <td [style.color]="p.type === 'Refund_Payment' ? 'crimson' : 'inherit'">{{ (p.type === 'Refund_Payment' ? -p.amount : p.amount) | number:'1.2-2' }}</td>
+                <td>{{ p.amount_currency | number:'1.2-2' }}</td>
+                <td class="ui-muted">{{ p.notes }}</td>
+                <td class="ui-muted">{{ p.auditor_name }}</td>
+                <td class="end nowrap">
+                  <button class="ui-btn ui-btn-danger sm" [disabled]="deletingId() === p.id" (click)="remove(p)">
+                    {{ deletingId() === p.id ? 'جاري الحذف...' : 'حذف' }}
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="11" class="center ui-muted" style="padding: 28px">لا توجد دفعات.</td></tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr style="font-weight: 600">
+              <td colspan="6">الاجمالي ({{ filtered().length }}) - الاستردادات بالسالب</td>
+              <td>{{ totalAmount() | number:'1.2-2' }}</td>
+              <td>{{ totalCurrency() | number:'1.2-2' }}</td>
+              <td colspan="3"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  }
+</div>

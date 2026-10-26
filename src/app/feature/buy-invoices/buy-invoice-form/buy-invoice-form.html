@@ -1,0 +1,335 @@
+<!-- buy-invoice-form/buy-invoice-form.html -->
+<div class="ui-page">
+  <div class="ui-page-header">
+    <h2 class="ui-title">
+      {{ id() ? (locked() ? 'فاتورة شراء #' + invoice()?.number : 'تعديل فاتورة شراء #' + invoice()?.number) : 'اضافة فاتورة شراء' }}
+    </h2>
+  </div>
+
+  @if (loading()) {
+    <p class="ui-muted">جاري التحميل...</p>
+  } @else {
+   @if (locked()) {
+      <div class="ui-alert" style="margin-bottom: 16px">
+        عليها دفعات أو مرتجعات، لا يمكن تعديلها. يمكنك فقط اضافة دفعات جديدة بالأسفل.
+      </div>
+    } @else if (isSuper && hasReturns()) {
+      <div class="ui-alert" style="margin-bottom: 16px">
+        عليها مرتجعات: يمكنك تعديل التاريخ والملاحظات فقط. لتعديل الأصناف احذف المرتجعات اولا.
+      </div>
+    } @else if (isSuper && hasPayments()) {
+      <div class="ui-alert" style="margin-bottom: 16px">
+        عليها دفعات: لا يمكن تغيير المورد او خفض الصافي عن المدفوع.
+      </div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="save()" class="ui-card">
+      <div class="ui-card-body">
+        <div class="ui-grid">
+
+          <div class="ui-field" hidden>
+            <span class="ui-label">رقم الفاتورة</span>
+            @if (id()) {
+              <strong>#{{ invoice()?.number }}</strong>
+            } @else {
+              <span class="ui-muted">يتم توليده تلقائيا عند الحفظ</span>
+            }
+          </div>
+
+          <div class="ui-field">
+            <label class="ui-label" for="date">التاريخ</label>
+            <input id="date" type="date" class="ui-input" formControlName="date"
+                   [class.is-invalid]="invalid('date')" />
+          </div>
+
+          <app-lookup-select
+            formControlName="supplier_id"
+            [loader]="lookup.suppliers"
+            label="المورد"
+            placeholder="اختر المورد"
+            error="اختر المورد"
+            [invalid]="invalid('supplier_id')" />
+
+          <div class="ui-field" hidden>
+            <label class="ui-label" for="ntc">الصافي بالعملة</label>
+            <input id="ntc" type="number" step="0.01" class="ui-input" formControlName="net_total_currency" />
+          </div>
+
+          @if (invoice()?.original_invoice_number) {
+            <div class="ui-field">
+              <span class="ui-label">الفاتورة الاصلية</span>
+              <strong>#{{ invoice()!.original_invoice_number }}</strong>
+            </div>
+          }
+
+          <div class="ui-field full">
+            <label class="ui-label" for="notes">ملاحظات</label>
+            <textarea id="notes" rows="2" class="ui-input" formControlName="notes"></textarea>
+          </div>
+        </div>
+
+        <h3 class="ui-title" style="margin: 24px 0 12px">الأصناف</h3>
+
+        @for (g of items.controls; track g; let i = $index) {
+          <div class="ui-card" style="margin-bottom: 12px" [formGroup]="g">
+            <div class="ui-card-body">
+              <div class="ui-grid-4">
+
+                <app-search-select
+                  formControlName="product_id"
+                  [loader]="lookup.products"
+                  [filter]="activeOnly"
+                  [display]="productText"
+                  label="المنتج"
+                  placeholder="ابحث بالاسم أو الباركود..."
+                  error="اختر المنتج"
+                  [invalid]="invalidItem(i, 'product_id')"
+                  (picked)="onProductPicked(g, $event)" />
+
+                <app-lookup-select
+                  formControlName="store_id"
+                  [loader]="lookup.stores"
+                  [filter]="activeOnly"
+                  label="المخزن"
+                  placeholder="اختر المخزن"
+                  error="اختر المخزن"
+                  [invalid]="invalidItem(i, 'store_id')" />
+
+                <app-lookup-select
+                  formControlName="project_id"
+                  [loader]="lookup.projects"
+                  label="المشروع"
+                  placeholder="بدون مشروع" />
+
+                <div class="ui-field">
+                  <label class="ui-label">نوع السعر</label>
+                  <select class="ui-input" formControlName="price_type">
+                    @for (t of priceTypes; track t.value) { <option [ngValue]="t.value">{{ t.label }}</option> }
+                  </select>
+                </div>
+
+                <div class="ui-field">
+                  <label class="ui-label">السعر</label>
+                  <input type="number" step="0.01" class="ui-input" formControlName="product_price"
+                         [class.is-invalid]="invalidItem(i, 'product_price')" />
+                </div>
+
+                <div class="ui-field">
+                  <label class="ui-label">الكمية</label>
+                  <input type="number" step="any" class="ui-input" formControlName="product_quantity"
+                         [class.is-invalid]="invalidItem(i, 'product_quantity')" />
+                </div>
+
+                <div class="ui-field">
+                  <label class="ui-label">الخصم</label>
+                  <input type="number" step="0.01" class="ui-input" formControlName="product_discount"
+                         [class.is-invalid]="invalidItem(i, 'product_discount')" />
+                </div>
+
+                <div class="ui-field">
+                  <span class="ui-label">الصافي</span>
+                  <strong>{{ lineNet(g) | number:'1.2-2' }}</strong>
+                </div>
+
+                <div class="ui-field full">
+                  <label class="ui-label">ملاحظات المنتج</label>
+                  <input class="ui-input" formControlName="product_notes" />
+                </div>
+              </div>
+
+              @if (!itemsLocked()) {
+                <button type="button" class="ui-btn ui-btn-danger sm" style="margin-top: 12px"
+                        (click)="removeItem(i)">حذف الصنف</button>
+              }
+            </div>
+          </div>
+        }
+
+        @if (!itemsLocked()) {
+          <button type="button" class="ui-btn ui-btn-outline" (click)="addItem()">+ اضافة صنف</button>
+        }
+
+        <div style="margin-top: 20px">
+          <div>الاجمالي (جنيه): <strong>{{ total | number:'1.2-2' }}</strong></div>
+          <div>الخصم (جنيه): <strong>{{ discount | number:'1.2-2' }}</strong></div>
+          <div>الصافي (جنيه): <strong>{{ netTotal | number:'1.2-2' }}</strong></div>
+          @if (netTotalCurrency > 0) {
+            <div>الصافي (عملة): <strong>{{ netTotalCurrency | number:'1.2-2' }}</strong></div>
+          }
+        </div>
+
+        @if (!id()) {
+          <h3 class="ui-title" style="margin: 24px 0 12px">الدفعات</h3>
+
+          @for (g of paymentRows.controls; track g; let i = $index) {
+            <div class="ui-card" style="margin-bottom: 12px" [formGroup]="g">
+              <div class="ui-card-body">
+                <div class="ui-grid-4">
+                  <div class="ui-field">
+                    <label class="ui-label">التاريخ</label>
+                    <input type="date" class="ui-input" formControlName="payment_date" />
+                  </div>
+
+                  <app-lookup-select
+                    formControlName="money_safe_id"
+                    [loader]="lookup.moneySafes"
+                    [filter]="activeOnly"
+                    label="الخزينة"
+                    placeholder="اختر الخزينة"
+                    error="اختر الخزينة"
+                    [invalid]="invalidPay(i, 'money_safe_id')" />
+
+                  <div class="ui-field">
+                    <label class="ui-label">المبلغ</label>
+                    <input type="number" step="0.01" class="ui-input" formControlName="amount"
+                           [class.is-invalid]="invalidPay(i, 'amount')" />
+                  </div>
+
+                  @if (isMulti(g.controls.money_safe_id.value)) {
+                    <div class="ui-field">
+                      <label class="ui-label">المبلغ بالعملة</label>
+                      <input type="number" step="0.01" class="ui-input" formControlName="amount_currency" />
+                    </div>
+                  }
+
+                  <div class="ui-field full">
+                    <label class="ui-label">ملاحظات</label>
+                    <input class="ui-input" formControlName="notes" />
+                  </div>
+                </div>
+                <button type="button" class="ui-btn ui-btn-danger sm" style="margin-top: 12px"
+                        (click)="removePaymentRow(i)">حذف الدفعة</button>
+              </div>
+            </div>
+          }
+
+          <button type="button" class="ui-btn ui-btn-outline" (click)="addPaymentRow()">+ اضافة دفعة</button>
+
+         @if (paymentRows.length) {
+            <div style="margin-top: 12px">
+              المدفوع: <strong>{{ newPaymentsSum | number:'1.2-2' }}</strong>
+              — المتبقي: <strong [style.color]="remainingToPay < 0 ? 'crimson' : 'inherit'">
+                {{ remainingToPay | number:'1.2-2' }}</strong>
+              @if (netTotalCurrency > 0) {
+                | بالعملة: <strong>{{ newPaymentsCurrencySum | number:'1.2-2' }}</strong>
+                — المتبقي: <strong [style.color]="remainingCurrencyToPay < 0 ? 'crimson' : 'inherit'">
+                  {{ remainingCurrencyToPay | number:'1.2-2' }}</strong>
+              }
+            </div>
+          }
+        }
+
+        @if (error()) {
+          <div class="ui-alert" role="alert" style="margin-top: 16px">{{ error() }}</div>
+        }
+      </div>
+
+      <div class="ui-card-footer">
+        <a routerLink="/buy-invoices" class="ui-btn ui-btn-outline">{{ locked() ? 'رجوع' : 'الغاء' }}</a>
+        @if (!locked()) {
+          <button type="submit" class="ui-btn ui-btn-primary" [disabled]="saving()">
+            {{ saving() ? 'جاري الحفظ...' : (id() ? 'حفظ' : 'اضافة') }}
+          </button>
+        }
+      </div>
+    </form>
+
+    @if (invoice(); as inv) {
+      <h3 class="ui-title" style="margin: 24px 0 8px">دفعات الفاتورة</h3>
+      <div class="ui-card">
+        <div class="ui-table-wrap">
+          <table class="ui-table">
+            <thead>
+              <tr>
+                <th>التاريخ</th>
+                <th>الخزينة</th>
+                <th>المبلغ</th>
+                <th>بالعملة</th>
+                <th>ملاحظات</th>
+                <th>المسجل</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (p of inv.payment; track p.id) {
+                <tr>
+                  <td>{{ p.payment_date.slice(0, 10) }}</td>
+                  <td>{{ safeName(p.money_safe_id) }}</td>
+                  <td>{{ p.amount | number:'1.2-2' }}</td>
+                  <td>{{ p.amount_currency | number:'1.2-2' }}</td>
+                  <td class="ui-muted">{{ p.notes }}</td>
+                  <td class="ui-muted">{{ p.auditor_name }}</td>
+                </tr>
+              } @empty {
+                <tr><td colspan="6" class="center ui-muted" style="padding: 20px">لا توجد دفعات.</td></tr>
+              }
+            </tbody>
+           <tfoot>
+              @if (inv.returned_amount > 0 || inv.returned_amount_currency > 0) {
+                <tr style="font-weight: 600">
+                  <td colspan="2">المرتجعات</td>
+                  <td>{{ inv.returned_amount | number:'1.2-2' }}</td>
+                  <td colspan="3">{{ inv.returned_amount_currency | number:'1.2-2' }}</td>
+                </tr>
+              }
+              <tr style="font-weight: 600">
+                <td colspan="2">المدفوع</td>
+                <td>{{ inv.paid_amount | number:'1.2-2' }}</td>
+                <td colspan="3">{{ inv.paid_amount_currency | number:'1.2-2' }}</td>
+              </tr>
+              <tr style="font-weight: 600">
+                <td colspan="2">المتبقي</td>
+                <td>{{ inv.remaining_amount | number:'1.2-2' }}</td>
+                <td colspan="3">{{ inv.remaining_amount_currency | number:'1.2-2' }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        @if (inv.remaining_amount > 0 || inv.remaining_amount_currency > 0) {
+          <div class="ui-card-body">
+            <strong>اضافة دفعة</strong>
+            <div class="ui-grid" style="margin-top: 12px">
+              <div class="ui-field">
+                <label class="ui-label">التاريخ</label>
+                <input type="date" class="ui-input" [ngModel]="payDate()" (ngModelChange)="payDate.set($event)" />
+              </div>
+
+              <app-lookup-select
+                [ngModel]="paySafeId()" (ngModelChange)="paySafeId.set($event)"
+                [loader]="lookup.moneySafes" [filter]="activeOnly"
+                label="الخزينة" placeholder="اختر الخزينة" />
+
+              <div class="ui-field">
+                <label class="ui-label">المبلغ</label>
+                <input type="number" step="0.01" class="ui-input"
+                       [ngModel]="payAmount()" (ngModelChange)="payAmount.set(+$event)" />
+              </div>
+
+              @if (isMulti(paySafeId())) {
+                <div class="ui-field">
+                  <label class="ui-label">المبلغ بالعملة</label>
+                  <input type="number" step="0.01" class="ui-input"
+                         [ngModel]="payCurrency()" (ngModelChange)="payCurrency.set(+$event)" />
+                </div>
+              }
+
+              <div class="ui-field full">
+                <label class="ui-label">ملاحظات</label>
+                <input class="ui-input" [ngModel]="payNotes()" (ngModelChange)="payNotes.set($event)" />
+              </div>
+            </div>
+
+            @if (payError()) {
+              <div class="ui-alert" role="alert" style="margin-top: 12px">{{ payError() }}</div>
+            }
+
+            <button type="button" class="ui-btn ui-btn-primary" style="margin-top: 12px"
+                    [disabled]="paying()" (click)="addPayment()">
+              {{ paying() ? 'جاري الحفظ...' : 'اضافة دفعة' }}
+            </button>
+          </div>
+        }
+      </div>
+    }
+  }
+</div>

@@ -1,0 +1,76 @@
+<!-- supplier-list/supplier-list.html -->
+<div class="ui-page">
+  <div class="ui-page-header">
+    <h2 class="ui-title">الموردون</h2>
+    <a routerLink="/suppliers/new" class="ui-btn ui-btn-primary">+ مورد جديد</a>
+  </div>
+
+  <input type="search" class="ui-input" style="margin-bottom: 16px"
+         placeholder="ابحث بالاسم أو الهاتف أو البريد أو البطاقة الضريبية أو السجل التجاري..."
+         [ngModel]="search()" (ngModelChange)="search.set($event)" />
+
+  @if (actionError()) {
+    <div class="ui-alert" role="alert" style="margin-bottom: 16px">
+      <span>{{ actionError() }}</span>
+      <button type="button" class="ui-alert-close" (click)="actionError.set(null)" aria-label="إغلاق">×</button>
+    </div>
+  }
+
+  @if (loading()) {
+    <p class="ui-muted">جاري التحميل...</p>
+  } @else if (error()) {
+    <div class="ui-alert">
+      <span>{{ error() }}</span>
+      <button class="ui-btn ui-btn-danger sm" (click)="load()">اعادة المحاولة</button>
+    </div>
+  } @else {
+    <div class="ui-card">
+      <div class="ui-table-wrap">
+        <table class="ui-table">
+          <thead>
+            <tr>
+              <th>الاسم</th>
+              <th>الهاتف</th>
+              <th>البريد</th>
+              <th>المدينة</th>
+              <th>البطاقة الضريبية</th>
+              <th>السجل التجاري</th>
+              <th>الرصيد الافتتاحي</th>
+              <th>الخصم الثابت %</th>
+              <th class="end">الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (s of filtered(); track s.id) {
+              <tr>
+                <td class="strong">
+                  {{ s.name }}
+                  @if (s.name_en) { <div class="ui-muted"><small>{{ s.name_en }}</small></div> }
+                </td>
+                <td>{{ s.phone }}</td>
+                <td class="ui-muted">{{ s.email }}</td>
+                <td>{{ s.city?.name }}</td>
+                <td class="ui-muted">{{ s.tax_card }}</td>
+                <td class="ui-muted">{{ s.commercial_register }}</td>
+                <td>{{ s.openingBalance | number:'1.2-2' }}</td>
+                <td>{{ s.fixedDiscount | number:'1.0-2' }}</td>
+                <td class="end nowrap">
+                  <a [routerLink]="['/suppliers', s.id, 'edit']" class="ui-btn ui-btn-outline sm">تعديل</a>
+                  <button class="ui-btn ui-btn-danger sm"
+                          [disabled]="deletingId() === s.id"
+                          (click)="remove(s)">
+                    {{ deletingId() === s.id ? 'جاري الحذف...' : 'حذف' }}
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="9" class="center ui-muted" style="padding: 28px">لا يوجد موردون.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</div>

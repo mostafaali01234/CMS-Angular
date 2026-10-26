@@ -55,6 +55,30 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadChildren: () => import('./feature/money-safes/money-safes.routes').then(m => m.MONEY_SAFE_ROUTES),
   },
+  {
+    path: 'stores',
+    canActivate: [authGuard],
+    loadChildren: () => import('./feature/stores/stores.routes').then(m => m.STORE_ROUTES),
+  },
+  {
+    path: 'buy-invoices',
+    canActivate: [authGuard],
+    loadChildren: () => import('./feature/buy-invoices/buy-invoices.routes').then(m => m.BUY_INVOICE_ROUTES),
+  },
+  {
+    path: 'supplier-payments',
+    canActivate: [authGuard],
+    loadChildren: () => import('./feature/supplier-payments/supplier-payments.routes').then(m => m.SUPPLIER_PAYMENT_ROUTES),
+  },
+  {
+    path: 'suppliers',
+    canActivate: [authGuard],
+    loadChildren: () => import('./feature/suppliers/suppliers.routes').then(m => m.SUPPLIER_ROUTES),
+  },
+  { path: 'sale-invoices', canActivate: [authGuard],
+    loadChildren: () => import('./feature/sale-invoices/sale-invoices.routes').then(m => m.SALE_INVOICE_ROUTES) },
+  { path: 'customer-payments', canActivate: [authGuard],
+    loadChildren: () => import('./feature/customer-payments/customer-payments.routes').then(m => m.CUSTOMER_PAYMENT_ROUTES) },
   { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
   { path: '**', redirectTo: 'dashboard' }
 ];

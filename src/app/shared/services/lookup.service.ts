@@ -7,11 +7,16 @@ import { ApiResponse } from '../models/api-response.model';
 import {
   City, CountryState, EmployeeOption, LookupItem, MoneySafeCategoryOption, MoneySafeOption, MoneySafeTypeOption, ProductCategoryOption,
   ProductOption,
+  StoreOption,
+  SupplierOption,
 } from '../models/lookup.model';
 import { unwrap } from '../utils/api';
 import { AuthService } from '../../core/services/AuthService/auth';
 
-export type LookupKey = 'states' | 'cities' | 'employees' | 'productCategories' | 'customers' | 'units' | 'products' | 'moneySafeCategories' | 'moneySafeTypes' | 'moneySafes';
+export type LookupKey = 'states' | 'cities' | 'employees' | 'productCategories'
+                         | 'customers' | 'units' | 'products' | 'moneySafeCategories' 
+                         | 'moneySafeTypes' | 'moneySafes' | 'stores' | 'suppliers'
+                         | 'projects';
 
 const byName = <T extends LookupItem>(list: T[]) =>
   [...list].sort((a, b) => a.name.localeCompare(b.name, 'ar'));
@@ -89,4 +94,15 @@ readonly moneySafes = () => this.cached<MoneySafeOption>(
               'moneySafes'
               , 'moneySafe'
               , list => [...list].sort((a, b) => a.cod - b.cod));
+
+readonly stores = () => this.cached<StoreOption>(
+              'stores'
+              , 'store'
+              , byName);
+readonly cities = () => this.getCities();
+readonly suppliers = () => this.cached<SupplierOption>(
+              'suppliers'
+              , 'supplier'
+              , byName);
+readonly projects = () => this.cached<LookupItem>('projects', 'project', byName);
 }

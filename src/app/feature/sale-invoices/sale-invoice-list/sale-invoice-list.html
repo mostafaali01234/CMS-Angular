@@ -1,0 +1,122 @@
+<!-- sale-invoice-list/sale-invoice-list.html -->
+<div class="ui-page" style="max-width: none;">
+  <div class="ui-page-header">
+    <h2 class="ui-title">فواتير البيع</h2>
+    <div>
+      <a routerLink="/sale-invoices/new" class="ui-btn ui-btn-primary">+ فاتورة جديدة</a>
+      <a routerLink="/sale-invoices/returns/new" class="ui-btn ui-btn-outline">+ مرتجع بيع</a>
+      <a routerLink="/customer-payments/new" class="ui-btn ui-btn-outline">+ دفعة من عميل</a>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px">
+    <input type="search" class="ui-input" style="flex: 1 1 200px" placeholder="رقم الفاتورة أو العميل أو الملاحظات..."
+           [ngModel]="search()" (ngModelChange)="search.set($event)" />
+    <input type="search" class="ui-input" style="flex: 0 0 130px" placeholder="رقم الاوردر"
+           [ngModel]="orderSearch()" (ngModelChange)="orderSearch.set($event)" />
+    <label>من <input type="date" class="ui-input" [ngModel]="dateFrom()" (ngModelChange)="dateFrom.set($event)" /></label>
+    <label>الى <input type="date" class="ui-input" [ngModel]="dateTo()" (ngModelChange)="dateTo.set($event)" /></label>
+
+    <div style="flex: 0 0 240px">
+      <app-search-select [ngModel]="customerId()" (ngModelChange)="customerId.set($event)"
+                         [loader]="lookup.customers" [display]="customerText" placeholder="كل العملاء" />
+    </div>
+
+    <select class="ui-input" style="flex: 0 0 140px" [ngModel]="typeFilter()" (ngModelChange)="typeFilter.set($event)">
+      <!-- <option value="all">كل الأنواع</option> -->
+      <option value="Sale">بيع</option>
+      <option value="Sale_Return">مرتجع بيع</option>
+    </select>
+    <select class="ui-input" style="flex: 0 0 140px" [ngModel]="payFilter()" (ngModelChange)="payFilter.set($event)">
+      <option value="all">الكل</option>
+      <option value="unpaid">غير مسددة</option>
+      <option value="paid">مسددة</option>
+    </select>
+    <button type="button" class="ui-btn ui-btn-outline sm" (click)="clearFilters()">مسح الفلاتر</button>
+  </div>
+
+  @if (actionError()) {
+    <div class="ui-alert" role="alert" style="margin-bottom: 16px">
+      <span>{{ actionError() }}</span>
+      <button type="button" class="ui-alert-close" (click)="actionError.set(null)" aria-label="إغلاق">×</button>
+    </div>
+  }
+
+  @if (loading()) {
+    <p class="ui-muted">جاري التحميل...</p>
+  } @else if (error()) {
+    <div class="ui-alert"><span>{{ error() }}</span>
+      <button class="ui-btn ui-btn-danger sm" (click)="load()">اعادة المحاولة</button></div>
+  } @else {
+    <div class="ui-card">
+      <div class="ui-table-wrap">
+        <table class="ui-table">
+          <thead>
+            <tr>
+              <th>الرقم</th>
+              <th>التاريخ</th>
+              <th>النوع</th>
+              <th>العميل</th>
+              <th>رقم الاوردر</th>
+              <th>الفاتورة القديمة</th>
+              <th>الصافي</th>
+              <th>الصافي (عملة)</th>
+              <th>المدفوع</th>
+              <th>المتبقي</th>
+              <th>المتبقي (عملة)</th>
+              <th class="end">الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (i of filtered(); track i.id) {
+              <tr>
+                <td class="strong">{{ i.number }}</td>
+                <td>{{ i.date | date:'yyyy-MM-dd' }}</td>
+                <td class="ui-muted">{{ typeLabel(i.type) }}</td>
+                <td>{{ i.customer_name }}</td>
+                <td>{{ i.order_id ?? '' }}</td>
+                <td>@if (i.original_invoice_number) { #{{ i.original_invoice_number }} }</td>
+                <td [style.color]="i.type === 'Sale_Return' ? 'crimson' : 'inherit'">
+                  {{ (i.type === 'Sale_Return' ? -i.net_total : i.net_total) | number:'1.2-2' }}
+                </td>
+                <td>@if (i.net_total_currency) { {{ (i.type === 'Sale_Return' ? -i.net_total_currency : i.net_total_currency) | number:'1.2-2' }} }</td>
+                <td>@if (i.type === 'Sale') { {{ i.paid_amount | number:'1.2-2' }} } @else { {{ i.refunded_amount | number:'1.2-2' }} }</td>
+                <td [class.strong]="i.remaining_amount > 0">@if (i.type === 'Sale') { {{ i.remaining_amount | number:'1.2-2' }} }</td>
+                <td>@if (i.type === 'Sale' && i.net_total_currency) { {{ i.remaining_amount_currency | number:'1.2-2' }} }</td>
+                <td class="end nowrap">
+                  <a [routerLink]="editLink(i)" class="ui-btn ui-btn-outline sm">{{ locks(i) ? 'عرض' : 'تعديل' }}</a>
+                  @if (i.type === 'Sale') {
+                    <a routerLink="/sale-invoices/returns/new" [queryParams]="{ customer: i.customer_id, invoice: i.id }"
+                       class="ui-btn ui-btn-outline sm">مرتجع</a>
+                    @if (i.remaining_amount > 0 || i.remaining_amount_currency > 0) {
+                      <a routerLink="/customer-payments/new" [queryParams]="{ customer: i.customer_id, invoice: i.id }"
+                         class="ui-btn ui-btn-outline sm">دفعة</a>
+                    }
+                  }
+                  @if (!locks(i)) {
+                    <button class="ui-btn ui-btn-danger sm" [disabled]="deletingId() === i.id" (click)="remove(i)">
+                      {{ deletingId() === i.id ? 'جاري الحذف...' : 'حذف' }}
+                    </button>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="12" class="center ui-muted" style="padding: 28px">لا توجد فواتير.</td></tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr style="font-weight: 600">
+              <td colspan="6">الاجمالي ({{ filtered().length }}) - المرتجعات بالسالب</td>
+              <td>{{ totalNet() | number:'1.2-2' }}</td>
+              <td>{{ totalNetCurrency() | number:'1.2-2' }}</td>
+              <td>{{ totalPaid() | number:'1.2-2' }}</td>
+              <td>{{ totalRemaining() | number:'1.2-2' }}</td>
+              <td>{{ totalRemainingCurrency() | number:'1.2-2' }}</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  }
+</div>

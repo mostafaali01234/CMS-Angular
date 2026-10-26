@@ -1,0 +1,136 @@
+<!-- buy-return-form/buy-return-form.html -->
+<div class="ui-page">
+  <div class="ui-page-header">
+    <h2 class="ui-title">{{ id() ? 'تعديل مرتجع شراء' : 'مرتجع شراء جديد' }}</h2>
+  </div>
+
+  @if (loading()) {
+    <p class="ui-muted">جاري التحميل...</p>
+  } @else {
+    <div class="ui-card" style="margin-bottom: 16px">
+      <div class="ui-card-body">
+        <div class="ui-grid">
+
+          <app-search-select
+            [ngModel]="supplierId()" (ngModelChange)="onSupplier($event)"
+            [disabled]="!!id()"
+            [loader]="lookup.suppliers"
+            [display]="supplierText"
+            label="المورد"
+            placeholder="ابحث بالاسم أو الهاتف..." />
+
+          <div class="ui-field">
+            <label class="ui-label">الفاتورة الاصلية</label>
+            @if (id()) {
+              <strong>#{{ returnable()?.number }}</strong>
+            } @else if (!supplierId()) {
+              <span class="ui-muted">اختر المورد أولا</span>
+            } @else if (invLoading()) {
+              <span class="ui-muted">جاري التحميل...</span>
+            } @else if (invoices().length === 0) {
+              <span class="ui-muted">لا توجد فواتير شراء لهذا المورد.</span>
+            } @else {
+              <select class="ui-input" [ngModel]="invoiceId()" (ngModelChange)="onInvoice($event)">
+                <option [ngValue]="0">اختر الفاتورة</option>
+                @for (i of invoices(); track i.id) {
+                  <option [ngValue]="i.id">
+                    #{{ i.number }} - {{ i.date | date:'yyyy-MM-dd' }} - {{ i.net_total | number:'1.2-2' }}
+                  </option>
+                }
+              </select>
+            }
+          </div>
+
+          <div class="ui-field">
+            <span class="ui-label">رقم المرتجع</span>
+            @if (id()) { <strong>#{{ number() }}</strong> }
+            @else { <span class="ui-muted">يتم توليده تلقائيا عند الحفظ</span> }
+          </div>
+
+          <div class="ui-field">
+            <label class="ui-label" for="date">التاريخ</label>
+            <input id="date" type="date" class="ui-input" [ngModel]="date()" (ngModelChange)="date.set($event)" />
+          </div>
+
+          <div class="ui-field full">
+            <label class="ui-label" for="notes">ملاحظات / سبب الارجاع</label>
+            <textarea id="notes" rows="2" class="ui-input"
+                      [ngModel]="notes()" (ngModelChange)="notes.set($event)"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    @if (retLoading()) {
+      <p class="ui-muted">جاري تحميل الأصناف...</p>
+    } @else if (returnable(); as r) {
+      <h3 class="ui-title" style="margin: 0 0 8px">أصناف الفاتورة #{{ r.number }}</h3>
+
+      <div class="ui-card" style="margin-bottom: 16px">
+        <div class="ui-table-wrap">
+          <table class="ui-table">
+            <thead>
+              <tr>
+                <th>المنتج</th>
+                <th>المخزن</th>
+                <th>السعر</th>
+                <th>الكمية</th>
+                <th>سبق ارجاعه</th>
+                <th>القابل للارجاع</th>
+                <th>كمية المرتجع</th>
+                <th>القيمة</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (it of r.items; track it.item_id) {
+                <tr>
+                  <td class="strong">{{ it.product_name }}</td>
+                  <td class="ui-muted">{{ it.store_name }}</td>
+                  <td>{{ it.product_price | number:'1.2-2' }}</td>
+                  <td>{{ it.original_quantity }}</td>
+                  <td>{{ it.returned_quantity }}</td>
+                  <td class="strong">{{ it.returnable_quantity }}</td>
+                  <td style="width: 190px">
+                    @if (it.returnable_quantity > 0) {
+                      <div style="display: flex; gap: 6px">
+                        <input type="number" step="any" min="0" [max]="it.returnable_quantity" class="ui-input"
+                               [ngModel]="qty()[it.item_id] ?? 0" (ngModelChange)="setQty(it, $event)" />
+                        <button type="button" class="ui-btn ui-btn-outline sm" (click)="returnAll(it)">الكل</button>
+                      </div>
+                    } @else {
+                      <span class="ui-muted">تم ارجاعه بالكامل</span>
+                    }
+                  </td>
+                  <td>{{ lineValue(it) | number:'1.2-2' }}</td>
+                </tr>
+              }
+            </tbody>
+            <tfoot>
+              <tr style="font-weight: 600">
+                <td colspan="7">قيمة المرتجع (جنيه)</td>
+                <td>{{ totalEgp() | number:'1.2-2' }}</td>
+              </tr>
+              @if (totalCurrency() > 0) {
+                <tr style="font-weight: 600">
+                  <td colspan="7">قيمة المرتجع (عملة)</td>
+                  <td>{{ totalCurrency() | number:'1.2-2' }}</td>
+                </tr>
+              }
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    }
+
+    @if (error()) {
+      <div class="ui-alert" role="alert" style="margin-bottom: 16px">{{ error() }}</div>
+    }
+
+    <div style="display: flex; gap: 8px; justify-content: flex-end">
+      <a routerLink="/buy-invoices" class="ui-btn ui-btn-outline">الغاء</a>
+      <button type="button" class="ui-btn ui-btn-primary" [disabled]="!canSubmit()" (click)="submit()">
+        {{ saving() ? 'جاري الحفظ...' : (id() ? 'حفظ' : 'انشاء المرتجع') }}
+      </button>
+    </div>
+  }
+</div>

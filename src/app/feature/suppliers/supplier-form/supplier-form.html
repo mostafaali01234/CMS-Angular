@@ -1,0 +1,95 @@
+<!-- supplier-form/supplier-form.html -->
+<div class="ui-page narrow">
+  <div class="ui-page-header">
+    <h2 class="ui-title">{{ id() ? 'تعديل مورد' : 'اضافة مورد جديد' }}</h2>
+  </div>
+
+  @if (loading()) {
+    <p class="ui-muted">جاري التحميل...</p>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="save()" class="ui-card">
+      <div class="ui-card-body">
+        <div class="ui-grid">
+
+          <div class="ui-field">
+            <label class="ui-label" for="name">اسم المورد</label>
+            <input id="name" class="ui-input" formControlName="name" [class.is-invalid]="invalid('name')" />
+            @if (invalid('name')) { <span class="ui-error-text">الرجاء ادخال اسم المورد (حتى 150 حرفا)</span> }
+          </div>
+
+          <div class="ui-field">
+            <label class="ui-label" for="name_en">الاسم بالانجليزية</label>
+            <input id="name_en" class="ui-input" dir="ltr" formControlName="name_en"
+                   [class.is-invalid]="invalid('name_en')" />
+          </div>
+
+          <div class="ui-field">
+            <label class="ui-label" for="phone">الهاتف</label>
+            <input id="phone" class="ui-input" formControlName="phone" [class.is-invalid]="invalid('phone')" />
+            @if (invalid('phone')) { <span class="ui-error-text">رقم هاتف غير صحيح</span> }
+          </div>
+
+          <div class="ui-field">
+            <label class="ui-label" for="email">البريد الالكتروني</label>
+            <input id="email" class="ui-input" dir="ltr" formControlName="email" [class.is-invalid]="invalid('email')" />
+            @if (invalid('email')) { <span class="ui-error-text">بريد الكتروني غير صحيح</span> }
+          </div>
+
+          <app-lookup-select
+            formControlName="city_id"
+            [loader]="lookup.cities"
+            label="المدينة"
+            placeholder="اختر المدينة"
+            error="اختر المدينة"
+            [invalid]="invalid('city_id')" />
+
+          <div class="ui-field">
+            <label class="ui-label" for="address">العنوان</label>
+            <input id="address" class="ui-input" formControlName="address" [class.is-invalid]="invalid('address')" />
+          </div>
+
+          <div class="ui-field">
+            <label class="ui-label" for="tax_card">البطاقة الضريبية</label>
+            <input id="tax_card" class="ui-input" formControlName="tax_card" [class.is-invalid]="invalid('tax_card')" />
+          </div>
+
+          <div class="ui-field">
+            <label class="ui-label" for="commercial_register">السجل التجاري</label>
+            <input id="commercial_register" class="ui-input" formControlName="commercial_register"
+                   [class.is-invalid]="invalid('commercial_register')" />
+          </div>
+
+          <div class="ui-field">
+            <label class="ui-label" for="openingBalance">الرصيد الافتتاحي</label>
+            <input id="openingBalance" type="number" step="0.01" class="ui-input"
+                   formControlName="openingBalance" [class.is-invalid]="invalid('openingBalance')" />
+          </div>
+
+          <div class="ui-field">
+            <label class="ui-label" for="fixedDiscount">الخصم الثابت (%)</label>
+            <input id="fixedDiscount" type="number" step="0.01" class="ui-input"
+                   formControlName="fixedDiscount" [class.is-invalid]="invalid('fixedDiscount')" />
+            @if (invalid('fixedDiscount')) { <span class="ui-error-text">القيمة بين 0 و 100</span> }
+          </div>
+
+          <div class="ui-field full">
+            <label class="ui-label" for="notes">ملاحظات</label>
+            <textarea id="notes" rows="3" class="ui-input" formControlName="notes"></textarea>
+          </div>
+
+        </div>
+
+        @if (error()) {
+          <div class="ui-alert" role="alert" style="margin-top: 16px">{{ error() }}</div>
+        }
+      </div>
+
+      <div class="ui-card-footer">
+        <a routerLink="/suppliers" class="ui-btn ui-btn-outline">الغاء</a>
+        <button type="submit" class="ui-btn ui-btn-primary" [disabled]="saving()">
+          {{ saving() ? 'جاري الحفظ...' : (id() ? 'حفظ' : 'اضافة') }}
+        </button>
+      </div>
+    </form>
+  }
+</div>

@@ -1,0 +1,157 @@
+<!-- customer-payment-form/customer-payment-form.html -->
+<div class="ui-page">
+  <div class="ui-page-header"><h2 class="ui-title">دفعة جديدة من عميل</h2></div>
+
+  <div class="ui-card" style="margin-bottom: 16px">
+    <div class="ui-card-body">
+      <div style="display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 16px">
+        <div class="ui-field" style="flex: 0 0 220px">
+          <label class="ui-label" for="order">بحث برقم الطلب</label>
+          <input id="order" type="number" class="ui-input" [ngModel]="orderInput()" (ngModelChange)="orderInput.set($event)"
+                 (keydown.enter)="searchOrder()" />
+        </div>
+        <button type="button" class="ui-btn ui-btn-outline" [disabled]="orderLoading() || !orderInput()" (click)="searchOrder()">
+          {{ orderLoading() ? 'جاري البحث...' : 'بحث' }}
+        </button>
+        @if (orderError()) { <span class="ui-error-text">{{ orderError() }}</span> }
+      </div>
+
+      @if (order(); as o) {
+        <div class="ui-alert" style="margin-bottom: 16px">
+          الطلب #{{ o.id }} - {{ o.customer_name }} - صافي الطلب {{ o.net_total | number:'1.2-2' }}
+        </div>
+      }
+
+      <div style="display: flex; gap: 16px; margin-bottom: 16px">
+        <label><input type="radio" name="mode" [checked]="mode() === 'Regular_Payment'" (change)="setMode('Regular_Payment')" /> دفعة عادية</label>
+        <label [style.opacity]="order() ? 1 : 0.5">
+          <input type="radio" name="mode" [checked]="mode() === 'Advance_Payment'" [disabled]="!order()" (change)="setMode('Advance_Payment')" />
+          دفعة مقدمة على طلب
+        </label>
+      </div>
+
+      <div class="ui-grid">
+        <app-search-select [ngModel]="customerId()" (ngModelChange)="onCustomer($event)" [loader]="lookup.customers"
+                           [display]="customerText" label="العميل" placeholder="ابحث بالاسم أو الهاتف..." />
+
+        <div class="ui-field"><label class="ui-label" for="date">التاريخ</label>
+          <input id="date" type="date" class="ui-input" [ngModel]="date()" (ngModelChange)="date.set($event)" /></div>
+
+        <app-lookup-select [ngModel]="safeId()" (ngModelChange)="safeId.set($event)" [loader]="lookup.moneySafes"
+                           [filter]="activeOnly" label="الخزينة" placeholder="اختر الخزينة" />
+
+        <div class="ui-field"><label class="ui-label" for="amount">المبلغ (جنيه)</label>
+          <input id="amount" type="number" step="0.01" class="ui-input" [ngModel]="amount()" (ngModelChange)="amount.set(+$event || 0)" /></div>
+
+        @if (isMulti()) {
+          <div class="ui-field"><label class="ui-label" for="cur">المبلغ (عملة)</label>
+            <input id="cur" type="number" step="0.01" class="ui-input" [ngModel]="amountCurrency()" (ngModelChange)="amountCurrency.set(+$event || 0)" /></div>
+        }
+
+        <div class="ui-field full"><label class="ui-label" for="notes">ملاحظات</label>
+          <input id="notes" class="ui-input" [ngModel]="notes()" (ngModelChange)="notes.set($event)" /></div>
+      </div>
+
+      @if (isAdvance()) {
+        <div class="ui-alert" style="margin-top: 12px">
+          دفعة مقدمة على الطلب #{{ order()?.id }}. عند انشاء فاتورة بيع لهذا الطلب سيتم احتسابها كمدفوع عليها تلقائيا.
+        </div>
+      }
+      @if (!isAdvance() && hasCurrencyInvoices() && !isMulti() && safeId()) {
+        <div class="ui-alert" style="margin-top: 12px">بعض الفواتير عليها مبالغ بالعملة. اختر خزينة متعددة العملات لسدادها.</div>
+      }
+    </div>
+  </div>
+
+  @if (customerId() && !isAdvance()) {
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px">
+      <h3 class="ui-title" style="margin: 0">{{ viewingAll() ? 'الفواتير غير المسددة للعميل' : 'الفواتير غير المسددة للطلب' }}</h3>
+      @if (!viewingAll()) {
+        <button type="button" class="ui-btn ui-btn-outline sm" (click)="showAllInvoices()">عرض كل فواتير العميل</button>
+      }
+    </div>
+
+    @if (invLoading()) {
+      <p class="ui-muted">جاري التحميل...</p>
+    } @else if (invError()) {
+      <div class="ui-alert">{{ invError() }}</div>
+    } @else if (invoices().length === 0) {
+      <p class="ui-muted">لا توجد فواتير غير مسددة.</p>
+    } @else {
+      <div class="ui-card" style="margin-bottom: 16px">
+        <div class="ui-table-wrap">
+          <table class="ui-table">
+            <thead>
+              <tr><th></th><th>الرقم</th><th>الطلب</th><th>التاريخ</th><th>الصافي</th><th>المتبقي (جنيه)</th><th>المتبقي (عملة)</th>
+                  <th>المسدد (جنيه)</th>@if (isMulti()) { <th>المسدد (عملة)</th> }</tr>
+            </thead>
+            <tbody>
+              @for (i of invoices(); track i.id) {
+                <tr>
+                  <td><input type="checkbox" [checked]="i.id in sel()" (change)="toggle(i)" /></td>
+                  <td class="strong">{{ i.number }}</td>
+                  <td>{{ i.order_id ?? '' }}</td>
+                  <td>{{ i.date | date:'yyyy-MM-dd' }}</td>
+                  <td>{{ i.net_total | number:'1.2-2' }}
+                    @if (i.net_total_currency > 0) { <div class="ui-muted"><small>{{ i.net_total_currency | number:'1.2-2' }} عملة</small></div> }</td>
+                  <td class="strong">{{ i.remaining_amount | number:'1.2-2' }}</td>
+                  <td class="strong">{{ i.remaining_amount_currency | number:'1.2-2' }}</td>
+                  <td style="width: 150px">
+                    @if (i.id in sel()) {
+                      <input type="number" step="0.01" class="ui-input" [class.is-invalid]="sel()[i.id].amount > i.remaining_amount"
+                             [ngModel]="sel()[i.id].amount" (ngModelChange)="setAllocation(i, 'amount', $event)" />
+                    }
+                  </td>
+                  @if (isMulti()) {
+                    <td style="width: 150px">
+                      @if (i.id in sel() && i.remaining_amount_currency > 0) {
+                        <input type="number" step="0.01" class="ui-input" [class.is-invalid]="sel()[i.id].currency > i.remaining_amount_currency"
+                               [ngModel]="sel()[i.id].currency" (ngModelChange)="setAllocation(i, 'currency', $event)" />
+                      }
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div class="ui-card-body">
+          <button type="button" class="ui-btn ui-btn-outline sm" [disabled]="amount() <= 0 && effectiveCurrency() <= 0"
+                  (click)="autoDistribute()">توزيع تلقائي (الأقدم أولا)</button>
+        </div>
+      </div>
+    }
+
+    @if (amount() > 0 || effectiveCurrency() > 0) {
+      <div class="ui-card" style="margin-bottom: 16px">
+        <div class="ui-card-body">
+          <div>موزع على الفواتير: <strong>{{ allocatedSum() | number:'1.2-2' }}</strong> جنيه
+            @if (isMulti()) { / <strong>{{ allocatedCurrency() | number:'1.2-2' }}</strong> عملة }</div>
+          <div>يضاف الى رصيد العميل: <strong>{{ (unallocated() > 0 ? unallocated() : 0) | number:'1.2-2' }}</strong> جنيه
+            @if (isMulti()) { / <strong>{{ (unallocatedCurrency() > 0 ? unallocatedCurrency() : 0) | number:'1.2-2' }}</strong> عملة }</div>
+
+          @if (selectedCount() === 0) {
+            <div class="ui-alert" style="margin-top: 12px">لم تحدد اي فاتورة. سيتم اضافة المبلغ كاملا الى رصيد العميل.</div>
+          } @else if (unallocated() > 0 || unallocatedCurrency() > 0) {
+            <div class="ui-alert" style="margin-top: 12px">المبلغ المتبقي بعد التوزيع سيضاف الى رصيد العميل.</div>
+          }
+          @if (overAllocated()) {
+            <div class="ui-alert" role="alert" style="margin-top: 12px">المبالغ الموزعة على الفواتير أكبر من مبلغ الدفعة.</div>
+          }
+          @if (badAllocation()) {
+            <div class="ui-alert" role="alert" style="margin-top: 12px">راجع المبالغ المسددة: يجب أن لا تزيد عن المتبقي على الفاتورة، وكل فاتورة تحتاج مبلغا.</div>
+          }
+        </div>
+      </div>
+    }
+  }
+
+  @if (error()) { <div class="ui-alert" role="alert" style="margin-bottom: 16px">{{ error() }}</div> }
+
+  <div style="display: flex; gap: 8px; justify-content: flex-end">
+    <a routerLink="/customer-payments" class="ui-btn ui-btn-outline">الغاء</a>
+    <button type="button" class="ui-btn ui-btn-primary" [disabled]="!canSubmit()" (click)="submit()">
+      {{ saving() ? 'جاري الحفظ...' : 'حفظ الدفعة' }}
+    </button>
+  </div>
+</div>
