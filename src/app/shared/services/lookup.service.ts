@@ -5,10 +5,9 @@ import { map, Observable, shareReplay } from 'rxjs';
 import { environment } from '../../../environments/environment.development';
 import { ApiResponse } from '../models/api-response.model';
 import {
-  City, CountryState, EmployeeOption, LookupItem, MoneySafeCategoryOption, MoneySafeOption, MoneySafeTypeOption, ProductCategoryOption,
-  ProductOption,
-  StoreOption,
-  SupplierOption,
+  City, CountryState, EmployeeOption, ExpenseCategoryOption, ExpenseTypeOption, 
+  LookupItem, MoneySafeCategoryOption, MoneySafeOption, MoneySafeTypeOption, 
+  ProductCategoryOption, ProductOption, StoreOption, SupplierOption,
 } from '../models/lookup.model';
 import { unwrap } from '../utils/api';
 import { AuthService } from '../../core/services/AuthService/auth';
@@ -16,7 +15,7 @@ import { AuthService } from '../../core/services/AuthService/auth';
 export type LookupKey = 'states' | 'cities' | 'employees' | 'productCategories'
                          | 'customers' | 'units' | 'products' | 'moneySafeCategories' 
                          | 'moneySafeTypes' | 'moneySafes' | 'stores' | 'suppliers'
-                         | 'projects';
+                         | 'projects' | 'expenseCategories' | 'expenseTypes' | 'cars';
 
 const byName = <T extends LookupItem>(list: T[]) =>
   [...list].sort((a, b) => a.name.localeCompare(b.name, 'ar'));
@@ -56,6 +55,14 @@ export class LookupService {
 
   getCities() {
     return this.cached<City>('cities', 'city');
+  }
+
+  getExpenseCategories() {
+    return this.cached<LookupItem>('expenseCategories', 'expenseCategory', byName);
+  }
+
+  getExpenseTypes() {
+    return this.cached<ExpenseTypeOption>('expenseTypes', 'expenseType');
   }
 
   // ---- loaders for <app-lookup-select> ----
@@ -105,4 +112,7 @@ readonly suppliers = () => this.cached<SupplierOption>(
               , 'supplier'
               , byName);
 readonly projects = () => this.cached<LookupItem>('projects', 'project', byName);
+readonly expenseCategories = () => this.getExpenseCategories();
+readonly expenseTypes = () => this.getExpenseTypes();
+readonly cars = () => this.cached<LookupItem>('cars', 'car', byName);
 }

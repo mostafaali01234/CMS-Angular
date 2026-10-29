@@ -9,39 +9,45 @@
     </div>
   </div>
 
-  <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px">
-    <input type="search" class="ui-input" style="flex: 1 1 220px"
-           placeholder="ابحث برقم الفاتورة أو المورد أو الملاحظات..."
-           [ngModel]="search()" (ngModelChange)="search.set($event)" />
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px"
+       (keydown.enter)="list.search()">
+    <input type="search" class="ui-input" style="flex: 1 1 200px" placeholder="المورد او الملاحظات..."
+           [ngModel]="list.form().search" (ngModelChange)="list.set('search', $event)" />
+    <input type="number" class="ui-input" style="flex: 0 0 140px" placeholder="رقم الفاتورة"
+           [ngModel]="list.form().number" (ngModelChange)="list.set('number', $event)" />
 
-    <label>من
-      <input type="date" class="ui-input" [ngModel]="dateFrom()" (ngModelChange)="dateFrom.set($event)" />
-    </label>
-    <label>الى
-      <input type="date" class="ui-input" [ngModel]="dateTo()" (ngModelChange)="dateTo.set($event)" />
-    </label>
+    <label>من <input type="date" class="ui-input"
+           [ngModel]="list.form().dateFrom" (ngModelChange)="list.set('dateFrom', $event, true)" /></label>
+    <label>الى <input type="date" class="ui-input"
+           [ngModel]="list.form().dateTo" (ngModelChange)="list.set('dateTo', $event, true)" /></label>
 
     <div style="flex: 0 0 220px">
-      <app-lookup-select [ngModel]="supplierId()" (ngModelChange)="supplierId.set($event)"
+      <app-lookup-select [ngModel]="list.form().supplierId" (ngModelChange)="list.set('supplierId', $event, true)"
                          [loader]="lookup.suppliers" placeholder="كل الموردين" />
     </div>
 
     <select class="ui-input" style="flex: 0 0 140px"
-            [ngModel]="typeFilter()" (ngModelChange)="typeFilter.set($event)">
-      <!-- <option value="all">كل الأنواع</option> -->
+            [ngModel]="list.form().type" (ngModelChange)="list.set('type', $event, true)">
+      <!-- <option value="">كل الأنواع</option> -->
       <option value="Buy">شراء</option>
       <option value="Buy_Return">مرتجع شراء</option>
     </select>
 
     <select class="ui-input" style="flex: 0 0 140px"
-            [ngModel]="payFilter()" (ngModelChange)="payFilter.set($event)">
-      <option value="all">الكل</option>
+            [ngModel]="list.form().payStatus" (ngModelChange)="list.set('payStatus', $event, true)">
+      <option value="">الكل</option>
       <option value="unpaid">غير مسددة</option>
       <option value="paid">مسددة</option>
     </select>
 
-    <button type="button" class="ui-btn ui-btn-outline sm" (click)="clearFilters()">مسح الفلاتر</button>
+    <button type="button" class="ui-btn ui-btn-primary" (click)="list.search()">بحث</button>
+    <button type="button" class="ui-btn ui-btn-outline" (click)="list.patch({ dateFrom: '', dateTo: '' }, true)">كل الفترات</button>
+    <button type="button" class="ui-btn ui-btn-outline sm" (click)="list.reset()">اليوم / مسح الفلاتر</button>
   </div>
+
+  @if (showingToday()) {
+    <p class="ui-muted" style="margin-bottom: 8px">يتم عرض فواتير اليوم فقط. البحث برقم الفاتورة يتجاهل التاريخ.</p>
+  }
 
   @if (actionError()) {
     <div class="ui-alert" role="alert" style="margin-bottom: 16px">
@@ -50,15 +56,11 @@
     </div>
   }
 
-  @if (loading()) {
-    <p class="ui-muted">جاري التحميل...</p>
-  } @else if (error()) {
-    <div class="ui-alert">
-      <span>{{ error() }}</span>
-      <button class="ui-btn ui-btn-danger sm" (click)="load()">اعادة المحاولة</button>
-    </div>
+  @if (list.error()) {
+    <div class="ui-alert"><span>{{ list.error() }}</span>
+      <button class="ui-btn ui-btn-danger sm" (click)="list.reload()">اعادة المحاولة</button></div>
   } @else {
-    <div class="ui-card">
+    <div class="ui-card" [style.opacity]="list.loading() ? 0.55 : 1">
       <div class="ui-table-wrap">
         <table class="ui-table">
           <thead>
@@ -68,114 +70,77 @@
               <th>النوع</th>
               <th>المورد</th>
               <th>الفاتورة الاصلية</th>
-              <th>الاجمالي</th>
+              <th>الصافي</th>
+              <th>الصافي (عملة)</th>
               <th>المدفوع</th>
               <th>المتبقي</th>
-              <th>|</th>
-              <th>الاجمالي (عملة)</th>
-              <th>المدفوع (عملة)</th>
               <th>المتبقي (عملة)</th>
-              <th>|</th>
               <th>ملاحظات</th>
               <th>اضافة بواسطة</th>
               <th class="end">الإجراءات</th>
             </tr>
           </thead>
           <tbody>
-            @for (i of filtered(); track i.id) {
+            @for (i of list.items(); track i.id) {
               <tr>
                 <td class="strong">{{ i.number }}</td>
                 <td>{{ i.date | date:'yyyy-MM-dd' }}</td>
                 <td class="ui-muted">{{ typeLabel(i.type) }}</td>
                 <td>{{ i.supplier_name }}</td>
-                <td>
-                  @if (i.original_invoice_number) { #{{ i.original_invoice_number }} }
-                  @else { <span class="ui-muted">—</span> }
-                </td>
+                <td>@if (i.original_invoice_number) { #{{ i.original_invoice_number }} }</td>
                 <td [style.color]="i.type === 'Buy_Return' ? 'crimson' : 'inherit'">
                   {{ (i.type === 'Buy_Return' ? -i.net_total : i.net_total) | number:'1.2-2' }}
                 </td>
-                <td>
-                  @if (i.type === 'Buy') { {{ i.paid_amount | number:'1.2-2' }} }
-                  @else { <span class="ui-muted">—</span> }
-                </td>
-                <td [class.strong]="i.remaining_amount > 0">
-                  @if (i.type === 'Buy') { {{ i.remaining_amount | number:'1.2-2' }} }
-                  @else { <span class="ui-muted">—</span> }
-                </td>
-                <td>|</td>
-                <td [style.color]="i.type === 'Buy_Return' ? 'crimson' : 'inherit'">
-                  @if (i.net_total_currency) { {{ (i.type === 'Buy_Return' ? -i.net_total_currency : i.net_total_currency) | number:'1.2-2' }} }
-                  @else { <span class="ui-muted">—</span> }
-                </td>
-                <td [style.color]="i.type === 'Buy_Return' ? 'crimson' : 'inherit'">
-                  @if (i.paid_amount_currency) { {{ (i.type === 'Buy_Return' ? -i.paid_amount_currency : i.paid_amount_currency) | number:'1.2-2' }} }
-                  @else { <span class="ui-muted">—</span> }
-                </td>
-                <td [class.strong]="i.remaining_amount_currency > 0">
-                  @if (i.type === 'Buy' && i.net_total_currency) { {{ i.remaining_amount_currency | number:'1.2-2' }} }
-                  @else { <span class="ui-muted">—</span> }
-                </td>
-                <td>|</td>
+                <td>@if (i.net_total_currency) { {{ (i.type === 'Buy_Return' ? -i.net_total_currency : i.net_total_currency) | number:'1.2-2' }} }</td>
+                <td>@if (i.type === 'Buy') { {{ i.paid_amount | number:'1.2-2' }} }</td>
+                <td [class.strong]="i.remaining_amount > 0">@if (i.type === 'Buy') { {{ i.remaining_amount | number:'1.2-2' }} }</td>
+                <td>@if (i.type === 'Buy' && i.net_total_currency) { {{ i.remaining_amount_currency | number:'1.2-2' }} }</td>
                 <td>{{i.notes}}</td>
                 <td>{{i.auditor_name}}</td>
                 <td class="end nowrap">
-                  <a [routerLink]="editLink(i)" class="ui-btn ui-btn-outline sm">
-                    {{ locks(i) ? 'عرض' : 'تعديل' }}
-                  </a>
-
+                  <a [routerLink]="editLink(i)" class="ui-btn ui-btn-outline sm">{{ locks(i) ? 'عرض' : 'تعديل' }}</a>
+                  <button class="ui-btn ui-btn-success sm" [disabled]="exportingId() === i.id" (click)="exportExcel(i)">
+                    {{ exportingId() === i.id ? '...' : 'Excel' }}
+                  </button>
                   @if (i.type === 'Buy') {
-                    <a routerLink="/buy-invoices/returns/new"
-                       [queryParams]="{ supplier: i.supplier_id, invoice: i.id }"
-                       class="ui-btn ui-btn-outline sm">مرتجع</a>
-
+                    <a routerLink="/buy-invoices/returns/new" [queryParams]="{ supplier: i.supplier_id, invoice: i.id }"
+                       class="ui-btn ui-btn-warning sm">مرتجع</a>
                     @if (i.remaining_amount > 0 || i.remaining_amount_currency > 0) {
-                      <a routerLink="/supplier-payments/new"
-                         [queryParams]="{ supplier: i.supplier_id, invoice: i.id }"
+                      <a routerLink="/supplier-payments/new" [queryParams]="{ supplier: i.supplier_id, invoice: i.id }"
                          class="ui-btn ui-btn-outline sm">دفعة</a>
                     }
                   }
-
                   @if (!locks(i)) {
-                    <button class="ui-btn ui-btn-danger sm"
-                            [disabled]="deletingId() === i.id" (click)="remove(i)">
+                    <button class="ui-btn ui-btn-danger sm" [disabled]="deletingId() === i.id" (click)="remove(i)">
                       {{ deletingId() === i.id ? 'جاري الحذف...' : 'حذف' }}
                     </button>
                   }
                 </td>
               </tr>
             } @empty {
-              <tr>
-                <td colspan="9" class="center ui-muted" style="padding: 28px">لا توجد فواتير.</td>
-              </tr>
+              <tr><td colspan="11" class="center ui-muted" style="padding: 28px">
+                {{ list.loading() ? 'جاري التحميل...' : 'لا توجد فواتير.' }}
+              </td></tr>
             }
           </tbody>
-          <tfoot>
-            <tr style="font-weight: 600">
-              <td colspan="5"></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr style="font-weight: 600">
-              <td colspan="5">الاجمالي ({{ filtered().length }})</td>
-              <td>{{ totalNet() | number:'1.2-2' }}</td>
-              <td>{{ totalPaid() | number:'1.2-2' }}</td>
-              <td>{{ totalRemaining() | number:'1.2-2' }}</td>
-              <td>|</td>
-              <td>{{ totalNetCurrency() | number:'1.2-2' }}</td>
-              <td>{{ totalPaidCurrency() | number:'1.2-2' }}</td>
-              <td>{{ totalRemainingCurrency() | number:'1.2-2' }}</td>
-              <td>|</td>
-            </tr>
-          </tfoot>
+          @if (list.summary(); as s) {
+            <tfoot>
+              <tr style="font-weight: 600">
+                <td colspan="5">اجمالي كل النتائج ({{ list.total() }})</td>
+                <td>{{ s.net | number:'1.2-2' }}</td>
+                <td>{{ s.net_currency | number:'1.2-2' }}</td>
+                <td>{{ s.paid | number:'1.2-2' }}</td>
+                <td>{{ s.remaining | number:'1.2-2' }}</td>
+                <td>{{ s.remaining_currency | number:'1.2-2' }}</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          }
         </table>
       </div>
+
+      <app-pager [page]="list.page()" [pageSize]="list.size()" [total]="list.total()"
+                 (pageChange)="list.goTo($event)" (sizeChange)="list.setSize($event)" />
     </div>
   }
 </div>

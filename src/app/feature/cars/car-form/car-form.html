@@ -1,0 +1,116 @@
+<!-- car-form/car-form.html -->
+<div class="ui-page narrow">
+  <div class="ui-page-header">
+    <h2 class="ui-title">{{ id() ? 'تعديل سيارة' : 'اضافة سيارة جديدة' }}</h2>
+  </div>
+
+  @if (loading()) {
+    <p class="ui-muted">جاري التحميل...</p>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="save()" class="ui-card">
+      <div class="ui-card-body">
+        <div class="ui-grid">
+
+          <div class="ui-field">
+            <label class="ui-label" for="name">اسم السيارة</label>
+            <input id="name" class="ui-input" formControlName="name" [class.is-invalid]="invalid('name')" />
+            @if (invalid('name')) { <span class="ui-error-text">الرجاء ادخال الاسم (حتى 150 حرفا)</span> }
+          </div>
+
+          <app-lookup-select formControlName="driver_id" [loader]="lookup.employees" [filter]="activeOnly"
+                             label="السائق" placeholder="اختر السائق" error="اختر السائق"
+                             [invalid]="invalid('driver_id')" />
+
+          <div class="ui-field">
+            <label class="ui-label" for="plat">رقم اللوحة</label>
+            <input id="plat" class="ui-input" formControlName="plat_number" [class.is-invalid]="invalid('plat_number')" />
+            @if (invalid('plat_number')) { <span class="ui-error-text">الرجاء ادخال رقم اللوحة</span> }
+          </div>
+
+          <div class="ui-field">
+            <label class="ui-label" for="model">الموديل</label>
+            <input id="model" class="ui-input" formControlName="model" [class.is-invalid]="invalid('model')" />
+            @if (invalid('model')) { <span class="ui-error-text">الرجاء ادخال الموديل</span> }
+          </div>
+
+          <div class="ui-field">
+            <label class="ui-label" for="owner">اسم المالك</label>
+            <input id="owner" class="ui-input" formControlName="owner_name" [class.is-invalid]="invalid('owner_name')" />
+            @if (invalid('owner_name')) { <span class="ui-error-text">الرجاء ادخال اسم المالك</span> }
+          </div>
+
+          <div class="ui-field">
+            <label class="ui-label" for="motor">رقم الموتور</label>
+            <input id="motor" class="ui-input" dir="ltr" formControlName="motor_number" [class.is-invalid]="invalid('motor_number')" />
+            @if (invalid('motor_number')) { <span class="ui-error-text">الرجاء ادخال رقم الموتور</span> }
+          </div>
+
+          <div class="ui-field">
+            <label class="ui-label" for="chassis">رقم الشاسيه</label>
+            <input id="chassis" class="ui-input" dir="ltr" formControlName="chassis_number" [class.is-invalid]="invalid('chassis_number')" />
+            @if (invalid('chassis_number')) { <span class="ui-error-text">الرجاء ادخال رقم الشاسيه</span> }
+          </div>
+        </div>
+
+        <h3 class="ui-title" style="margin: 24px 0 12px">معدلات الصيانة (كم)</h3>
+        <div class="ui-grid">
+          <div class="ui-field">
+            <label class="ui-label" for="oil">تغيير الزيت</label>
+            <input id="oil" type="number" step="any" class="ui-input" formControlName="oil_change_rate" [class.is-invalid]="invalid('oil_change_rate')" />
+          </div>
+          <div class="ui-field">
+            <label class="ui-label" for="filter">تغيير الفلتر</label>
+            <input id="filter" type="number" step="any" class="ui-input" formControlName="filter_change_rate" [class.is-invalid]="invalid('filter_change_rate')" />
+          </div>
+          <div class="ui-field">
+            <label class="ui-label" for="sk">تغيير السير (SK)</label>
+            <input id="sk" type="number" step="any" class="ui-input" formControlName="sk_change_rate" [class.is-invalid]="invalid('sk_change_rate')" />
+          </div>
+          <div class="ui-field">
+            <label class="ui-label" for="tire">تغيير الاطارات</label>
+            <input id="tire" type="number" step="any" class="ui-input" formControlName="tire_change_rate" [class.is-invalid]="invalid('tire_change_rate')" />
+          </div>
+        </div>
+
+        <h3 class="ui-title" style="margin: 24px 0 12px">الرخصة والتأمين</h3>
+        <div class="ui-grid">
+          <div class="ui-field">
+            <label class="ui-label" for="ls">بداية الرخصة</label>
+            <input id="ls" type="date" class="ui-input" formControlName="license_start_date" [class.is-invalid]="invalid('license_start_date')" />
+          </div>
+          <div class="ui-field">
+            <label class="ui-label" for="le">نهاية الرخصة</label>
+            <input id="le" type="date" class="ui-input" formControlName="license_end_date" [class.is-invalid]="invalid('license_end_date')" />
+          </div>
+          <div class="ui-field">
+            <label class="ui-label" for="is">بداية التأمين</label>
+            <input id="is" type="date" class="ui-input" formControlName="insurance_start_date" [class.is-invalid]="invalid('insurance_start_date')" />
+          </div>
+          <div class="ui-field">
+            <label class="ui-label" for="ie">نهاية التأمين</label>
+            <input id="ie" type="date" class="ui-input" formControlName="insurance_end_date" [class.is-invalid]="invalid('insurance_end_date')" />
+          </div>
+          <div class="ui-field full">
+            <label class="ui-label" for="ic">شركة التأمين</label>
+            <input id="ic" class="ui-input" formControlName="insurance_company_name" [class.is-invalid]="invalid('insurance_company_name')" />
+            @if (invalid('insurance_company_name')) { <span class="ui-error-text">الرجاء ادخال شركة التأمين</span> }
+          </div>
+
+          <div class="ui-field full">
+            <label class="ui-label" for="notes">ملاحظات</label>
+            <textarea id="notes" rows="3" class="ui-input" formControlName="notes"></textarea>
+          </div>
+        </div>
+
+        @if (error()) { <div class="ui-alert" role="alert" style="margin-top: 16px">{{ error() }}</div> }
+      </div>
+
+      <div class="ui-card-footer">
+        <a routerLink="/cars" class="ui-btn ui-btn-outline">الغاء</a>
+        <button type="submit" class="ui-btn ui-btn-primary" [disabled]="saving()">
+          {{ saving() ? 'جاري الحفظ...' : (id() ? 'حفظ' : 'اضافة') }}
+        </button>
+      </div>
+    </form>
+  }
+</div>

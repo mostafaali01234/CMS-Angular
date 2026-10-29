@@ -1,0 +1,84 @@
+<!-- car-list/car-list.html -->
+<div class="ui-page" style="max-width: none;">
+  <div class="ui-page-header">
+    <h2 class="ui-title">السيارات</h2>
+    <a routerLink="/cars/new" class="ui-btn ui-btn-primary">+ سيارة جديدة</a>
+  </div>
+
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px"
+       (keydown.enter)="list.search()">
+    <input type="search" class="ui-input" style="flex: 1 1 260px"
+           placeholder="الاسم او رقم اللوحة او الموديل او المالك او رقم الموتور/الشاسيه..."
+           [ngModel]="list.form().search" (ngModelChange)="list.set('search', $event)" />
+
+    <div style="flex: 0 0 220px">
+      <app-lookup-select [ngModel]="list.form().driverId" (ngModelChange)="list.set('driverId', $event, true)"
+                         [loader]="lookup.employees" placeholder="كل السائقين" />
+    </div>
+
+    <select class="ui-input" style="flex: 0 0 180px"
+            [ngModel]="list.form().expiry" (ngModelChange)="list.set('expiry', $event, true)">
+      @for (f of expiryFilters; track f.value) { <option [value]="f.value">{{ f.label }}</option> }
+    </select>
+
+    <button type="button" class="ui-btn ui-btn-primary" (click)="list.search()">بحث</button>
+    <button type="button" class="ui-btn ui-btn-outline sm" (click)="list.reset()">مسح الفلاتر</button>
+  </div>
+
+  @if (actionError()) {
+    <div class="ui-alert" role="alert" style="margin-bottom: 16px">
+      <span>{{ actionError() }}</span>
+      <button type="button" class="ui-alert-close" (click)="actionError.set(null)" aria-label="إغلاق">×</button>
+    </div>
+  }
+
+  @if (list.error()) {
+    <div class="ui-alert"><span>{{ list.error() }}</span>
+      <button class="ui-btn ui-btn-danger sm" (click)="list.reload()">اعادة المحاولة</button></div>
+  } @else {
+    <div class="ui-card" [style.opacity]="list.loading() ? 0.55 : 1">
+      <div class="ui-table-wrap">
+        <table class="ui-table">
+          <thead>
+            <tr>
+              <th>الاسم</th><th>رقم اللوحة</th><th>الموديل</th><th>السائق</th><th>المالك</th>
+              <th>نهاية الرخصة</th><th>نهاية التأمين</th><th class="end">الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of list.items(); track c.id) {
+              <tr>
+                <td class="strong">{{ c.name }}</td>
+                <td>{{ c.plat_number }}</td>
+                <td>{{ c.model }}</td>
+                <td>{{ c.driver_name }}</td>
+                <td class="ui-muted">{{ c.owner_name }}</td>
+                <td [style.color]="expiry(c.license_end_date).color">
+                  {{ c.license_end_date | date:'yyyy-MM-dd' }}
+                  @if (expiry(c.license_end_date).text) { <div><small>{{ expiry(c.license_end_date).text }}</small></div> }
+                </td>
+                <td [style.color]="expiry(c.insurance_end_date).color">
+                  {{ c.insurance_end_date | date:'yyyy-MM-dd' }}
+                  @if (expiry(c.insurance_end_date).text) { <div><small>{{ expiry(c.insurance_end_date).text }}</small></div> }
+                </td>
+                <td class="end nowrap">
+                  <a [routerLink]="['/cars', c.id, 'edit']" class="ui-btn ui-btn-outline sm">تعديل</a>
+                  <button class="ui-btn ui-btn-danger sm" [disabled]="deletingId() === c.id" (click)="remove(c)">
+                    {{ deletingId() === c.id ? 'جاري الحذف...' : 'حذف' }}
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="8" class="center ui-muted" style="padding: 28px">
+                {{ list.loading() ? 'جاري التحميل...' : 'لا توجد سيارات.' }}
+              </td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <app-pager [page]="list.page()" [pageSize]="list.size()" [total]="list.total()"
+                 (pageChange)="list.goTo($event)" (sizeChange)="list.setSize($event)" />
+    </div>
+  }
+</div>

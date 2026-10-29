@@ -1,4 +1,5 @@
 // sale-invoice.model.ts
+import { PageQuery } from '../../shared/models/paged.model';
 import { PRICE_TYPES } from '../buy-invoices/buy-invoice.model';
 export { PRICE_TYPES };
 
@@ -122,3 +123,15 @@ export interface SaveSaleReturn {
   auditor_id: number;
   items: { original_item_id: number; quantity: number }[];
 }
+
+export interface SaleInvoiceFilter {
+  dateFrom: string;
+  dateTo: string;
+  customerId: number;
+  type: string;        // '' | 'Sale' | 'Sale_Return'
+  payStatus: string;
+  search: string;
+  number: string;
+  orderId: string;
+}
+export type SaleInvoiceQuery = SaleInvoiceFilter & PageQuery;

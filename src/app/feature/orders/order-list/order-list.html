@@ -134,11 +134,13 @@
                 </thead>
                 <tbody>
                     @for (o of orders(); track o.id; let i = $index) {
+                    <!-- <tr [style.opacity]="o.status === 'ملغي' || o.status === 'محذوف' ? 0.6 : 1"></tr> -->
                     <tr>
                         <td class="strong">{{ (page() - 1) * pageSize() + i + 1 }}</td>
                         <td class="strong">{{ o.id }}</td>
                         <td>{{ o.created_at_utc | date:'yyyy-MM-dd' }}</td>
-                        <td>{{ label(o.status) }}</td>
+                        <!-- <td>{{ label(o.status) }}</td> -->
+                        <td><app-order-status [status]="o.status" /></td>
                         @if (canManage) {
                             <td>
                                 @if (canManage) {

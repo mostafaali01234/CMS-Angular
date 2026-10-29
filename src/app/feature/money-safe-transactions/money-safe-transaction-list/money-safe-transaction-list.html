@@ -1,0 +1,105 @@
+<!-- money-safe-transaction-list/money-safe-transaction-list.html -->
+<div class="ui-page" style="max-width: none;">
+  <div class="ui-page-header">
+    <h2 class="ui-title">حركات الخزائن</h2>
+    <a routerLink="/money-safe-transactions/new" class="ui-btn ui-btn-primary">+ حركة جديدة</a>
+  </div>
+
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px"
+       (keydown.enter)="list.search()">
+    <input type="search" class="ui-input" style="flex: 1 1 200px" placeholder="الملاحظات او الخزينة او المشروع..."
+           [ngModel]="list.form().search" (ngModelChange)="list.set('search', $event)" />
+
+    <label>من <input type="date" class="ui-input"
+           [ngModel]="list.form().dateFrom" (ngModelChange)="list.set('dateFrom', $event, true)" /></label>
+    <label>الى <input type="date" class="ui-input"
+           [ngModel]="list.form().dateTo" (ngModelChange)="list.set('dateTo', $event, true)" /></label>
+
+    <div style="flex: 0 0 220px">
+      <app-lookup-select [ngModel]="list.form().moneySafeId" (ngModelChange)="list.set('moneySafeId', $event, true)"
+                         [loader]="lookup.moneySafes" placeholder="كل الخزائن (خارج او داخل)" />
+    </div>
+
+    <select class="ui-input" style="flex: 0 0 150px"
+            [ngModel]="list.form().transactionType" (ngModelChange)="list.set('transactionType', $event, true)">
+      <option value="">كل الأنواع</option>
+      @for (t of types; track t.value) { <option [value]="t.value">{{ t.label }}</option> }
+    </select>
+
+    <div style="flex: 0 0 200px">
+      <app-lookup-select [ngModel]="list.form().projectId" (ngModelChange)="list.set('projectId', $event, true)"
+                         [loader]="lookup.projects" placeholder="كل المشاريع" />
+    </div>
+
+    <button type="button" class="ui-btn ui-btn-primary" (click)="list.search()">بحث</button>
+    <button type="button" class="ui-btn ui-btn-outline" (click)="list.patch({ dateFrom: '', dateTo: '' }, true)">كل الفترات</button>
+    <button type="button" class="ui-btn ui-btn-outline sm" (click)="list.reset()">اليوم / مسح الفلاتر</button>
+  </div>
+
+  @if (showingToday()) {
+    <p class="ui-muted" style="margin-bottom: 8px">يتم عرض حركات اليوم فقط.</p>
+  }
+
+  @if (actionError()) {
+    <div class="ui-alert" role="alert" style="margin-bottom: 16px">
+      <span>{{ actionError() }}</span>
+      <button type="button" class="ui-alert-close" (click)="actionError.set(null)" aria-label="إغلاق">×</button>
+    </div>
+  }
+
+  @if (list.error()) {
+    <div class="ui-alert"><span>{{ list.error() }}</span>
+      <button class="ui-btn ui-btn-danger sm" (click)="list.reload()">اعادة المحاولة</button></div>
+  } @else {
+    <div class="ui-card" [style.opacity]="list.loading() ? 0.55 : 1">
+      <div class="ui-table-wrap">
+        <table class="ui-table">
+          <thead>
+            <tr>
+              <th>التاريخ</th><th>النوع</th><th>من خزينة</th><th>الى خزينة</th><th>المبلغ</th><th>بالعملة</th>
+              <th>المشروع</th><th>ملاحظات</th><th>المسجل</th><th class="end">الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (t of list.items(); track t.id) {
+              <tr>
+                <td>{{ t.transaction_date | date:'yyyy-MM-dd' }}</td>
+                <td class="ui-muted">{{ t.transaction_type.replace('_', ' ') }}</td>
+                <td class="strong" style="color: crimson">{{ t.out_money_safe_name }}</td>
+                <td class="strong" style="color: #2e9e4f">{{ t.in_money_safe_name }}</td>
+                <td>{{ t.transaction_amount | number:'1.2-2' }}</td>
+                <td>@if (t.transaction_amount_currency) { {{ t.transaction_amount_currency | number:'1.2-2' }} }</td>
+                <td class="ui-muted">{{ t.project_name }}</td>
+                <td class="ui-muted">{{ t.transaction_notes }}</td>
+                <td class="ui-muted">{{ t.auditor_name }}</td>
+                <td class="end nowrap">
+                  <a [routerLink]="['/money-safe-transactions', t.id, 'edit']" class="ui-btn ui-btn-outline sm">تعديل</a>
+                  <button class="ui-btn ui-btn-danger sm" [disabled]="deletingId() === t.id" (click)="remove(t)">
+                    {{ deletingId() === t.id ? 'جاري الحذف...' : 'حذف' }}
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="10" class="center ui-muted" style="padding: 28px">
+                {{ list.loading() ? 'جاري التحميل...' : 'لا توجد حركات.' }}
+              </td></tr>
+            }
+          </tbody>
+          @if (list.summary(); as s) {
+            <tfoot>
+              <tr style="font-weight: 600">
+                <td colspan="4">اجمالي كل النتائج ({{ list.total() }})</td>
+                <td>{{ s.amount | number:'1.2-2' }}</td>
+                <td>{{ s.amount_currency | number:'1.2-2' }}</td>
+                <td colspan="4"></td>
+              </tr>
+            </tfoot>
+          }
+        </table>
+      </div>
+
+      <app-pager [page]="list.page()" [pageSize]="list.size()" [total]="list.total()"
+                 (pageChange)="list.goTo($event)" (sizeChange)="list.setSize($event)" />
+    </div>
+  }
+</div>

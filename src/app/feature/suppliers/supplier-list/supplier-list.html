@@ -56,6 +56,7 @@
                 <td>{{ s.fixedDiscount | number:'1.0-2' }}</td>
                 <td class="end nowrap">
                   <a [routerLink]="['/suppliers', s.id, 'edit']" class="ui-btn ui-btn-outline sm">تعديل</a>
+                    <a [routerLink]="['/balances', 'suppliers', s.id]" class="ui-btn ui-btn-outline sm">كشف حساب</a>
                   <button class="ui-btn ui-btn-danger sm"
                           [disabled]="deletingId() === s.id"
                           (click)="remove(s)">

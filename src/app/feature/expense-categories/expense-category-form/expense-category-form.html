@@ -1,0 +1,35 @@
+<!-- expense-category-form/expense-category-form.html -->
+<div class="ui-page narrow">
+  <div class="ui-page-header">
+    <h2 class="ui-title">{{ id() ? 'تعديل تصنيف مصروفات' : 'اضافة تصنيف مصروفات جديد' }}</h2>
+  </div>
+
+  @if (loading()) {
+    <p class="ui-muted">جاري التحميل...</p>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="save()" class="ui-card">
+      <div class="ui-card-body">
+        <div class="ui-grid">
+
+          <div class="ui-field full">
+            <label class="ui-label" for="name">اسم التصنيف</label>
+            <input id="name" class="ui-input" formControlName="name" [class.is-invalid]="invalid('name')" />
+            @if (invalid('name')) { <span class="ui-error-text">الرجاء ادخال اسم التصنيف</span> }
+          </div>
+
+        </div>
+
+        @if (error()) {
+          <div class="ui-alert" role="alert" style="margin-top: 16px">{{ error() }}</div>
+        }
+      </div>
+
+      <div class="ui-card-footer">
+        <a routerLink="/expense-categories" class="ui-btn ui-btn-outline">الغاء</a>
+        <button type="submit" class="ui-btn ui-btn-primary" [disabled]="saving()">
+          {{ saving() ? 'جاري الحفظ...' : (id() ? 'حفظ' : 'اضافة') }}
+        </button>
+      </div>
+    </form>
+  }
+</div>

@@ -5,7 +5,9 @@ import { map, Observable } from 'rxjs';
 import { environment } from '../../../environments/environment.development';
 import { ApiResponse } from '../../shared/models/api-response.model';
 import { unwrap } from '../../shared/utils/api';
-import { SaleInvoice, SaleReturnableInvoice, SaveSaleInvoice, SaveSaleReturn } from './sale-invoice.model';
+import { SaleInvoice, SaleInvoiceQuery, SaleReturnableInvoice, SaveSaleInvoice, SaveSaleReturn } from './sale-invoice.model';
+import { InvoiceListSummary, Paged } from '../../shared/models/paged.model';
+import { toParams } from '../../shared/utils/params';
 
 @Injectable({ providedIn: 'root' })
 export class SaleInvoiceService {
@@ -15,6 +17,11 @@ export class SaleInvoiceService {
   private list(url: string) { return this.http.get<ApiResponse<SaleInvoice[]>>(url).pipe(map(unwrap)); }
 
   getAll(): Observable<SaleInvoice[]> { return this.list(this.baseUrl); }
+  getPaged(q: SaleInvoiceQuery): Observable<Paged<SaleInvoice, InvoiceListSummary>> {
+    return this.http
+      .get<ApiResponse<Paged<SaleInvoice, InvoiceListSummary>>>(`${this.baseUrl}/paged`, { params: toParams(q) })
+      .pipe(map(unwrap));
+  }
   getById(id: number): Observable<SaleInvoice> {
     return this.http.get<ApiResponse<SaleInvoice>>(`${this.baseUrl}/${id}`).pipe(map(unwrap));
   }
@@ -42,5 +49,9 @@ export class SaleInvoiceService {
   }
   updateReturn(id: number, body: SaveSaleReturn): Observable<void> {
     return this.http.put<void>(`${this.baseUrl}/return/${id}`, body);
+  }
+
+  exportExcel(id: number): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/${id}/export`, { responseType: 'blob' });
   }
 }

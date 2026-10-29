@@ -58,7 +58,7 @@ export class LookupSelect<T extends LookupItem = LookupItem> implements ControlV
   writeValue(v: number | null) { this.value.set(v ?? 0); }
   registerOnChange(fn: (v: number) => void) { this.onChange = fn; }
   registerOnTouched(fn: () => void) { this.onTouched = fn; }
-  setDisabledState(isDisabled: boolean) { this.disabled.set(isDisabled); }
+  setDisabledCategory(isDisabled: boolean) { this.disabled.set(isDisabled); }
 
   select(id: number) {
     this.value.set(id);

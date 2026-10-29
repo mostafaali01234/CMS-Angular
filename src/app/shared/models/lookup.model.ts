@@ -15,6 +15,7 @@ export interface EmployeeOption extends LookupItem {
 }
 
 export interface ProductCategoryOption extends LookupItem {}
+export interface ExpenseCategoryOption extends LookupItem {}
 
 /** Ready-made filter for lists that have an `active` flag. */
 export const activeOnly = (item: { active: boolean }) => item.active;
@@ -55,4 +56,8 @@ export interface StoreOption extends LookupItem {
 
 export interface SupplierOption extends LookupItem {
   phone?: string | null;
+}
+
+export interface ExpenseTypeOption extends LookupItem {
+  category_id?: number | null;     
 }

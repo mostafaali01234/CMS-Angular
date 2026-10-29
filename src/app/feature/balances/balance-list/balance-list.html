@@ -1,0 +1,70 @@
+<!-- balance-list/balance-list.html -->
+<div class="ui-page">
+  <div class="ui-page-header">
+    <h2 class="ui-title">{{ isCustomer ? 'ارصدة العملاء' : 'ارصدة الموردين' }}</h2>
+  </div>
+
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 16px">
+    <input type="search" class="ui-input" style="flex: 1 1 260px" placeholder="ابحث بالاسم أو الهاتف..."
+           [ngModel]="search()" (ngModelChange)="search.set($event)" />
+    <label><input type="checkbox" [ngModel]="onlyNonZero()" (ngModelChange)="onlyNonZero.set($event)" /> الارصدة غير الصفرية فقط</label>
+  </div>
+
+  @if (loading()) {
+    <p class="ui-muted">جاري التحميل...</p>
+  } @else if (error()) {
+    <div class="ui-alert"><span>{{ error() }}</span><button class="ui-btn ui-btn-danger sm" (click)="load()">اعادة المحاولة</button></div>
+  } @else {
+    <div class="ui-card">
+      <div class="ui-table-wrap">
+        <table class="ui-table">
+          <thead>
+            <tr>
+              <th>الاسم</th><th>الهاتف</th><th>رصيد افتتاحي</th><th>الفواتير</th><th>المرتجعات</th><th>المدفوعات</th>
+              @if (isCustomer) { <th>المسترد</th> }
+              <th>الرصيد</th><th>الرصيد (عملة)</th><th class="end">كشف حساب</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of filtered(); track r.id) {
+              <tr>
+                <td class="strong">{{ r.name }}</td>
+                <td class="ui-muted">{{ r.phone }}</td>
+                <td>{{ r.opening_balance | number:'1.2-2' }}</td>
+                <td>{{ r.invoices_total | number:'1.2-2' }}
+                  @if (r.invoices_total_currency) { <div class="ui-muted"><small>{{ r.invoices_total_currency | number:'1.2-2' }} عملة</small></div> }</td>
+                <td>{{ r.returns_total | number:'1.2-2' }}</td>
+                <td>{{ r.payments_total | number:'1.2-2' }}
+                  @if (r.payments_total_currency) { <div class="ui-muted"><small>{{ r.payments_total_currency | number:'1.2-2' }} عملة</small></div> }</td>
+                @if (isCustomer) { <td>{{ r.refunds_total | number:'1.2-2' }}</td> }
+                <td class="strong" [style.color]="r.balance < 0 ? 'crimson' : 'inherit'">
+                  {{ r.balance | number:'1.2-2' }} <small class="ui-muted">{{ side(r.balance) }}</small>
+                </td>
+                <td [style.color]="r.balance_currency < 0 ? 'crimson' : 'inherit'">
+                  @if (r.balance_currency) { {{ r.balance_currency | number:'1.2-2' }} } @else { <span class="ui-muted">—</span> }
+                </td>
+                <td class="end nowrap">
+                  <a [routerLink]="['/balances', isCustomer ? 'customers' : 'suppliers', r.id]" class="ui-btn ui-btn-outline sm">كشف حساب</a>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td [attr.colspan]="isCustomer ? 10 : 9" class="center ui-muted" style="padding: 28px">لا توجد ارصدة.</td></tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr style="font-weight: 600">
+              <td [attr.colspan]="isCustomer ? 7 : 6">
+                {{ isCustomer ? 'مستحق لنا' : 'مستحق للموردين' }} ({{ filtered().length }})
+              </td>
+              <td>{{ positive() | number:'1.2-2' }}</td><td>{{ positiveCur() | number:'1.2-2' }}</td><td></td>
+            </tr>
+            <tr style="font-weight: 600">
+              <td [attr.colspan]="isCustomer ? 7 : 6">{{ isCustomer ? 'مستحق للعملاء (رصيد دائن)' : 'مستحق لنا عند الموردين' }}</td>
+              <td>{{ negative() | number:'1.2-2' }}</td><td>{{ negativeCur() | number:'1.2-2' }}</td><td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  }
+</div>

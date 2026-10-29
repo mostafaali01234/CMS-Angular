@@ -79,6 +79,35 @@ export const routes: Routes = [
     loadChildren: () => import('./feature/sale-invoices/sale-invoices.routes').then(m => m.SALE_INVOICE_ROUTES) },
   { path: 'customer-payments', canActivate: [authGuard],
     loadChildren: () => import('./feature/customer-payments/customer-payments.routes').then(m => m.CUSTOMER_PAYMENT_ROUTES) },
+  { path: 'balances', canActivate: [authGuard],
+    loadChildren: () => import('./feature/balances/balances.routes').then(m => m.BALANCE_ROUTES) },
+  {
+    path: 'expense-categories',
+    canActivate: [authGuard],
+    loadChildren: () =>
+      import('./feature/expense-categories/expense-categories.routes').then(m => m.EXPENSE_CATEGORY_ROUTES),
+  },
+  {
+    path: 'expense-types',
+    canActivate: [authGuard],
+    loadChildren: () =>
+      import('./feature/expense-types/expense-types.routes').then(m => m.EXPENSE_TYPE_ROUTES),
+  },
+  { 
+    path: 'expenses', canActivate: [authGuard],
+    loadChildren: () => import('./feature/expenses/expenses.routes').then(m => m.EXPENSE_ROUTES) 
+  },
+  { 
+    path: 'cars', canActivate: [authGuard],
+    loadChildren: () => import('./feature/cars/cars.routes').then(m => m.CAR_ROUTES) 
+  },
+  { 
+    path: 'money-safe-transactions', canActivate: [authGuard],
+    loadChildren: () => import('./feature/money-safe-transactions/money-safe-transactions.routes')
+      .then(m => m.MONEY_SAFE_TRANSACTION_ROUTES) 
+  },
+
+
   { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
   { path: '**', redirectTo: 'dashboard' }
 ];

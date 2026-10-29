@@ -13,12 +13,12 @@ import { apiError } from '../../../shared/utils/api';
 import { map, take, Subject } from 'rxjs';
 import { activeOnly } from '../../../shared/models/lookup.model';
 import { LookupSelect } from '../../../shared/components/lookup-select/lookup-select';
-
+import { OrderStatus } from '../../../shared/components/order-status/order-status';
 
 
 @Component({
     selector: 'app-order-list',
-    imports: [RouterLink, FormsModule, DatePipe, DecimalPipe, LookupSelect],
+    imports: [RouterLink, FormsModule, DatePipe, DecimalPipe, LookupSelect, OrderStatus],    
     templateUrl: './order-list.html',
 })
 export class OrderList implements OnInit {

@@ -1,0 +1,41 @@
+<!-- expense-type-form/expense-type-form.html -->
+<div class="ui-page narrow">
+  <div class="ui-page-header">
+    <h2 class="ui-title">{{ id() ? 'تعديل نوع مصروفات' : 'اضافة نوع مصروفات جديد' }}</h2>
+  </div>
+
+  @if (loading()) {
+    <p class="ui-muted">جاري التحميل...</p>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="save()" class="ui-card">
+      <div class="ui-card-body">
+        <div class="ui-grid">
+
+          <div class="ui-field full">
+            <label class="ui-label" for="name">اسم المصروف</label>
+            <input id="name" class="ui-input" formControlName="name" [class.is-invalid]="invalid('name')" />
+            @if (invalid('name')) { <span class="ui-error-text">الرجاء ادخال اسم المصروف</span> }
+          </div>
+
+          <app-lookup-select
+            formControlName="category_id"  [invalid]="invalid('category')"  error="اختر التصنيف"
+            [loader]="lookup.expenseCategories"
+            label="التصنيف"
+            placeholder="اختر" />
+
+        </div>
+
+        @if (error()) {
+          <div class="ui-alert" role="alert" style="margin-top: 16px">{{ error() }}</div>
+        }
+      </div>
+
+      <div class="ui-card-footer">
+        <a routerLink="/expense-types" class="ui-btn ui-btn-outline">الغاء</a>
+        <button type="submit" class="ui-btn ui-btn-primary" [disabled]="saving()">
+          {{ saving() ? 'جاري الحفظ...' : (id() ? 'حفظ' : 'اضافة') }}
+        </button>
+      </div>
+    </form>
+  }
+</div>

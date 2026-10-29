@@ -1,0 +1,88 @@
+<!-- expense-form/expense-form.html -->
+<div class="ui-page narrow">
+  <div class="ui-page-header">
+    <h2 class="ui-title">{{ id() ? 'تعديل مصروف' : 'اضافة مصروف جديد' }}</h2>
+  </div>
+
+  @if (loading()) {
+    <p class="ui-muted">جاري التحميل...</p>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="save()" class="ui-card">
+      <div class="ui-card-body">
+        <div class="ui-grid">
+
+          <div class="ui-field">
+            <label class="ui-label" for="date">التاريخ</label>
+            <input id="date" type="date" class="ui-input" formControlName="date" [class.is-invalid]="invalid('date')" />
+            @if (invalid('date')) { <span class="ui-error-text">ادخل التاريخ</span> }
+          </div>
+          
+          <app-lookup-select formControlName="project_id" [loader]="lookup.projects"
+                             label="المشروع" placeholder="بدون مشروع" />
+
+
+          <expense-category-type-select
+                            formControlName="expense_type_id"
+                            [invalid]="invalid('expense_type_id')" />
+
+          <app-lookup-select formControlName="money_safe_id" [loader]="lookup.moneySafes" [filter]="activeOnly"
+                             label="الخزينة" placeholder="اختر الخزينة" error="اختر الخزينة"
+                             [invalid]="invalid('money_safe_id')" />
+
+          <div class="ui-field">
+            <label class="ui-label" for="amount">المبلغ (جنيه)</label>
+            <input id="amount" type="number" step="0.01" class="ui-input" formControlName="amount"
+                   [class.is-invalid]="invalid('amount')" />
+          </div>
+
+          @if (isMulti) {
+            <div class="ui-field">
+              <label class="ui-label" for="cur">المبلغ (عملة)</label>
+              <input id="cur" type="number" step="0.01" class="ui-input" formControlName="amount_currency" />
+            </div>
+          }
+
+          <div class="ui-field full">
+            <label class="ui-label" for="notes">ملاحظات</label>
+            <textarea id="notes" rows="2" class="ui-input" formControlName="notes"></textarea>
+          </div>
+
+          <div class="ui-field full">
+            <label><input type="checkbox" formControlName="has_car" /> مصروف سيارة (زيت / بنزين)</label>
+          </div>
+
+          @if (hasCar) {
+            <app-lookup-select formControlName="car_id" [loader]="lookup.cars"
+                               label="السيارة" placeholder="اختر السيارة" />
+
+            <div class="ui-field">
+              <label class="ui-label" for="oil_start">عداد بداية الزيت (كم)</label>
+              <input id="oil_start" type="number" step="any" class="ui-input" formControlName="oil_start_km" />
+            </div>
+            <div class="ui-field">
+              <label class="ui-label" for="oil_end">عداد نهاية الزيت (كم)</label>
+              <input id="oil_end" type="number" step="any" class="ui-input" formControlName="oil_end_km" />
+            </div>
+            <div class="ui-field">
+              <label class="ui-label" for="gas_km">عداد البنزين الحالي (كم)</label>
+              <input id="gas_km" type="number" step="any" class="ui-input" formControlName="gas_current_km" />
+            </div>
+            <div class="ui-field">
+              <label class="ui-label" for="gas_l">عدد لترات البنزين</label>
+              <input id="gas_l" type="number" step="any" class="ui-input" formControlName="gas_litres_count" />
+            </div>
+          }
+        </div>
+
+        @if (error()) { <div class="ui-alert" role="alert" style="margin-top: 16px">{{ error() }}</div> }
+      </div>
+
+      <div class="ui-card-footer">
+        <a routerLink="/expenses" class="ui-btn ui-btn-outline">الغاء</a>
+        <button type="submit" class="ui-btn ui-btn-primary" [disabled]="saving()">
+          {{ saving() ? 'جاري الحفظ...' : (id() ? 'حفظ' : 'اضافة') }}
+        </button>
+      </div>
+    </form>
+  }
+</div>

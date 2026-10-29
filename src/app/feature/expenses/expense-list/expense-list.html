@@ -1,0 +1,108 @@
+<!-- expense-list/expense-list.html -->
+<div class="ui-page" style="max-width: none;">
+  <div class="ui-page-header">
+    <h2 class="ui-title">المصروفات</h2>
+    <a routerLink="/expenses/new" class="ui-btn ui-btn-primary">+ مصروف جديد</a>
+  </div>
+
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px"
+       (keydown.enter)="list.search()">
+    <input type="search" class="ui-input" style="flex: 1 1 200px" placeholder="الملاحظات او نوع المصروف..."
+           [ngModel]="list.form().search" (ngModelChange)="list.set('search', $event)" />
+
+    <div style="flex: 0 0 220px">
+      <expense-category-type-select
+            [inline]="true"
+            [anyCategory]="true"
+            categoryLabel=""
+            typeLabel=""
+            categoryPlaceholder="كل التصنيفات"
+            typePlaceholder="كل الانواع"
+            [ngModel]="list.form().expenseTypeId"
+            (ngModelChange)="list.set('expenseTypeId', $event, true)"
+            (categoryChange)="list.set('categoryId', $event)" />
+    </div>
+
+    <label>من <input type="date" class="ui-input"
+           [ngModel]="list.form().dateFrom" (ngModelChange)="list.set('dateFrom', $event, true)" /></label>
+    <label>الى <input type="date" class="ui-input"
+           [ngModel]="list.form().dateTo" (ngModelChange)="list.set('dateTo', $event, true)" /></label>
+
+    <button type="button" class="ui-btn ui-btn-primary" (click)="list.search()">بحث</button>
+    <button type="button" class="ui-btn ui-btn-outline" (click)="list.patch({ dateFrom: '', dateTo: '' }, true)">كل الفترات</button>
+    <button type="button" class="ui-btn ui-btn-outline sm" (click)="list.reset()">اليوم / مسح الفلاتر</button>  </div>
+
+    @if (showingToday()) {
+      <p class="ui-muted" style="margin-bottom: 8px">يتم عرض مصروفات اليوم فقط.</p>
+    }
+  @if (actionError()) {
+    <div class="ui-alert" role="alert" style="margin-bottom: 16px">
+      <span>{{ actionError() }}</span>
+      <button type="button" class="ui-alert-close" (click)="actionError.set(null)" aria-label="إغلاق">×</button>
+    </div>
+  }
+
+  @if (list.error()) {
+    <div class="ui-alert"><span>{{ list.error() }}</span>
+      <button class="ui-btn ui-btn-danger sm" (click)="list.reload()">اعادة المحاولة</button></div>
+  } @else {
+    <div class="ui-card" [style.opacity]="list.loading() ? 0.55 : 1">
+      <div class="ui-table-wrap">
+        <table class="ui-table">
+          <thead>
+            <tr>
+              <th>التاريخ</th>
+              <th>التصنيف</th>
+              <th>النوع</th>
+              <th>الخزينة</th>
+              <th>المبلغ</th>
+              <th>بالعملة</th>
+              <th>المشروع</th>
+              <th>ملاحظات</th>
+              <th>المسجل</th>
+              <th class="end">الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (e of list.items(); track e.id) {
+              <tr>
+                <td>{{ e.date | date:'yyyy-MM-dd' }}</td>
+                <td class="ui-muted">{{ e.expense_category_name }}</td>
+                <td class="strong">{{ e.expense_type_name }}</td>
+                <td>{{ e.money_safe_name }}</td>
+                <td>{{ e.amount | number:'1.2-2' }}</td>
+                <td>@if (e.amount_currency) { {{ e.amount_currency | number:'1.2-2' }} }</td>
+                <td class="ui-muted">{{ e.project_name }}</td>
+                <td class="ui-muted">{{ e.notes }}</td>
+                <td class="ui-muted">{{ e.auditor_name }}</td>
+                <td class="end nowrap">
+                  <a [routerLink]="['/expenses', e.id, 'edit']" class="ui-btn ui-btn-outline sm">تعديل</a>
+                  <button class="ui-btn ui-btn-danger sm" [disabled]="deletingId() === e.id" (click)="remove(e)">
+                    {{ deletingId() === e.id ? 'جاري الحذف...' : 'حذف' }}
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="10" class="center ui-muted" style="padding: 28px">
+                {{ list.loading() ? 'جاري التحميل...' : 'لا توجد مصروفات.' }}
+              </td></tr>
+            }
+          </tbody>
+          @if (list.summary(); as s) {
+            <tfoot>
+              <tr style="font-weight: 600">
+                <td colspan="4">اجمالي كل النتائج ({{ list.total() }})</td>
+                <td>{{ s.amount | number:'1.2-2' }}</td>
+                <td>{{ s.amount_currency | number:'1.2-2' }}</td>
+                <td colspan="4"></td>
+              </tr>
+            </tfoot>
+          }
+        </table>
+      </div>
+
+      <app-pager [page]="list.page()" [pageSize]="list.size()" [total]="list.total()"
+                 (pageChange)="list.goTo($event)" (sizeChange)="list.setSize($event)" />
+    </div>
+  }
+</div>

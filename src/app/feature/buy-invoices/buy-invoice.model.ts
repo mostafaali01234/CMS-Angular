@@ -1,4 +1,7 @@
 // buy-invoice.model.ts
+
+import { PageQuery } from "../../shared/models/paged.model";
+
 // TODO: fill in the real enum names (the API sends names, not numbers)
 export const INVOICE_TYPES = [
   { value: 'Buy', label: 'شراء' },
@@ -133,3 +136,13 @@ export interface SaveBuyReturn {
   auditor_id: number;
   items: { original_item_id: number; quantity: number }[];
 }
+export interface BuyInvoiceFilter {
+  dateFrom: string;
+  dateTo: string;
+  supplierId: number;
+  type: string;        // '' | 'Buy' | 'Buy_Return'
+  payStatus: string;   // '' | 'unpaid' | 'paid'
+  search: string;
+  number: string;
+}
+export type BuyInvoiceQuery = BuyInvoiceFilter & PageQuery;

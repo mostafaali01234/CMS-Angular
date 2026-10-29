@@ -141,5 +141,5 @@ export class SearchSelect<T extends LookupItem = LookupItem> implements ControlV
   writeValue(v: number | null) { this.value.set(v ?? 0); }
   registerOnChange(fn: (v: number) => void) { this.onChange = fn; }
   registerOnTouched(fn: () => void) { this.onTouched = fn; }
-  setDisabledState(d: boolean) { this.disabled.set(d); }
+  setDisabledCategory(d: boolean) { this.disabled.set(d); }
 }

@@ -34,7 +34,8 @@ export class Sidebar {
       label: 'العملاء', icon: '👥',
       children: [
         // { label: 'عملائي', icon: '•', path: '/customers?sellerid=' + this.auth.employeeId() },
-        { label: 'كل العملاء', icon: '•', path: '/customers' }
+        { label: 'كل العملاء', icon: '•', path: '/customers' },
+        { label: 'ارصدة العملاء', icon: '•', role: 'Admin,SuperAdmin', path: '/balances/customers' }
       ]
     },
     {
@@ -57,10 +58,10 @@ export class Sidebar {
     {
       label: 'المصروفات', icon: '💸', role: 'Admin,SuperAdmin',
       children: [
-        { label: 'مصروف جديد', icon: '•', path: '/shifts' },
-        { label: 'كشف المصروفات', icon: '•', path: '/shifts' },
-        { label: 'انوع المصروفات', icon: '•', path: '/branches' },
-        { label: 'تصنيف المصروفات', icon: '•', path: '/floors' },
+        { label: 'مصروف جديد', icon: '•', path: '/expenses/new' },
+        { label: 'كشف المصروفات', icon: '•', path: '/expenses' },
+        { label: 'انوع المصروفات', icon: '•', path: '/expense-types' },
+        { label: 'تصنيف المصروفات', icon: '•', path: '/expense-categories' },
       ]
     },
     {
@@ -121,8 +122,8 @@ export class Sidebar {
     {
       label: 'السيارات', icon: '🚗', role: 'Admin,SuperAdmin',
       children: [
-        { label: 'سيارة جديدة', icon: '•', path: '/shifts' },
-        { label: 'كشف السيارات', icon: '•', path: '/branches' },
+        { label: 'سيارة جديدة', icon: '•', path: '/cars/new' },
+        { label: 'كشف السيارات', icon: '•', path: '/cars' },
       ]
     },
     {
@@ -130,6 +131,7 @@ export class Sidebar {
       children: [
         { label: 'مورد جديد', icon: '•', path: '/suppliers/new' },
         { label: 'كشف الموردين', icon: '•', path: '/suppliers' },
+        { label: 'ارصدة الموردين', icon: '•', role: 'Admin,SuperAdmin', path: '/balances/suppliers' },
         { label: 'فواتير الموردين', icon: '•', path: '/suppliers/invoices' },
         { label: 'دفعات الموردين', icon: '•', path: '/supplier-payments' },
         { label: 'الارصدة الافتتاحية للموردين', icon: '•', path: '/suppliers/opening-balance' },

@@ -1,0 +1,65 @@
+<!-- expense-type-list/expense-type-list.html -->
+<div class="ui-page narrow">
+  <div class="ui-page-header">
+    <h2 class="ui-title">انوع المصروفات</h2>
+    <a routerLink="/expense-types/new" class="ui-btn ui-btn-primary">+ نوع جديد</a>
+  </div>
+
+  <input
+    type="search"
+    class="ui-input"
+    style="margin-bottom: 16px"
+    placeholder="ابحث بالاسم ..."
+    [ngModel]="search()"
+    (ngModelChange)="search.set($event)" />
+
+  @if (actionError()) {
+    <div class="ui-alert" role="alert" style="margin-bottom: 16px">
+      <span>{{ actionError() }}</span>
+      <button type="button" class="ui-alert-close" (click)="actionError.set(null)" aria-label="إغلاق">×</button>
+    </div>
+  }
+
+  @if (loading()) {
+    <p class="ui-muted">جاري التحميل...</p>
+  } @else if (error()) {
+    <div class="ui-alert">
+      <span>{{ error() }}</span>
+      <button class="ui-btn ui-btn-danger sm" (click)="load()">اعادة المحاولة</button>
+    </div>
+  } @else {
+    <div class="ui-card">
+      <div class="ui-table-wrap">
+        <table class="ui-table">
+          <thead>
+            <tr>
+              <th>اسم النوع</th>
+              <th>التصنيف</th>
+              <th class="end">الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of filtered(); track c.id) {
+              <tr>
+                <td class="strong">{{ c.name }}</td>
+                <td class="strong">{{ c.category?.name}}</td>
+                <td class="end nowrap">
+                  <a [routerLink]="['/expense-types', c.id, 'edit']" class="ui-btn ui-btn-outline sm">تعديل</a>
+                  <button class="ui-btn ui-btn-danger sm"
+                          [disabled]="deletingId() === c.id"
+                          (click)="remove(c)">
+                    {{ deletingId() === c.id ? 'جاري الحذف...' : 'حذف' }}
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="3" class="center ui-muted" style="padding: 28px">لا توجد انواع.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</div>

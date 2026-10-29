@@ -54,6 +54,7 @@
                 <td class="end nowrap">
                   <a [routerLink]="['/customers', c.id, 'edit']" class="ui-btn ui-btn-outline sm">تعديل</a>
                   @if(this.auth.hasRole('Admin') || this.auth.hasRole('SuperAdmin')){
+                      <a [routerLink]="['/balances', 'customers', c.id]" class="ui-btn ui-btn-outline sm">كشف حساب</a>
                     <button class="ui-btn ui-btn-danger sm"
                               [disabled]="deletingId() === c.id"
                               (click)="remove(c)">

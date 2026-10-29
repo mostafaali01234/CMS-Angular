@@ -1,0 +1,34 @@
+<!-- shared/components/expense-category-type-select/expense-category-type-select.html -->
+<div class="ui-field" [style.flex]="inline() ? '0 0 220px' : null" [style.margin]="inline() ? '0' : null">
+  @if (categoryLabel()) {
+    <label class="ui-label" [for]="'expense-category-' + uid">{{ categoryLabel() }}</label>
+  }
+  <select [id]="'expense-category-' + uid" class="ui-input"
+          [ngModel]="categoryId()" (ngModelChange)="onCategoryChange($event)"
+          [ngModelOptions]="{ standalone: true }"
+          [disabled]="disabled()" (blur)="touched()"
+          [class.is-invalid]="invalid() && !categoryId()">
+    <option [ngValue]="0">{{ categoryPlaceholder() }}</option>
+    @for (c of categories(); track c.id) {
+      <option [ngValue]="c.id">{{ c.name }}</option>
+    }
+  </select>
+  @if (invalid() && !categoryId()) { <span class="ui-error-text">{{ categoryError() }}</span> }
+</div>
+
+<div class="ui-field" [style.flex]="inline() ? '0 0 220px' : null" [style.margin]="inline() ? '0' : null">
+  @if (typeLabel()) {
+    <label class="ui-label" [for]="'expense-type-' + uid">{{ typeLabel() }}</label>
+  }
+  <select [id]="'expense-type-' + uid" class="ui-input"
+          [ngModel]="typeId()" (ngModelChange)="onTypeChange($event)"
+          [ngModelOptions]="{ standalone: true }"
+          [disabled]="typeDisabled()" (blur)="touched()"
+          [class.is-invalid]="invalid() && !!categoryId()">
+    <option [ngValue]="0">{{ (categoryId() || anyCategory()) ? typePlaceholder() : typeLockedPlaceholder() }}</option>
+    @for (t of filteredTypes(); track t.id) {
+      <option [ngValue]="t.id">{{ t.name }}</option>
+    }
+  </select>
+  @if (invalid() && !!categoryId()) { <span class="ui-error-text">{{ typeError() }}</span> }
+</div>

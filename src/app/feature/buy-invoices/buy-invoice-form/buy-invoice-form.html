@@ -264,6 +264,9 @@
               }
             </tbody>
            <tfoot>
+            <tr>
+              <td></td><td></td><td></td>
+            </tr>
               @if (inv.returned_amount > 0 || inv.returned_amount_currency > 0) {
                 <tr style="font-weight: 600">
                   <td colspan="2">المرتجعات</td>
@@ -272,7 +275,7 @@
                 </tr>
               }
               <tr style="font-weight: 600">
-                <td colspan="2">المدفوع</td>
+                <td colspan="2">اجمالي الدفعات</td>
                 <td>{{ inv.paid_amount | number:'1.2-2' }}</td>
                 <td colspan="3">{{ inv.paid_amount_currency | number:'1.2-2' }}</td>
               </tr>

@@ -1,0 +1,68 @@
+<!-- money-safe-transaction-form/money-safe-transaction-form.html -->
+<div class="ui-page narrow">
+  <div class="ui-page-header">
+    <h2 class="ui-title">{{ id() ? 'تعديل حركة خزينة' : 'حركة خزينة جديدة' }}</h2>
+  </div>
+
+  @if (loading()) {
+    <p class="ui-muted">جاري التحميل...</p>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="save()" class="ui-card">
+      <div class="ui-card-body">
+        <div class="ui-grid">
+
+          <div class="ui-field">
+            <label class="ui-label" for="date">التاريخ</label>
+            <input id="date" type="date" class="ui-input" formControlName="transaction_date"
+                   [class.is-invalid]="invalid('transaction_date')" />
+          </div>
+
+          <div class="ui-field">
+            <label class="ui-label" for="type">النوع</label>
+            <select id="type" class="ui-input" formControlName="transaction_type">
+              @for (t of types; track t.value) { <option [ngValue]="t.value">{{ t.label }}</option> }
+            </select>
+          </div>
+
+          <app-lookup-select formControlName="out_money_safe_id" [loader]="lookup.moneySafes" [filter]="activeOnly"
+                             label="من خزينة" placeholder="اختر الخزينة" error="اختر الخزينة"
+                             [invalid]="invalid('out_money_safe_id')" />
+
+          <app-lookup-select formControlName="in_money_safe_id" [loader]="lookup.moneySafes" [filter]="activeOnly"
+                             label="الى خزينة" placeholder="اختر الخزينة" error="اختر الخزينة"
+                             [invalid]="invalid('in_money_safe_id')" />
+
+          <div class="ui-field">
+            <label class="ui-label" for="amount">المبلغ (جنيه)</label>
+            <input id="amount" type="number" step="0.01" class="ui-input" formControlName="transaction_amount"
+                   [class.is-invalid]="invalid('transaction_amount')" />
+          </div>
+
+          @if (canCurrency) {
+            <div class="ui-field">
+              <label class="ui-label" for="cur">المبلغ (عملة)</label>
+              <input id="cur" type="number" step="0.01" class="ui-input" formControlName="transaction_amount_currency" />
+            </div>
+          }
+
+          <app-lookup-select formControlName="project_id" [loader]="lookup.projects"
+                             label="المشروع" placeholder="بدون مشروع" />
+
+          <div class="ui-field full">
+            <label class="ui-label" for="notes">ملاحظات</label>
+            <textarea id="notes" rows="2" class="ui-input" formControlName="transaction_notes"></textarea>
+          </div>
+        </div>
+
+        @if (error()) { <div class="ui-alert" role="alert" style="margin-top: 16px">{{ error() }}</div> }
+      </div>
+
+      <div class="ui-card-footer">
+        <a routerLink="/money-safe-transactions" class="ui-btn ui-btn-outline">الغاء</a>
+        <button type="submit" class="ui-btn ui-btn-primary" [disabled]="saving()">
+          {{ saving() ? 'جاري الحفظ...' : (id() ? 'حفظ' : 'اضافة') }}
+        </button>
+      </div>
+    </form>
+  }
+</div>

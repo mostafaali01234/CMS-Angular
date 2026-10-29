@@ -1,0 +1,75 @@
+<!-- balance-statement/balance-statement.html -->
+<div class="ui-page">
+  <div class="ui-page-header">
+    <h2 class="ui-title">كشف حساب {{ isCustomer ? 'عميل' : 'مورد' }}: {{ statement()?.party_name }}</h2>
+    <div>
+      <button type="button" class="ui-btn ui-btn-outline" (click)="print()">طباعة</button>
+      <a [routerLink]="listLink" class="ui-btn ui-btn-outline">رجوع</a>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px">
+    <label>من <input type="date" class="ui-input" [ngModel]="from()" (ngModelChange)="from.set($event)" /></label>
+    <label>الى <input type="date" class="ui-input" [ngModel]="to()" (ngModelChange)="to.set($event)" /></label>
+    <button type="button" class="ui-btn ui-btn-primary" (click)="load()">عرض</button>
+    @if (from() || to()) { <button type="button" class="ui-btn ui-btn-outline sm" (click)="clearDates()">مسح التاريخ</button> }
+  </div>
+
+  @if (loading()) {
+    <p class="ui-muted">جاري التحميل...</p>
+  } @else if (error()) {
+    <div class="ui-alert"><span>{{ error() }}</span><button class="ui-btn ui-btn-danger sm" (click)="load()">اعادة المحاولة</button></div>
+  } @else if (statement(); as s) {
+    <div class="ui-card">
+      <div class="ui-table-wrap">
+        <table class="ui-table">
+          <thead>
+            <tr>
+              <th>التاريخ</th><th>البيان</th><th>المستند</th><th>الطلب</th><th>ملاحظات</th>
+              <th>{{ increaseLabel }}</th><th>{{ decreaseLabel }}</th><th>الرصيد</th>
+              @if (hasCurrency()) { <th>{{ increaseLabel }} (عملة)</th><th>{{ decreaseLabel }} (عملة)</th><th>الرصيد (عملة)</th> }
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="font-weight: 600">
+              <td colspan="7">رصيد ما قبل الفترة</td>
+              <td>{{ s.opening_balance | number:'1.2-2' }}</td>
+              @if (hasCurrency()) { <td colspan="2"></td><td>{{ s.opening_balance_currency | number:'1.2-2' }}</td> }
+            </tr>
+            @for (l of s.lines; track l.kind + l.id) {
+              <tr>
+                <td>{{ l.date | date:'yyyy-MM-dd' }}</td>
+                <td>{{ kindLabel(l.kind) }}</td>
+                <td>
+                  @if (l.number) { #{{ l.number }} }
+                  @else if (l.ref_number) { فاتورة #{{ l.ref_number }} }
+                  @else { <span class="ui-muted">{{ isCustomer ? 'رصيد العميل' : 'رصيد المورد' }}</span> }
+                  @if (link(l); as lnk) { <a [routerLink]="lnk" class="ui-btn ui-btn-outline sm">فتح</a> }
+                </td>
+                <td>{{ l.order_id ?? '' }}</td>
+                <td class="ui-muted">{{ l.notes }}</td>
+                <td>@if (l.increase) { {{ l.increase | number:'1.2-2' }} }</td>
+                <td>@if (l.decrease) { {{ l.decrease | number:'1.2-2' }} }</td>
+                <td class="strong" [style.color]="l.balance < 0 ? 'crimson' : 'inherit'">{{ l.balance | number:'1.2-2' }}</td>
+                @if (hasCurrency()) {
+                  <td>@if (l.increase_currency) { {{ l.increase_currency | number:'1.2-2' }} }</td>
+                  <td>@if (l.decrease_currency) { {{ l.decrease_currency | number:'1.2-2' }} }</td>
+                  <td>{{ l.balance_currency | number:'1.2-2' }}</td>
+                }
+              </tr>
+            } @empty {
+              <tr><td [attr.colspan]="hasCurrency() ? 11 : 8" class="center ui-muted" style="padding: 28px">لا توجد حركات في هذه الفترة.</td></tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr style="font-weight: 600">
+              <td colspan="7">الرصيد الحالي <small class="ui-muted">{{ side(s.closing_balance) }}</small></td>
+              <td [style.color]="s.closing_balance < 0 ? 'crimson' : 'inherit'">{{ s.closing_balance | number:'1.2-2' }}</td>
+              @if (hasCurrency()) { <td colspan="2"></td><td>{{ s.closing_balance_currency | number:'1.2-2' }}</td> }
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  }
+</div>

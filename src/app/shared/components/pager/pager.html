@@ -1,0 +1,26 @@
+<!-- shared/components/pager/pager.html -->
+<div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center; justify-content: space-between; padding: 12px 16px">
+  <span class="ui-muted">عرض {{ from() }} - {{ to() }} من {{ total() }}</span>
+
+  <div style="display: flex; gap: 4px; align-items: center; flex-wrap: wrap">
+    <button type="button" class="ui-btn ui-btn-outline sm" [disabled]="page() <= 1"
+            (click)="pageChange.emit(page() - 1)">السابق</button>
+
+    @for (p of window(); track $index) {
+      @if (p === 0) {
+        <span class="ui-muted">…</span>
+      } @else {
+        <button type="button" class="ui-btn sm" [class.ui-btn-primary]="p === page()"
+                [class.ui-btn-outline]="p !== page()" (click)="pageChange.emit(p)">{{ p }}</button>
+      }
+    }
+
+    <button type="button" class="ui-btn ui-btn-outline sm" [disabled]="page() >= pages()"
+            (click)="pageChange.emit(page() + 1)">التالي</button>
+
+    <select class="ui-input" style="width: 90px; margin-inline-start: 8px" aria-label="عدد الصفوف"
+            (change)="sizeChange.emit(+$any($event.target).value)">
+      @for (s of sizes; track s) { <option [value]="s" [selected]="s === pageSize()">{{ s }}</option> }
+    </select>
+  </div>
+</div>

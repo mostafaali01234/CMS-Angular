@@ -56,7 +56,7 @@ export class StateCitySelect implements ControlValueAccessor, OnInit {
   }
   registerOnChange(fn: (v: number) => void) { this.onChange = fn; }
   registerOnTouched(fn: () => void) { this.onTouched = fn; }
-  setDisabledState(isDisabled: boolean) { this.disabled.set(isDisabled); }
+  setDisabledCategory(isDisabled: boolean) { this.disabled.set(isDisabled); }
 
   // --- UI events ---
   onStateChange(id: number) {
