@@ -1,0 +1,98 @@
+<!-- product-moves/product-moves.html -->
+<div class="ui-page" style="max-width: none">
+  <div class="ui-page-header">
+    <h2 class="ui-title">حركة الأصناف</h2>
+    <a routerLink="/stock/matrix" class="ui-btn ui-btn-outline">المخزون</a>
+  </div>
+
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px"
+       (keydown.enter)="list.search()">
+    <div style="flex: 0 0 260px">
+      <app-search-select [ngModel]="list.form().productId" (ngModelChange)="list.set('productId', $event, true)"
+                         [loader]="lookup.products" [display]="productText" placeholder="كل المنتجات" />
+    </div>
+
+    <input type="number" class="ui-input" style="flex: 0 0 130px" placeholder="رقم الطلب"
+           [ngModel]="list.form().orderId" (ngModelChange)="list.set('orderId', $event)" />
+
+    <select class="ui-input" style="flex: 0 0 160px"
+            [ngModel]="list.form().operationType" (ngModelChange)="list.set('operationType', $event, true)">
+      <option value="">كل العمليات</option>
+      @for (o of operations; track o.value) { <option [value]="o.value">{{ o.label }}</option> }
+    </select>
+
+    <label>من <input type="date" class="ui-input"
+           [ngModel]="list.form().dateFrom" (ngModelChange)="list.set('dateFrom', $event, true)" /></label>
+    <label>الى <input type="date" class="ui-input"
+           [ngModel]="list.form().dateTo" (ngModelChange)="list.set('dateTo', $event, true)" /></label>
+
+    <button type="button" class="ui-btn ui-btn-primary" (click)="list.search()">بحث</button>
+    <button type="button" class="ui-btn ui-btn-outline" (click)="list.patch({ dateFrom: '', dateTo: '' }, true)">كل الفترات</button>
+    <button type="button" class="ui-btn ui-btn-outline sm" (click)="list.reset()">اليوم / مسح الفلاتر</button>
+  </div>
+
+  @if (showingToday()) {
+    <p class="ui-muted" style="margin-bottom: 8px">يتم عرض حركات اليوم فقط.</p>
+  }
+
+  @if (list.error()) {
+    <div class="ui-alert"><span>{{ list.error() }}</span>
+      <button class="ui-btn ui-btn-danger sm" (click)="list.reload()">اعادة المحاولة</button></div>
+  } @else {
+    <div class="ui-card" [style.opacity]="list.loading() ? 0.55 : 1">
+      <div class="ui-table-wrap">
+        <table class="ui-table">
+          <thead>
+            <tr>
+              <th>التاريخ</th><th>العملية</th><th>المستند</th><th>الطلب</th><th>المنتج</th><th>التصنيف</th>
+              <th>الكمية</th><th>من مخزن</th><th>الى مخزن</th><th>رصيد المنتج</th>
+              <th>العميل / المورد</th><th>البائع</th><th>سعر المنتج</th>
+              <th>اجمالي الفاتورة</th><th>المدفوع</th><th>المتبقي</th><th>العمولة</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (m of list.items(); track m.operation_type + m.doc_id + m.product_id + $index) {
+              <tr>
+                <td>{{ m.date | date:'yyyy-MM-dd HH:mm' }}</td>
+                <td>{{ opLabel(m.operation_type) }}@if (m.is_return) { <small class="ui-muted"> (مرتجع)</small> }</td>
+                <td><a [routerLink]="docLink(m)">#{{ m.doc_number }}</a></td>
+                <td>{{ m.order_id ?? '' }}</td>
+                <td class="strong">{{ m.product_name }}</td>
+                <td class="ui-muted">{{ m.category_name }}</td>
+                <td class="strong">{{ m.product_count | number:'1.0-3' }}</td>
+                <td>{{ m.out_store_name }}</td>
+                <td>{{ m.in_store_name }}</td>
+                <td class="strong" [style.color]="m.stock_after < 0 ? 'crimson' : 'inherit'">{{ m.stock_after | number:'1.0-3' }}</td>
+                <td>{{ party(m) }}</td>
+                <td class="ui-muted">{{ m.seller_name }}</td>
+                <td>@if (m.product_price != null) { {{ m.product_price | number:'1.2-2' }} }</td>
+                <td>@if (m.invoice_total != null) { {{ m.invoice_total | number:'1.2-2' }} }</td>
+                <td>@if (m.invoice_paid != null) { {{ m.invoice_paid | number:'1.2-2' }} }</td>
+                <td [class.strong]="(m.invoice_remaining ?? 0) > 0">@if (m.invoice_remaining != null) { {{ m.invoice_remaining | number:'1.2-2' }} }</td>
+                <td>{{ m.commission | number:'1.2-2' }}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="17" class="center ui-muted" style="padding: 28px">
+                {{ list.loading() ? 'جاري التحميل...' : 'لا توجد حركات.' }}
+              </td></tr>
+            }
+          </tbody>
+          @if (list.summary(); as s) {
+            <tfoot>
+              <tr style="font-weight: 600">
+                <td colspan="6">اجمالي كل النتائج ({{ list.total() }})</td>
+                <td colspan="11">
+                  وارد: <span style="color: #2e9e4f">{{ s.total_in | number:'1.0-3' }}</span>
+                  &nbsp;|&nbsp; صادر: <span style="color: crimson">{{ s.total_out | number:'1.0-3' }}</span>
+                  <small class="ui-muted"> (التحويلات بين المخازن لا تغير الاجمالي)</small>
+                </td>
+              </tr>
+            </tfoot>
+          }
+        </table>
+      </div>
+      <app-pager [page]="list.page()" [pageSize]="list.size()" [total]="list.total()"
+                 (pageChange)="list.goTo($event)" (sizeChange)="list.setSize($event)" />
+    </div>
+  }
+</div>

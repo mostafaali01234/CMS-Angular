@@ -1,0 +1,80 @@
+<!-- stock-matrix/stock-matrix.html -->
+<div class="ui-page" style="max-width: none">
+  <div class="ui-page-header">
+    <h2 class="ui-title">المخزون في كل المخازن</h2>
+    <a routerLink="/stock/store" class="ui-btn ui-btn-outline">مخزون مخزن</a>
+  </div>
+
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px"
+       (keydown.enter)="list.search()">
+    <input type="search" class="ui-input" style="flex: 1 1 240px" placeholder="اسم المنتج او الباركود..."
+           [ngModel]="list.form().search" (ngModelChange)="list.set('search', $event)" />
+
+    <div style="flex: 0 0 220px">
+      <app-lookup-select [ngModel]="list.form().categoryId" (ngModelChange)="list.set('categoryId', $event, true)"
+                         [loader]="lookup.productCategories" placeholder="كل التصنيفات" />
+    </div>
+
+    <label><input type="checkbox" [ngModel]="list.form().includeZero"
+                  (ngModelChange)="list.set('includeZero', $event, true)" /> عرض الاصناف الصفرية</label>
+
+    <button type="button" class="ui-btn ui-btn-primary" (click)="list.search()">بحث</button>
+    <button type="button" class="ui-btn ui-btn-outline sm" (click)="list.reset()">مسح الفلاتر</button>
+  </div>
+
+  @if (list.error()) {
+    <div class="ui-alert"><span>{{ list.error() }}</span>
+      <button class="ui-btn ui-btn-danger sm" (click)="list.reload()">اعادة المحاولة</button></div>
+  } @else {
+    <div class="ui-card" [style.opacity]="list.loading() ? 0.55 : 1">
+      <div class="ui-table-wrap">
+        <table class="ui-table">
+          <thead>
+            <tr>
+              <th>المنتج</th><th>التصنيف</th>
+              @for (s of list.summary()?.stores ?? []; track s.id) { <th class="center">{{ s.name }}</th> }
+              <th class="center">الاجمالي</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of list.items(); track r.product_id) {
+              <tr>
+                <td class="strong">
+                  <a [routerLink]="['/stock/product-moves']" [queryParams]="{ product: r.product_id }">{{ r.product_name }}</a>
+                </td>
+                <td class="ui-muted">{{ r.category_name }}</td>
+                @for (c of r.counts; track $index) {
+                  <td class="center" [style.color]="c < 0 ? 'crimson' : (c === 0 ? 'gray' : 'inherit')">
+                    @if (c === 0) { — }
+                    @else {
+                      <a [routerLink]="['/stock/store-moves']"
+                         [queryParams]="{ store: list.summary()?.stores?.[$index]?.id, product: r.product_id }">
+                        {{ c | number:'1.0-3' }}
+                      </a>
+                    }
+                  </td>
+                }
+                <td class="center strong" [style.color]="r.total < 0 ? 'crimson' : 'inherit'">{{ r.total | number:'1.0-3' }}</td>
+              </tr>
+            } @empty {
+              <tr><td [attr.colspan]="(list.summary()?.stores?.length ?? 0) + 3" class="center ui-muted" style="padding: 28px">
+                {{ list.loading() ? 'جاري التحميل...' : 'لا توجد اصناف.' }}
+              </td></tr>
+            }
+          </tbody>
+          @if (list.summary(); as h) {
+            <tfoot>
+              <tr style="font-weight: 600">
+                <td colspan="2">اجمالي كل النتائج ({{ list.total() }} صنف)</td>
+                @for (t of h.totals; track $index) { <td class="center">{{ t | number:'1.0-3' }}</td> }
+                <td class="center">{{ h.grand_total | number:'1.0-3' }}</td>
+              </tr>
+            </tfoot>
+          }
+        </table>
+      </div>
+      <app-pager [page]="list.page()" [pageSize]="list.size()" [total]="list.total()"
+                 (pageChange)="list.goTo($event)" (sizeChange)="list.setSize($event)" />
+    </div>
+  }
+</div>

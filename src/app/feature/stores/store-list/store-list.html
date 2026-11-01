@@ -58,6 +58,8 @@
                 <td>{{ s.active ? 'نشط' : 'غير نشط' }}</td>
                 <td class="end nowrap">
                   <a [routerLink]="['/stores', s.id, 'edit']" class="ui-btn ui-btn-outline sm">تعديل</a>
+                  <a [routerLink]="['/stock', 'store']" [queryParams]="{ store: s.id }" class="ui-btn ui-btn-info sm">المخزون</a>
+                  <a [routerLink]="['/stock', 'store-moves']" [queryParams]="{ store: s.id }" class="ui-btn ui-btn-warning sm">حركة المخزن</a>
                   <button class="ui-btn ui-btn-danger sm"
                           [disabled]="deletingId() === s.id"
                           (click)="remove(s)">

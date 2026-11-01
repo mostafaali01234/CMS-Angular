@@ -1,0 +1,109 @@
+<!-- store-transaction-list/store-transaction-list.html -->
+<div class="ui-page" style="max-width: none;">
+  <div class="ui-page-header">
+    <h2 class="ui-title">تحويلات المخازن</h2>
+    <a routerLink="/store-transactions/new" class="ui-btn ui-btn-primary">+ تحويل جديد</a>
+  </div>
+
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px"
+       (keydown.enter)="list.search()">
+    <input type="search" class="ui-input" style="flex: 1 1 200px" placeholder="الملاحظات او المخزن او المنتج..."
+           [ngModel]="list.form().search" (ngModelChange)="list.set('search', $event)" />
+
+    <label>من <input type="date" class="ui-input"
+           [ngModel]="list.form().dateFrom" (ngModelChange)="list.set('dateFrom', $event, true)" /></label>
+    <label>الى <input type="date" class="ui-input"
+           [ngModel]="list.form().dateTo" (ngModelChange)="list.set('dateTo', $event, true)" /></label>
+
+    <div style="flex: 0 0 200px">
+      <app-lookup-select [ngModel]="list.form().outStoreId" (ngModelChange)="list.set('outStoreId', $event, true)"
+                         [loader]="lookup.stores" placeholder="من اي مخزن" />
+    </div>
+    <div style="flex: 0 0 200px">
+      <app-lookup-select [ngModel]="list.form().inStoreId" (ngModelChange)="list.set('inStoreId', $event, true)"
+                         [loader]="lookup.stores" placeholder="الى اي مخزن" />
+    </div>
+    <div style="flex: 0 0 240px">
+      <app-search-select [ngModel]="list.form().productId" (ngModelChange)="list.set('productId', $event, true)"
+                         [loader]="lookup.products" [display]="productText" placeholder="كل المنتجات" />
+    </div>
+
+    <button type="button" class="ui-btn ui-btn-primary" (click)="list.search()">بحث</button>
+    <button type="button" class="ui-btn ui-btn-outline" (click)="list.patch({ dateFrom: '', dateTo: '' }, true)">كل الفترات</button>
+    <button type="button" class="ui-btn ui-btn-outline sm" (click)="list.reset()">اليوم / مسح الفلاتر</button>
+  </div>
+
+  @if (showingToday()) {
+    <p class="ui-muted" style="margin-bottom: 8px">يتم عرض تحويلات اليوم فقط.</p>
+  }
+
+  @if (actionError()) {
+    <div class="ui-alert" role="alert" style="margin-bottom: 16px">
+      <span>{{ actionError() }}</span>
+      <button type="button" class="ui-alert-close" (click)="actionError.set(null)" aria-label="إغلاق">×</button>
+    </div>
+  }
+
+  @if (list.error()) {
+    <div class="ui-alert"><span>{{ list.error() }}</span>
+      <button class="ui-btn ui-btn-danger sm" (click)="list.reload()">اعادة المحاولة</button></div>
+  } @else {
+    <div class="ui-card" [style.opacity]="list.loading() ? 0.55 : 1">
+      <div class="ui-table-wrap">
+        <table class="ui-table">
+          <thead>
+            <tr>
+              <th>#</th><th>التاريخ</th><th>من مخزن</th><th>الى مخزن</th><th>الأصناف</th>
+              <th>ملاحظات</th><th>المسجل</th><th class="end">الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (t of list.items(); track t.id) {
+              <tr>
+                <td class="strong">{{ t.id }}</td>
+                <td>{{ t.transaction_date | date:'yyyy-MM-dd' }}</td>
+                <td class="strong" style="color: crimson">{{ t.out_store_name }}</td>
+                <td class="strong" style="color: #2e9e4f">{{ t.in_store_name }}</td>
+                <td>
+                  <button type="button" class="ui-btn ui-btn-outline sm" (click)="toggle(t)">
+                    {{ t.transaction_items.length }} {{ expandedId() === t.id ? '▲' : '▼' }}
+                  </button>
+                </td>
+                <td class="ui-muted">{{ t.notes }}</td>
+                <td class="ui-muted">{{ t.auditor_name }}</td>
+                <td class="end nowrap">
+                  <a [routerLink]="['/store-transactions', t.id, 'edit']" class="ui-btn ui-btn-outline sm">تعديل</a>
+                  <button class="ui-btn ui-btn-danger sm" [disabled]="deletingId() === t.id" (click)="remove(t)">
+                    {{ deletingId() === t.id ? 'جاري الحذف...' : 'حذف' }}
+                  </button>
+                </td>
+              </tr>
+
+              @if (expandedId() === t.id) {
+                <tr>
+                  <td colspan="8" style="padding: 12px 16px">
+                    <table class="ui-table" style="max-width: 520px">
+                      <thead><tr><th>المنتج</th><th>الكمية</th></tr></thead>
+                      <tbody>
+                        @for (i of t.transaction_items; track i.item_id) {
+                          <tr><td class="strong">{{ i.item_name }}</td><td>{{ i.quantity | number:'1.0-3' }}</td></tr>
+                        }
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+              }
+            } @empty {
+              <tr><td colspan="8" class="center ui-muted" style="padding: 28px">
+                {{ list.loading() ? 'جاري التحميل...' : 'لا توجد تحويلات.' }}
+              </td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <app-pager [page]="list.page()" [pageSize]="list.size()" [total]="list.total()"
+                 (pageChange)="list.goTo($event)" (sizeChange)="list.setSize($event)" />
+    </div>
+  }
+</div>

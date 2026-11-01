@@ -1,0 +1,71 @@
+<!-- store-transaction-form/store-transaction-form.html -->
+<div class="ui-page narrow">
+  <div class="ui-page-header">
+    <h2 class="ui-title">{{ id() ? 'تعديل حركة مخزن #' + id() : 'حركة مخزن جديدة' }}</h2>
+  </div>
+
+  @if (loading()) {
+    <p class="ui-muted">جاري التحميل...</p>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="save()" class="ui-card">
+      <div class="ui-card-body">
+        <div class="ui-grid">
+
+          <div class="ui-field">
+            <label class="ui-label" for="date">التاريخ</label>
+            <input id="date" type="date" class="ui-input" formControlName="transaction_date"
+                   [class.is-invalid]="invalid('transaction_date')" />
+          </div>
+
+          <div></div>
+
+          <app-lookup-select formControlName="out_store_id" [loader]="lookup.stores" [filter]="activeOnly"
+                             label="من مخزن" placeholder="اختر المخزن" error="اختر المخزن"
+                             [invalid]="invalid('out_store_id')" />
+
+          <app-lookup-select formControlName="in_store_id" [loader]="lookup.stores" [filter]="activeOnly"
+                             label="الى مخزن" placeholder="اختر المخزن" error="اختر المخزن"
+                             [invalid]="invalid('in_store_id')" />
+
+          <div class="ui-field full">
+            <label class="ui-label" for="notes">ملاحظات</label>
+            <textarea id="notes" rows="2" class="ui-input" formControlName="notes"></textarea>
+          </div>
+        </div>
+
+        <h3 class="ui-title" style="margin: 24px 0 12px">الأصناف</h3>
+
+        @for (g of items.controls; track g; let i = $index) {
+          <div class="ui-card" style="margin-bottom: 12px" [formGroup]="g">
+            <div class="ui-card-body">
+              <div class="ui-grid">
+                <app-search-select formControlName="item_id" [loader]="lookup.products" [filter]="activeOnly"
+                                   [display]="productText" label="المنتج" placeholder="ابحث بالاسم أو الباركود..."
+                                   error="اختر المنتج" [invalid]="invalidItem(i, 'item_id')" />
+
+                <div class="ui-field">
+                  <label class="ui-label">الكمية</label>
+                  <input type="number" step="any" class="ui-input" formControlName="quantity"
+                         [class.is-invalid]="invalidItem(i, 'quantity')" />
+                </div>
+              </div>
+              <button type="button" class="ui-btn ui-btn-danger sm" style="margin-top: 12px"
+                      [disabled]="items.length === 1" (click)="removeItem(i)">حذف الصنف</button>
+            </div>
+          </div>
+        }
+
+        <button type="button" class="ui-btn ui-btn-outline" (click)="addItem()">+ اضافة صنف</button>
+
+        @if (error()) { <div class="ui-alert" role="alert" style="margin-top: 16px">{{ error() }}</div> }
+      </div>
+
+      <div class="ui-card-footer">
+        <a routerLink="/store-transactions" class="ui-btn ui-btn-outline">الغاء</a>
+        <button type="submit" class="ui-btn ui-btn-primary" [disabled]="saving()">
+          {{ saving() ? 'جاري الحفظ...' : (id() ? 'حفظ' : 'اضافة') }}
+        </button>
+      </div>
+    </form>
+  }
+</div>

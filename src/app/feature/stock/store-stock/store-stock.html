@@ -1,0 +1,79 @@
+<!-- store-stock/store-stock.html -->
+<div class="ui-page" style="max-width: none;">
+  <div class="ui-page-header">
+    <h2 class="ui-title">مخزون مخزن</h2>
+    <a routerLink="/stock/matrix" class="ui-btn ui-btn-outline">كل المخازن</a>
+  </div>
+
+  @if (storesLoaded() && stores().length === 0) {
+    <p class="ui-muted">لا توجد مخازن.</p>
+  } @else {
+    <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px"
+         (keydown.enter)="list.search()">
+      <select class="ui-input" style="flex: 0 0 220px"
+              [ngModel]="list.form().storeId" (ngModelChange)="list.set('storeId', +$event, true)">
+        @for (s of stores(); track s.id) { <option [ngValue]="s.id">{{ s.name }}</option> }
+      </select>
+
+      <input type="search" class="ui-input" style="flex: 1 1 200px" placeholder="اسم المنتج او الباركود..."
+             [ngModel]="list.form().search" (ngModelChange)="list.set('search', $event)" />
+
+      <div style="flex: 0 0 220px">
+        <app-lookup-select [ngModel]="list.form().categoryId" (ngModelChange)="list.set('categoryId', $event, true)"
+                           [loader]="lookup.productCategories" placeholder="كل التصنيفات" />
+      </div>
+
+      <label><input type="checkbox" [ngModel]="list.form().includeZero"
+                    (ngModelChange)="list.set('includeZero', $event, true)" /> عرض الاصناف الصفرية</label>
+
+      <button type="button" class="ui-btn ui-btn-primary" (click)="list.search()">بحث</button>
+      <button type="button" class="ui-btn ui-btn-outline sm" (click)="list.reset()">مسح الفلاتر</button>
+    </div>
+
+    @if (list.error()) {
+      <div class="ui-alert"><span>{{ list.error() }}</span>
+        <button class="ui-btn ui-btn-danger sm" (click)="list.reload()">اعادة المحاولة</button></div>
+    } @else {
+      <div class="ui-card" [style.opacity]="list.loading() ? 0.55 : 1">
+        <div class="ui-table-wrap">
+          <table class="ui-table">
+            <thead>
+              <tr><th>المنتج</th><th>التصنيف</th><th>الباركود</th><th>الكمية</th><th class="end">الحركات</th></tr>
+            </thead>
+            <tbody>
+              @for (r of list.items(); track r.product_id) {
+                <tr>
+                  <td class="strong">{{ r.product_name }}</td>
+                  <td class="ui-muted">{{ r.category_name }}</td>
+                  <td class="ui-muted">{{ r.barcode }}</td>
+                  <td class="strong" [style.color]="r.quantity < 0 ? 'crimson' : (r.quantity === 0 ? 'gray' : 'inherit')">
+                    {{ r.quantity | number:'1.0-3' }}
+                  </td>
+                  <td class="end">
+                    <a routerLink="/stock/store-moves"
+                       [queryParams]="{ store: list.applied().storeId, product: r.product_id }"
+                       class="ui-btn ui-btn-outline sm">الحركات</a>
+                  </td>
+                </tr>
+              } @empty {
+                <tr><td colspan="5" class="center ui-muted" style="padding: 28px">
+                  {{ list.loading() ? 'جاري التحميل...' : 'لا توجد اصناف في هذا المخزن.' }}
+                </td></tr>
+              }
+            </tbody>
+            @if (list.summary(); as s) {
+              <tfoot>
+                <tr style="font-weight: 600">
+                  <td colspan="3">اجمالي الكميات ({{ list.total() }} صنف)</td>
+                  <td>{{ s.total_quantity | number:'1.0-3' }}</td><td></td>
+                </tr>
+              </tfoot>
+            }
+          </table>
+        </div>
+        <app-pager [page]="list.page()" [pageSize]="list.size()" [total]="list.total()"
+                   (pageChange)="list.goTo($event)" (sizeChange)="list.setSize($event)" />
+      </div>
+    }
+  }
+</div>

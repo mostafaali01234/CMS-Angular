@@ -88,10 +88,11 @@ export class Sidebar {
     {
       label: 'المخازن', icon: '📦', role: 'Admin,SuperAdmin',
       children: [
-        { label: 'كشف المخزان', icon: '•', path: '/stores' },
+        { label: 'كشف المخازن', icon: '•', path: '/stores' },
         { label: 'تحويلات بين المخازن', icon: '•', path: '/store-transactions' },
-        { label: 'مخزون كل المحازن', icon: '•', path: '/store/inventory' },
-        { label: 'مخزون كل المخازن 2', icon: '•', path: '/store/inventory-details' },
+        { label: 'مخزون مخزن', icon: '•', path: '/stock/store' },
+        { label: 'حركة مخزن', icon: '•', path: '/stock/store-moves' },
+        { label: 'مخزون كل المحازن', icon: '•', path: '/stock/matrix' },
       ]
     },
     {
@@ -116,7 +117,7 @@ export class Sidebar {
       children: [
         { label: 'كشف المنتجات', icon: '•', path: '/products' },
         { label: 'تصنيفات المنتجات', icon: '•', path: '/product-categories' },
-        { label: 'حركة المنتجات', icon: '•', path: '/shifts' }
+        { label: 'حركة المنتجات', icon: '•', path: '/stock/product-moves' }
       ]
     },
     {

@@ -106,6 +106,16 @@ export const routes: Routes = [
     loadChildren: () => import('./feature/money-safe-transactions/money-safe-transactions.routes')
       .then(m => m.MONEY_SAFE_TRANSACTION_ROUTES) 
   },
+  { 
+    path: 'store-transactions', canActivate: [authGuard],
+    loadChildren: () => import('./feature/store-transactions/store-transactions.routes')
+      .then(m => m.STORE_TRANSACTION_ROUTES)
+  },
+  {
+     path: 'stock', canActivate: [authGuard],
+     loadChildren: () => import('./feature/stock/stock.routes')
+     .then(m => m.STOCK_ROUTES) 
+  },
 
 
   { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
