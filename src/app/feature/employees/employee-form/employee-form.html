@@ -1,0 +1,125 @@
+<!-- employee-form/employee-form.html -->
+<div class="ui-page narrow">
+  <div class="ui-page-header">
+    <h2 class="ui-title">{{ id() ? 'تعديل موظف #' + id() : 'موظف جديد' }}</h2>
+  </div>
+
+  @if (loading()) {
+    <p class="ui-muted">جاري التحميل...</p>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="save()" class="ui-card">
+      <div class="ui-card-body">
+        <div class="ui-grid">
+
+          <div class="ui-field">
+            <label class="ui-label" for="name">الاسم</label>
+            <input id="name" class="ui-input" formControlName="name" [class.is-invalid]="invalid('name')" />
+          </div>
+
+          <div class="ui-field">
+            <label class="ui-label" for="hire">تاريخ التعيين</label>
+            <input id="hire" type="date" class="ui-input" formControlName="hire_date"
+                   [class.is-invalid]="invalid('hire_date')" />
+          </div>
+
+          <app-lookup-select formControlName="job_id" [loader]="lookup.jobs"
+                             label="الوظيفة" placeholder="اختر الوظيفة" error="اختر الوظيفة"
+                             [invalid]="invalid('job_id')" />
+
+          <app-lookup-select formControlName="department_id" [loader]="lookup.departments"
+                             label="القسم" placeholder="بدون قسم" />
+
+          <div class="ui-field">
+            <label class="ui-label" for="salary">الراتب الاساسي</label>
+            <input id="salary" type="number" step="any" class="ui-input" formControlName="salary"
+                   [class.is-invalid]="invalid('salary')" />
+          </div>
+
+          <div class="ui-field">
+            <label class="ui-label" for="ob">الرصيد الافتتاحي</label>
+            <input id="ob" type="number" step="any" class="ui-input" formControlName="opening_balance"
+                   [class.is-invalid]="invalid('opening_balance')" />
+          </div>
+
+          <div class="ui-field">
+            <label class="ui-label" for="pp">هاتف شخصي</label>
+            <input id="pp" class="ui-input" formControlName="personal_phone"
+                   [class.is-invalid]="invalid('personal_phone')" />
+          </div>
+
+          <div class="ui-field">
+            <label class="ui-label" for="wp">هاتف العمل</label>
+            <input id="wp" class="ui-input" formControlName="work_phone"
+                   [class.is-invalid]="invalid('work_phone')" />
+          </div>
+
+          <div class="ui-field">
+            <label class="ui-label" for="idn">الرقم القومي</label>
+            <input id="idn" class="ui-input" formControlName="identification_number" />
+          </div>
+
+          <div class="ui-field">
+            <label class="ui-label" for="bd">تاريخ الميلاد</label>
+            <input id="bd" type="date" class="ui-input" formControlName="birth_date" />
+          </div>
+          
+          <app-state-city-select formControlName="city_id" [invalid]="invalid('city_id')" />
+
+
+          <div class="ui-field">
+            <label class="ui-label" for="addr">العنوان</label>
+            <input id="addr" class="ui-input" formControlName="additional_address" />
+          </div>
+
+          <div class="ui-field">
+            <label class="ui-label" for="ms">الحالة الاجتماعية</label>
+            <select id="ms" class="ui-input" formControlName="martial_status">
+              @for (o of martialStatuses; track o.value) { <option [ngValue]="o.value">{{ o.label }}</option> }
+            </select>
+          </div>
+
+          <div class="ui-field">
+            <label class="ui-label" for="kids">عدد الاطفال</label>
+            <input id="kids" type="number" min="0" class="ui-input" formControlName="kids_count"
+                   [class.is-invalid]="invalid('kids_count')" />
+          </div>
+
+          <div class="ui-field">
+            <label class="ui-label" for="mil">الموقف من التجنيد</label>
+            <select id="mil" class="ui-input" formControlName="military_status">
+              @for (o of militaryStatuses; track o.value) { <option [ngValue]="o.value">{{ o.label }}</option> }
+            </select>
+          </div>
+
+          <div class="ui-field">
+            <label class="ui-label" for="edu">المؤهل</label>
+            <input id="edu" class="ui-input" formControlName="education" />
+          </div>
+
+          <div class="ui-field">
+            <label class="ui-label" for="spec">التخصص</label>
+            <input id="spec" class="ui-input" formControlName="education_spec" />
+          </div>
+
+          <div class="ui-field full">
+            <label class="ui-label" for="notes">ملاحظات</label>
+            <textarea id="notes" rows="3" class="ui-input" formControlName="notes"></textarea>
+          </div>
+
+          <div class="ui-field full">
+            <label><input type="checkbox" formControlName="active" /> موظف نشط</label>
+          </div>
+        </div>
+
+        @if (error()) { <div class="ui-alert" role="alert" style="margin-top: 16px">{{ error() }}</div> }
+      </div>
+
+      <div class="ui-card-footer">
+        <a routerLink="/employees" class="ui-btn ui-btn-outline">الغاء</a>
+        <button type="submit" class="ui-btn ui-btn-primary" [disabled]="saving()">
+          {{ saving() ? 'جاري الحفظ...' : (id() ? 'حفظ' : 'اضافة') }}
+        </button>
+      </div>
+    </form>
+  }
+</div>

@@ -200,3 +200,29 @@ textarea.ui-input { resize: vertical; }
 @keyframes ui-pop { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
 
 
+.shift-items-table-header{
+    border: 1px solid var(--border);
+    text-align: center !important;
+    background-color: var(--muted);
+    color: white !important;
+    font-weight: bolder !important;
+}
+
+.shift-items-table-header-red{
+    border: 1px solid var(--border);
+    text-align: center !important;
+    background-color: var(--muted);
+    font-weight: bolder !important;
+    color: #ffd500 !important;
+}
+
+.shift-items-table-cell{
+    border: 1px solid var(--border);
+    text-align: center !important;
+}
+
+.shift-items-table-cell-red{
+    border: 1px solid var(--border);
+    text-align: center !important;
+    color: crimson !important;
+}

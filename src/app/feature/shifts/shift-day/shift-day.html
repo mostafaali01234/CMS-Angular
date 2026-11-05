@@ -1,0 +1,118 @@
+<!-- shift-day/shift-day.html -->
+<div class="ui-page" style="max-width: none">
+  <div class="ui-page-header">
+    <h2 class="ui-title">ورديات اليوم</h2>
+    <div style="display: flex; gap: 8px; align-items: center">
+      <button class="ui-btn ui-btn-primary" (click)="shiftDate(1)">+</button>
+      <input type="date" class="ui-input" [ngModel]="date()" (ngModelChange)="date.set($event); load()" />
+      <button class="ui-btn ui-btn-danger" (click)="shiftDate(-1)">-</button>
+    </div>
+  </div>
+
+  @if (error()) { <div class="ui-alert" role="alert">{{ error() }}</div> }
+
+  <div class="ui-card" [style.opacity]="loading() ? 0.55 : 1">
+    <div class="ui-table-wrap">
+      <table class="ui-table">
+        <!-- shift-day/shift-day.html -->
+        <thead>
+          <tr>
+            <th>السيارة</th>
+            <th>الجهة</th>
+            <th>بداية</th>
+            <th>نهاية</th>
+            <th>المخزن</th>
+            <th>الموظفون</th>
+            <th>اجمالي الفواتير</th>
+            <th>الدفعات</th>
+            <th>العهدة</th>
+            <th>المصروف</th>
+            <th>السلف</th>
+            <th>الصافي</th>
+            <th>المبلغ المورد</th>
+            <th class="end">اجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of rows(); track r.car.id) {
+          @let d = r.draft;
+          @let s = r.shift;
+          <tr>
+            <td class="strong">{{ r.car.name }}</td>
+
+            @if (d) {
+            <td><select class="ui-input" [(ngModel)]="d.country_state_id">
+                <option [ngValue]="0">اختر</option>
+                @for (x of states(); track x.id) { <option [ngValue]="x.id">{{ x.name }}</option> }
+              </select></td>
+            <td><input type="number" class="ui-input" style="width: 90px" [(ngModel)]="d.km_start" /></td>
+            <td><input type="number" class="ui-input" style="width: 90px" [(ngModel)]="d.km_end" /></td>
+            <td><select class="ui-input" [(ngModel)]="d.store_id">
+                <option [ngValue]="0">اختر</option>
+                @for (x of stores(); track x.id) { <option [ngValue]="x.id">{{ x.manager_name }} - {{ x.name }}</option> }
+              </select></td>
+            <td class="ui-muted">أدناه</td>
+            } @else if (s) {
+            <td>{{ s.country_state_name }}</td>
+            <td>{{ s.km_start }}</td>
+            <td>{{ s.km_end }}</td>
+            <td>{{ s.store_name }}</td>
+            <td>
+              @for (t of s.techs; track t.id) {
+              <div>{{ t.tech_name }} <small class="ui-muted">({{ techLabel(t.tech_type) }})</small></div>
+              }
+            </td>
+            } @else {
+            <td colspan="5" class="ui-muted">لا توجد وردية</td>
+            }
+
+            @if (s) {
+            @let t = totals(s);
+            <td>{{ t.revenue | number:'1.0-2' }}</td>
+            <td>{{ t.paid | number:'1.0-2' }}</td>
+            <td>{{ t.custody | number:'1.0-2' }}</td>
+            <td [style.color]="'crimson'">{{ t.expenses | number:'1.0-2' }}</td>
+            <td [style.color]="'crimson'">{{ t.loans | number:'1.0-2' }}</td>
+            <td class="strong" [style.color]="t.net < 0 ? 'crimson' : 'green'">{{ t.net | number:'1.0-2' }}</td>
+            <td>{{ t.delivered | number:'1.0-2' }}</td>
+            } @else
+            {
+            <td colspan="6"></td>
+            }
+
+            <td class="end nowrap">
+              @if (d) {
+              <button class="ui-btn ui-btn-primary sm" [disabled]="r.saving" (click)="save(r)">{{ r.saving ? '...' :
+                'حفظ' }}</button>
+              <button class="ui-btn ui-btn-outline sm" (click)="cancel(r)">الغاء</button>
+              } @else {
+              <button class="ui-btn ui-btn-outline sm" (click)="startEdit(r)">{{ s ? 'تعديل' : 'اضافة' }}</button>
+              @if (s) {
+              <a class="ui-btn ui-btn-outline sm" routerLink="/shifts/board"
+                [queryParams]="{ date: date(), store: s.store_id }">فتح</a>
+              <button class="ui-btn ui-btn-danger sm" (click)="remove(r)">حذف</button>
+              }
+              }
+            </td>
+          </tr>
+
+          @if (d) {
+          <tr>
+            <td colspan="13" style="padding: 8px 16px">
+              <app-techs-editor [(techs)]="d.techs" [employees]="employees()" />
+            </td>
+          </tr>
+          }
+          @if (r.error) {
+          <tr>
+            <td colspan="13">
+              <div class="ui-alert" role="alert">{{ r.error }}</div>
+            </td>
+          </tr>
+          }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

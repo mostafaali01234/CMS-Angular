@@ -1,0 +1,63 @@
+<!-- payroll-adjustment-form/payroll-adjustment-form.html -->
+<div class="ui-page narrow">
+  <div class="ui-page-header">
+    <h2 class="ui-title">{{ id() ? 'تعديل خصم / حافز #' + id() : 'خصم / حافز جديد' }}</h2>
+  </div>
+
+  @if (loading()) {
+    <p class="ui-muted">جاري التحميل...</p>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="save()" class="ui-card">
+      <div class="ui-card-body">
+        <div class="ui-grid">
+
+          <app-lookup-select formControlName="employee_id" [loader]="lookup.employees"
+                             label="الموظف" placeholder="اختر الموظف" error="اختر الموظف"
+                             [invalid]="invalid('employee_id')" />
+
+          <div class="ui-field">
+            <label class="ui-label" for="date">التاريخ</label>
+            <input id="date" type="date" class="ui-input" formControlName="operation_date"
+                   [class.is-invalid]="invalid('operation_date')" />
+          </div>
+
+          <div class="ui-field">
+            <label class="ui-label" for="type">النوع</label>
+            <select id="type" class="ui-input" formControlName="type" [class.is-invalid]="invalid('type')">
+              <option [ngValue]="0" disabled>اختر النوع</option>
+              <optgroup label="خصومات">
+                @for (t of deductionTypes; track t.value) { <option [ngValue]="t.value">{{ t.label }}</option> }
+              </optgroup>
+              <optgroup label="حوافز">
+                @for (t of additionTypes; track t.value) { <option [ngValue]="t.value">{{ t.label }}</option> }
+              </optgroup>
+            </select>
+            @if (kind() === 1) { <small style="color: #2e9e4f">يضاف الى المرتب</small> }
+            @if (kind() === 2) { <small style="color: crimson">يخصم من المرتب</small> }
+          </div>
+
+          <div class="ui-field">
+            <label class="ui-label" for="amount">المبلغ</label>
+            <input id="amount" type="number" step="any" class="ui-input" formControlName="amount"
+                   [class.is-invalid]="invalid('amount')" />
+          </div>
+
+          <div class="ui-field full">
+            <label class="ui-label" for="reason">السبب</label>
+            <textarea id="reason" rows="3" class="ui-input" formControlName="reason"
+                      [class.is-invalid]="invalid('reason')"></textarea>
+          </div>
+        </div>
+
+        @if (error()) { <div class="ui-alert" role="alert" style="margin-top: 16px">{{ error() }}</div> }
+      </div>
+
+      <div class="ui-card-footer">
+        <a routerLink="/payroll-adjustments" class="ui-btn ui-btn-outline">الغاء</a>
+        <button type="submit" class="ui-btn ui-btn-primary" [disabled]="saving()">
+          {{ saving() ? 'جاري الحفظ...' : (id() ? 'حفظ' : 'اضافة') }}
+        </button>
+      </div>
+    </form>
+  }
+</div>

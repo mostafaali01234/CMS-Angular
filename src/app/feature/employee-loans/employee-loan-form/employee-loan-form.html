@@ -1,0 +1,97 @@
+<!-- employee-loan-form/employee-loan-form.html -->
+<div class="ui-page narrow">
+  <div class="ui-page-header">
+    <h2 class="ui-title">{{ id() ? (locked() ? 'سلفة #' + id() : 'تعديل سلفة #' + id()) : 'سلفة جديدة' }}</h2>
+  </div>
+
+  @if (loading()) {
+    <p class="ui-muted">جاري التحميل...</p>
+  } @else {
+    @if (locked()) {
+      <div class="ui-alert" style="margin-bottom: 16px">
+        تم خصم او تخطي اقساط من هذه السلفة، لذلك لا يمكن تعديلها.
+      </div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="save()" class="ui-card">
+      <div class="ui-card-body">
+        <div class="ui-grid">
+
+          <app-lookup-select formControlName="employee_id" [loader]="lookup.employees"
+                             label="الموظف" placeholder="اختر الموظف" error="اختر الموظف"
+                             [invalid]="invalid('employee_id')" />
+
+
+          <div class="ui-field">
+            <label class="ui-label" for="amount">المبلغ</label>
+            <input id="amount" type="number" step="any" class="ui-input" formControlName="amount"
+                   [class.is-invalid]="invalid('amount')" />
+          </div>
+
+          <div class="ui-field">
+            <label class="ui-label" for="start">تاريخ اول خصم</label>
+            <input id="start" type="date" class="ui-input" formControlName="start_date"
+                   [class.is-invalid]="invalid('start_date')" />
+          </div>
+
+          <div class="ui-field full">
+            <label class="ui-label">طريقة السداد</label>
+            <div style="display: flex; gap: 24px">
+              <label><input type="radio" value="installments" formControlName="mode" /> اقساط تخصم من المرتب</label>
+              <label><input type="radio" value="safe" formControlName="mode" /> تسوية مباشرة من خزنة</label>
+            </div>
+          </div>
+
+          @if (isSafe()) {
+            <app-lookup-select formControlName="money_safe_id" [loader]="lookup.moneySafes" [filter]="activeOnly"
+                               label="الخزنة" placeholder="اختر الخزنة" />
+          } @else {
+            <div class="ui-field">
+              <label class="ui-label" for="count">عدد الاقساط (حتى 120)</label>
+              <input id="count" type="number" min="1" max="120" class="ui-input" formControlName="installment_count"
+                     [class.is-invalid]="invalid('installment_count')" />
+            </div>
+          }
+
+          <app-lookup-select formControlName="project_id" [loader]="lookup.projects"
+                             label="المشروع" placeholder="بدون" />
+
+          <div class="ui-field full">
+            <label class="ui-label" for="notes">ملاحظات</label>
+            <textarea id="notes" rows="2" class="ui-input" formControlName="notes"></textarea>
+          </div>
+        </div>
+
+        @if (installments().length > 0) {
+          <h3 class="ui-title" style="margin: 24px 0 12px">جدول الاقساط</h3>
+          <div class="ui-table-wrap">
+            <table class="ui-table">
+              <thead><tr><th>#</th><th>تاريخ الاستحقاق</th><th>المبلغ</th><th>الحالة</th></tr></thead>
+              <tbody>
+                @for (i of installments(); track i.id) {
+                  <tr>
+                    <td>{{ i.installment_number }}</td>
+                    <td>{{ i.due_date | date:'yyyy-MM-dd' }}</td>
+                    <td>{{ i.amount | number:'1.2-2' }}</td>
+                    <td>{{ statusLabel(i.status) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+
+        @if (error()) { <div class="ui-alert" role="alert" style="margin-top: 16px">{{ error() }}</div> }
+      </div>
+
+      <div class="ui-card-footer">
+        <a routerLink="/employee-loans" class="ui-btn ui-btn-outline">{{ locked() ? 'رجوع' : 'الغاء' }}</a>
+        @if (!locked()) {
+          <button type="submit" class="ui-btn ui-btn-primary" [disabled]="saving()">
+            {{ saving() ? 'جاري الحفظ...' : (id() ? 'حفظ' : 'اضافة') }}
+          </button>
+        }
+      </div>
+    </form>
+  }
+</div>

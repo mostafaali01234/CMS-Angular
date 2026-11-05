@@ -10,6 +10,8 @@ import { StoreOption } from '../../../shared/models/lookup.model';
 import { LookupSelect } from '../../../shared/components/lookup-select/lookup-select';
 import { Pager } from '../../../shared/components/pager/pager';
 import { pagedList } from '../../../shared/utils/paged-list';
+import { exportFile } from '../../../shared/utils/download';
+import { today } from '../../../shared/utils/date';
 
 @Component({
   selector: 'app-store-stock',
@@ -23,6 +25,9 @@ export class StoreStock {
 
   stores = signal<StoreOption[]>([]);
   storesLoaded = signal(false);
+  exporting = signal(false);
+  exportError = signal<string | null>(null);
+
   private defaultStoreId = 0;
 
   list = pagedList<StockRow, StockFilter, StockSummary>(
@@ -42,5 +47,10 @@ export class StoreStock {
       },
       error: () => this.storesLoaded.set(true),
     });
+  }
+
+  exportExcel() {
+    exportFile(this.service.exportStoreStock(this.list.applied()), `stock-store-${today()}.xlsx`,
+      { busy: this.exporting, error: this.exportError });
   }
 }

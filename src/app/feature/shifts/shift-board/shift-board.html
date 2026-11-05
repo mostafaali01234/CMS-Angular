@@ -1,0 +1,447 @@
+<!-- shift-board/shift-board.html -->
+<div class="ui-page" style="max-width: none">
+  <div class="ui-page-header">
+    <h2 class="ui-title">وردية مخزن</h2>
+    <a routerLink="/shifts/day" class="ui-btn ui-btn-outline">ورديات اليوم</a>
+  </div>
+
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px"
+    (keydown.enter)="search()">
+    <label>التاريخ <input type="date" class="ui-input" [ngModel]="date()" (ngModelChange)="date.set($event)" /></label>
+    <label>المخزن
+      <select class="ui-input" style="min-width: 200px" [ngModel]="storeId()" (ngModelChange)="storeId.set(+$event)">
+        <option [ngValue]="0">اختر</option>
+        @for (s of stores(); track s.id) { <option [ngValue]="s.id">{{ s.manager_name }} - {{ s.name }}</option> }
+      </select>
+    </label>
+    <button class="ui-btn ui-btn-primary" [disabled]="loading()" (click)="search()">بحث</button>
+  </div>
+
+  @if (error()) { <div class="ui-alert" role="alert" style="margin-bottom: 16px">{{ error() }}</div> }
+
+  @if (board(); as b) {
+  <!-- ===== header: new shift or edit ===== -->
+  <div class="ui-card" style="margin-bottom: 16px">
+    <div class="ui-card-body">
+      <h3 class="ui-title" style="margin-bottom: 12px">
+        {{ shift() ? 'الوردية #' + shift()!.id : 'لا توجد وردية - اضافة وردية جديدة' }}
+      </h3>
+
+      @let readOnly = !!shift() && !editing();
+      <div class="ui-grid">
+        <div class="ui-field"><label class="ui-label">السيارة</label>
+          <select class="ui-input" [disabled]="readOnly" [ngModel]="form().car_id"
+            (ngModelChange)="setForm('car_id', +$event)">
+            <option [ngValue]="0">اختر</option>
+            @for (c of cars(); track c.id) { <option [ngValue]="c.id">{{ c.name }}</option> }
+          </select>
+        </div>
+
+        <div class="ui-field"><label class="ui-label">الجهة</label>
+          <select class="ui-input" [disabled]="readOnly" [ngModel]="form().country_state_id"
+            (ngModelChange)="setForm('country_state_id', +$event)">
+            <option [ngValue]="0">اختر</option>
+            @for (c of states(); track c.id) { <option [ngValue]="c.id">{{ c.name }}</option> }
+          </select>
+        </div>
+
+        <div class="ui-field"><label class="ui-label">البداية (كم)</label>
+          <input type="number" class="ui-input" [disabled]="readOnly" [ngModel]="form().km_start"
+            (ngModelChange)="setForm('km_start', +$event)" />
+        </div>
+        <div class="ui-field"><label class="ui-label">النهاية (كم)</label>
+          <input type="number" class="ui-input" [disabled]="readOnly" [ngModel]="form().km_end"
+            (ngModelChange)="setForm('km_end', +$event)" />
+        </div>
+
+        <div class="ui-field full"><label class="ui-label">الموظفون</label>
+          <app-techs-editor [(techs)]="techs" [employees]="employees()" [disabled]="readOnly" />
+        </div>
+
+        <div class="ui-field full"><label class="ui-label">ملاحظات</label>
+          <textarea rows="2" class="ui-input" [disabled]="readOnly" [ngModel]="form().notes"
+            (ngModelChange)="setForm('notes', $event)"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="ui-card-footer">
+      @if (!shift()) {
+      <button class="ui-btn ui-btn-primary" [disabled]="saving()" (click)="save()">{{ saving() ? 'جاري الحفظ...' :
+        'اضافة الوردية' }}</button>
+      } @else if (editing()) {
+      <button class="ui-btn ui-btn-outline" (click)="search()">الغاء</button>
+      <button class="ui-btn ui-btn-primary" [disabled]="saving()" (click)="save()">حفظ</button>
+      } @else {
+      <button class="ui-btn ui-btn-outline" (click)="editing.set(true)">تعديل</button>
+      }
+    </div>
+  </div>
+
+  @if (shift(); as s) {
+  @let t = totals(s);
+
+  <!-- ===== money summary ===== -->
+  <div class="ui-card" style="margin-bottom: 16px">
+    <div class="ui-card-body" style="display: flex; gap: 24px; flex-wrap: wrap">
+      <span>اجمالي الفواتير: <b>{{ t.revenue | number:'1.0-2' }}</b></span>
+      <span>الدفعات: <b>{{ t.paid | number:'1.0-2' }}</b></span>
+      <span>العهدة: <b>{{ t.custody | number:'1.0-2' }}</b></span>
+      <span>المصروف: <b [style.color]="'crimson'">{{ t.expenses | number:'1.0-2' }}</b></span>
+      <span>السلف: <b [style.color]="'crimson'">{{ t.loans | number:'1.0-2' }}</b></span>
+      <span>الصافي: <b [style.color]="t.net < 0 ? 'crimson' : 'inherit'">{{ t.net | number:'1.0-2' }}</b></span>
+      <span>المورد: <b>{{ t.delivered | number:'1.0-2' }}</b></span>
+      <span class="ui-muted">خزنة {{ b.primary_tech_name }}: {{ b.money_safe_name }}</span>
+    </div>
+  </div>
+
+  @if (!safeReady()) {
+  <div class="ui-alert" role="alert" style="margin-bottom: 16px">
+    الفني الاساسي ليس له خزنة (المدير على جدول الخزن)، لا يمكن اضافة مصروف او سلفة او فاتورة.
+  </div>
+  }
+
+  <div
+    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; margin-bottom: 16px">
+
+
+    <!-- ===== custody: into the tech's safe ===== -->
+    <div class="ui-card">
+      <div class="ui-card-body">
+        <h3 class="ui-title" style="margin-bottom: 8px">العهدة (الى خزنة {{ b.primary_tech_name }}: {{ b.money_safe_name
+          }})</h3>
+        @if (custodyError()) {
+        <div class="ui-alert" role="alert" style="margin-bottom: 8px">
+          <span>{{ custodyError() }}</span>
+          <button type="button" class="ui-alert-close" (click)="custodyError.set(null)" aria-label="إغلاق">×</button>
+        </div>
+        }
+        <table class="ui-table">
+          <tbody>
+            @for (x of custodyTx(s); track x.id) {
+            <tr>
+              <td class="strong">من: {{ safeName(x.out_money_safe_id) }}</td>
+              <td>{{ x.transaction_amount | number:'1.0-2' }}</td>
+              <td class="end"><button class="ui-btn ui-btn-danger sm" [disabled]="busy()"
+                  (click)="removeTransaction(x, custodyError)">حذف</button></td>
+            </tr>
+            } @empty { <tr>
+              <td colspan="3" class="ui-muted center">لا توجد عهدة</td>
+            </tr> }
+          </tbody>
+        </table>
+        <div style="display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap">
+          <select class="ui-input" [ngModel]="custody().money_safe_id"
+            (ngModelChange)="custody.update(x => ({ ...x, money_safe_id: +$event }))">
+            <option [ngValue]="0">من خزنة</option>
+            @for (m of otherSafes(); track m.id) { <option [ngValue]="m.id">{{ m.name }}</option> }
+          </select>
+          <input type="number" class="ui-input" style="width: 100px" placeholder="المبلغ" [ngModel]="custody().amount"
+            (ngModelChange)="custody.update(x => ({ ...x, amount: +$event }))" />
+          <input class="ui-input" style="flex: 1" placeholder="ملاحظات" [ngModel]="custody().notes"
+            (ngModelChange)="custody.update(x => ({ ...x, notes: $event }))" />
+          <button class="ui-btn ui-btn-primary sm" [disabled]="busy() || !safeReady()"
+            (click)="addCustody()">اضافة</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== expenses ===== -->
+    <div class="ui-card">
+      <div class="ui-card-body">
+        <h3 class="ui-title" style="margin-bottom: 8px">المصروفات</h3>
+        @if (expError()) {
+        <div class="ui-alert" role="alert" style="margin-bottom: 8px">
+          <span>{{ expError() }}</span>
+          <button type="button" class="ui-alert-close" (click)="expError.set(null)" aria-label="إغلاق">×</button>
+        </div>
+        }
+        <table class="ui-table">
+          <tbody>
+            @for (e of s.expenses; track e.id) {
+            <tr>
+              <td class="strong">{{ e.expense_type_name }}</td>
+              <td>{{ e.amount | number:'1.0-2' }}</td>
+              <td class="ui-muted">{{ e.notes }}</td>
+              <td class="end"><button class="ui-btn ui-btn-danger sm" [disabled]="busy()"
+                  (click)="removeExpense(e)">حذف</button></td>
+            </tr>
+            } @empty { <tr>
+              <td colspan="4" class="ui-muted center">لا توجد مصروفات</td>
+            </tr> }
+          </tbody>
+        </table>
+        <div style="display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap">
+          <select class="ui-input" [ngModel]="exp().expense_type_id"
+            (ngModelChange)="exp.update(x => ({ ...x, expense_type_id: +$event }))">
+            <option [ngValue]="0">النوع</option>
+            @for (x of expenseTypes(); track x.id) { <option [ngValue]="x.id">{{ x.name }}</option> }
+          </select>
+          <input type="number" class="ui-input" style="width: 100px" placeholder="المبلغ" [ngModel]="exp().amount"
+            (ngModelChange)="exp.update(x => ({ ...x, amount: +$event }))" />
+          <input class="ui-input" style="flex: 1" placeholder="ملاحظات" [ngModel]="exp().notes"
+            (ngModelChange)="exp.update(x => ({ ...x, notes: $event }))" />
+          <button class="ui-btn ui-btn-primary sm" [disabled]="busy() || !safeReady()"
+            (click)="addExpense()">اضافة</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== loans ===== -->
+    <div class="ui-card">
+      <div class="ui-card-body">
+        <h3 class="ui-title" style="margin-bottom: 8px">السلف</h3>
+        @if (loanError()) {
+        <div class="ui-alert" role="alert" style="margin-bottom: 8px">
+          <span>{{ loanError() }}</span>
+          <button type="button" class="ui-alert-close" (click)="loanError.set(null)" aria-label="إغلاق">×</button>
+        </div>
+        }
+        <table class="ui-table">
+          <tbody>
+            @for (l of s.loans; track l.id) {
+            <tr>
+              <td class="strong">{{ l.employee_name }}</td>
+              <td>{{ l.amount | number:'1.0-2' }}</td>
+              <td class="ui-muted">{{ l.notes }}</td>
+              <td class="end"><button class="ui-btn ui-btn-danger sm" [disabled]="busy()"
+                  (click)="removeLoan(l)">حذف</button></td>
+            </tr>
+            } @empty { <tr>
+              <td colspan="4" class="ui-muted center">لا توجد سلف</td>
+            </tr> }
+          </tbody>
+        </table>
+        <div style="display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap">
+          <select class="ui-input" [ngModel]="loan().employee_id"
+            (ngModelChange)="loan.update(x => ({ ...x, employee_id: +$event }))">
+            <option [ngValue]="0">الموظف</option>
+            @for (e of employees(); track e.id) { <option [ngValue]="e.id">{{ e.name }}</option> }
+          </select>
+          <input type="number" class="ui-input" style="width: 100px" placeholder="المبلغ" [ngModel]="loan().amount"
+            (ngModelChange)="loan.update(x => ({ ...x, amount: +$event }))" />
+          <input class="ui-input" style="flex: 1" placeholder="ملاحظات" [ngModel]="loan().notes"
+            (ngModelChange)="loan.update(x => ({ ...x, notes: $event }))" />
+          <button class="ui-btn ui-btn-primary sm" [disabled]="busy() || !safeReady()"
+            (click)="addLoan()">اضافة</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== end-of-shift handover: out of the tech's safe ===== -->
+    <div class="ui-card">
+      <div class="ui-card-body">
+        <h3 class="ui-title" style="margin-bottom: 8px">تسليم نهاية الوردية</h3>
+        @if (settleError()) {
+        <div class="ui-alert" role="alert" style="margin-bottom: 8px">
+          <span>{{ settleError() }}</span>
+          <button type="button" class="ui-alert-close" (click)="settleError.set(null)" aria-label="إغلاق">×</button>
+        </div>
+        }
+        @if (settlementTx(s).length) {
+        <table class="ui-table">
+          <tbody>
+            @for (x of settlementTx(s); track x.id) {
+            <tr>
+              <td class="strong">الى: {{ safeName(x.in_money_safe_id) }}</td>
+              <td>{{ x.transaction_amount | number:'1.0-2' }}</td>
+              <td class="end"><button class="ui-btn ui-btn-danger sm" [disabled]="busy()"
+                  (click)="removeTransaction(x, settleError)">حذف</button></td>
+            </tr>
+            }
+          </tbody>
+        </table>
+        } @else {
+        <p class="ui-muted" style="margin-bottom: 8px">صافي الوردية: {{ t.net | number:'1.0-2' }} (يمكن تعديل المبلغ)
+        </p>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap">
+          <select class="ui-input" [ngModel]="settle().money_safe_id"
+            (ngModelChange)="settle.update(x => ({ ...x, money_safe_id: +$event }))">
+            <option [ngValue]="0">الى خزنة</option>
+            @for (m of otherSafes(); track m.id) { <option [ngValue]="m.id">{{ m.name }}</option> }
+          </select>
+          <input type="number" class="ui-input" style="width: 110px" placeholder="المبلغ"
+            [ngModel]="settleAmount() ?? t.net" (ngModelChange)="settleAmount.set(+$event)" />
+          <input class="ui-input" style="flex: 1" placeholder="ملاحظات" [ngModel]="settle().notes"
+            (ngModelChange)="settle.update(x => ({ ...x, notes: $event }))" />
+          <button class="ui-btn ui-btn-primary sm" [disabled]="busy() || !safeReady()"
+            (click)="addSettlement()">تسليم</button>
+        </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== invoices ===== -->
+  <div class="ui-card" style="margin-bottom: 16px">
+    @if (invoiceError()) {
+    <div class="ui-card-body" style="padding-bottom: 0">
+      <div class="ui-alert" role="alert">
+        <span>{{ invoiceError() }}</span>
+        <button type="button" class="ui-alert-close" (click)="invoiceError.set(null)" aria-label="إغلاق">×</button>
+      </div>
+    </div>
+    }
+
+    <div class="ui-table-wrap">
+      <table class="ui-table">
+        <thead>
+          <tr>
+            <th>الفاتورة</th>
+            <th>الاوردر</th>
+            <th>العميل</th>
+            <th>الاجمالي</th>
+            <th>المدفوع</th>
+            <th>المتبقي</th>
+            <th class="end"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (i of s.invoices; track i.id) {
+          <tr>
+            <td class="strong">#{{ i.number }}</td>
+            <td>{{ i.order_id }}</td>
+            <td>{{ i.customer_name }}</td>
+            <td>{{ i.net_total | number:'1.0-2' }}</td>
+            <td>{{ paidOf(i) | number:'1.0-2' }}</td>
+            <td [class.strong]="i.net_total - paidOf(i) > 0">{{ i.net_total - paidOf(i) | number:'1.0-2' }}</td>
+            <td class="end nowrap">
+              <button class="ui-btn ui-btn-outline sm" [disabled]="busy()" (click)="startEditInvoice(i)">تعديل</button>
+              <button class="ui-btn ui-btn-danger sm" [disabled]="busy()" (click)="removeInvoice(i)">حذف</button>
+            </td>
+          </tr>
+          } @empty { <tr>
+            <td colspan="7" class="center ui-muted">لا توجد فواتير</td>
+          </tr> }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- edit an existing invoice -->
+    @if (editInv(); as inv) {
+    <div class="ui-card-body" style="border-top: 1px solid #ddd">
+      <h4 class="ui-title" style="margin-bottom: 4px">تعديل الفاتورة #{{ inv.number }}</h4>
+      <app-invoice-items [(items)]="editRows" />
+      <div style="display: flex; gap: 8px; align-items: center; margin-top: 8px">
+        <b>الاجمالي: {{ editTotal() | number:'1.0-2' }}</b>
+        <b style="color:grey;">مدفوع مبلغ {{ paidOf(inv) }} في خزنة {{ b.primary_tech_name }}: {{ b.money_safe_name
+          }}</b>
+        <button class="ui-btn ui-btn-primary" [disabled]="busy()" (click)="saveInvoice()">حفظ الفاتورة</button>
+        <button class="ui-btn ui-btn-outline" (click)="cancelEditInvoice()">الغاء</button>
+      </div>
+    </div>
+    }
+
+    <!-- add a new invoice from an open order -->
+    <div class="ui-card-body" style="border-top: 1px solid #ddd">
+      <div (keydown.enter)="$event.stopPropagation()">
+        @if (selectedOrder(); as o) {
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap">
+          <b>الاوردر #{{ o.id }} - {{ o.customer_name }} - {{ o.net_total | number:'1.0-2' }}</b>
+          <button type="button" class="ui-btn ui-btn-outline sm" [disabled]="busy()" (click)="clearOrder()">تغيير
+            الاوردر</button>
+        </div>
+        } @else {
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap">
+          <input type="search" class="ui-input" style="min-width: 280px" placeholder="اكتب رقم الاوردر او اسم العميل..."
+            [ngModel]="orderSearch()" (ngModelChange)="orderSearch.set($event)" (keydown.enter)="searchOrder()" />
+          <button type="button" class="ui-btn ui-btn-outline sm" [disabled]="busy() || !orderSearch().trim()"
+            (click)="searchOrder()">بحث</button>
+          <span class="ui-muted">{{ b.open_orders.length }} اوردر قيد التنفيذ</span>
+        </div>
+
+        @if (orderSearch().trim()) {
+        <div style="margin-top: 6px; max-width: 480px">
+          @for (o of matches(); track o.id) {
+          <button type="button" class="ui-btn ui-btn-outline"
+            style="display: flex; width: 100%; justify-content: space-between; margin-bottom: 4px" [disabled]="busy()"
+            (click)="pickOrder(o)">
+            <span class="strong">#{{ o.id }} - {{ o.customer_name }}</span>
+            <span>{{ o.net_total | number:'1.0-2' }}</span>
+          </button>
+          } @empty {
+          <div class="ui-muted">لا يوجد طلب قيد التنفيذ بهذا الرقم</div>
+          }
+        </div>
+        }
+        }
+      </div>
+
+      @if (draft()) {
+      <app-invoice-items [(items)]="draftRows" />
+      <div style="display: flex; gap: 8px; align-items: center; margin-top: 8px">
+        <b>الاجمالي: {{ draftTotal() | number:'1.0-2' }}</b>
+        <b style="color:grey;">دفع لخزنة {{ b.primary_tech_name }}: {{ b.money_safe_name }}</b>
+        <input type="number" class="ui-input" style="width: 130px" placeholder="المدفوع الان" [ngModel]="paid()"
+          (ngModelChange)="paid.set(+$event)" />
+        <button class="ui-btn ui-btn-primary" [disabled]="busy() || !safeReady()" (click)="addInvoice()">اضافة
+          الفاتورة</button>
+      </div>
+      }
+    </div>
+  </div>
+  }
+
+  <!-- ===== the store's items ===== -->
+  @if (b.items.length) {
+  <div class="ui-card" [style.opacity]="loading() ? 0.55 : 1">
+    <div class="ui-table-wrap">
+      <table class="ui-table" style="text-align: center">
+        <thead>
+          <tr>
+            <th rowspan="3" class="shift-items-table-header">الصنف</th>
+            <th rowspan="3" class="shift-items-table-header">رصيد اول المدة</th>
+            <th rowspan="3" class="shift-items-table-header">تحويل</th>
+            <th rowspan="3" class="shift-items-table-header">اجمالي</th>
+
+            @for (i of invoices(); track i.id) {
+            <th class="shift-items-table-header-red">اوردر #{{ i.order_id }}</th>
+            <th class="shift-items-table-header">فاتورة #{{ i.number }}</th>
+            }
+
+            <th rowspan="3" class="shift-items-table-header">اجمالي المستهلك</th>
+            <th rowspan="3" class="shift-items-table-header">تحويل</th>
+            @if (hasOther()) { <th rowspan="3" class="shift-items-table-header">حركات اخرى</th> }
+            <th rowspan="3" class="shift-items-table-header">المتبقي</th>
+          </tr>
+          <tr>
+            @for (i of invoices(); track i.id) { <th colspan="2" class="shift-items-table-header">{{ i.customer_name }}
+            </th> }
+          </tr>
+          <tr>
+            @for (i of invoices(); track i.id) {
+            <th class="shift-items-table-header-red">{{ i.order_net_total | number:'1.0-2' }}</th>
+            <th class="shift-items-table-header">{{ i.net_total | number:'1.0-2' }}</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of b.items; track r.product_id) {
+          <tr>
+            <td class="strong shift-items-table-cell">{{ r.product_name }}</td>
+            <td class="shift-items-table-cell">{{ r.opening | number:'1.0-3' }}</td>
+            <td class="shift-items-table-cell">{{ r.transfer_in | number:'1.0-3' }}</td>
+            <td class="strong shift-items-table-cell">{{ r.total | number:'1.0-3' }}</td>
+
+            @for (i of invoices(); track i.id) {
+            @let o = ordered(r, i.order_id);
+            @let v = sold(r, i.id);
+            <td class="strong shift-items-table-cell-red">{{ o ? (o | number:'1.0-3') : '' }}</td>
+            <td class="strong shift-items-table-cell">{{ v ? (v | number:'1.0-3') : '' }}</td>
+            }
+
+            <td class="shift-items-table-cell">{{ r.consumed | number:'1.0-3' }}</td>
+            <td class="shift-items-table-cell">{{ r.transfer_out | number:'1.0-3' }}</td>
+            @if (hasOther()) { <td class="shift-items-table-cell">{{ r.other_change ? (r.other_change | number:'1.0-3')
+              : '' }}</td> }
+            <td class="strong" [style.color]="r.remaining < 0 ? 'crimson' : 'inherit'">{{ r.remaining | number:'1.0-3'
+              }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+  }
+
+  }
+</div>

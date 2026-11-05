@@ -51,8 +51,8 @@ export class Sidebar {
     {
       label: 'المأموريات', icon: '🚚', role: 'Admin,SuperAdmin',
       children: [
-        { label: 'كشف المأموريات', icon: '•', path: '/branches' },
-        { label: 'المأموريات باليوم', icon: '•', path: '/floors' }
+        { label: 'كشف المأموريات', icon: '•', path: '/shifts/board' },
+        { label: 'المأموريات باليوم', icon: '•', path: '/shifts/day' }
       ]
     },
     {
@@ -67,9 +67,9 @@ export class Sidebar {
     {
       label: 'الموظفين', icon: '🧑‍💼', role: 'Admin,SuperAdmin',
       children: [
-        { label: 'كشف الموظفين', icon: '•', path: '/branches' },
-        { label: 'الخصومات/الحوافز', icon: '•', path: '/shifts' },
-        { label: 'السلف', icon: '•', path: '/shifts' },
+        { label: 'كشف الموظفين', icon: '•', path: '/employees' },
+        { label: 'الخصومات/الحوافز', icon: '•', path: '/payroll-adjustments' },
+        { label: 'السلف', icon: '•', path: '/employee-loans' },
         { label: 'حساب المرتبات', icon: '•', path: '/floors' },
         { label: 'المرتبات المعتمدة', icon: '•', path: '/floors' },
         { label: 'المرتبات المصروفة', icon: '•', path: '/floors' },

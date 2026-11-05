@@ -25,4 +25,13 @@ export class StockService {
   getMatrix(q: MatrixFilter & PageQuery) { return this.get<Paged<MatrixRow, MatrixHeader>>('matrix', q); }
   getStoreMoves(q: MovesFilter & PageQuery) { return this.get<Paged<StockMove, MovesSummary>>('store-moves', q); }
   getProductMoves(q: MovesFilter & PageQuery) { return this.get<Paged<StockMove, MovesSummary>>('product-moves', q); }
+
+  private blob(path: string, q: object): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/${path}`, { params: toParams(q), responseType: 'blob' });
+  }
+
+  exportStoreStock(q: StockFilter) { return this.blob('store/export', q); }
+  exportMatrix(q: MatrixFilter) { return this.blob('matrix/export', q); }
+  exportStoreMoves(q: MovesFilter) { return this.blob('store-moves/export', q); }
+  exportProductMoves(q: MovesFilter) { return this.blob('product-moves/export', q); }
 }

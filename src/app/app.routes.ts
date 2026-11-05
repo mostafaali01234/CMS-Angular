@@ -116,6 +116,23 @@ export const routes: Routes = [
      loadChildren: () => import('./feature/stock/stock.routes')
      .then(m => m.STOCK_ROUTES) 
   },
+  { 
+    path: 'employees', canActivate: [authGuard],
+    loadChildren: () => import('./feature/employees/employees.routes').then(m => m.EMPLOYEE_ROUTES) 
+  },
+  { 
+    path: 'employee-loans', canActivate: [authGuard],
+    loadChildren: () => import('./feature/employee-loans/employee-loans.routes').then(m => m.EMPLOYEE_LOAN_ROUTES) 
+  },
+  { 
+    path: 'payroll-adjustments', canActivate: [authGuard],
+    loadChildren: () => import('./feature/payroll-adjustments/payroll-adjustments.routes').then(m => m.ADJUSTMENT_ROUTES) 
+  },
+  { 
+    path: 'shifts', canActivate: [authGuard],
+    loadChildren: () => import('./feature/shifts/shifts.routes').then(m => m.SHIFT_ROUTES) 
+  },
+
 
 
   { path: '', pathMatch: 'full', redirectTo: 'dashboard' },

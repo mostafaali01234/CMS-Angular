@@ -1,0 +1,120 @@
+<!-- payroll-adjustment-list/payroll-adjustment-list.html -->
+<div class="ui-page" style="max-width: none">
+  <div class="ui-page-header">
+    <h2 class="ui-title">خصومات / حوافز</h2>
+    <a routerLink="/payroll-adjustments/new" class="ui-btn ui-btn-primary">+ جديد</a>
+  </div>
+
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px"
+       (keydown.enter)="list.search()">
+    <input type="search" class="ui-input" style="flex: 1 1 200px" placeholder="الموظف او السبب..."
+           [ngModel]="list.form().search" (ngModelChange)="list.set('search', $event)" />
+
+    <div style="flex: 0 0 220px">
+      <app-lookup-select [ngModel]="list.form().employeeId" (ngModelChange)="list.set('employeeId', $event, true)"
+                         [loader]="lookup.employees" placeholder="كل الموظفين" />
+    </div>
+
+    <select class="ui-input" style="flex: 0 0 140px"
+            [ngModel]="list.form().kind" (ngModelChange)="list.set('kind', $event, true)">
+      <option value="">خصومات وحوافز</option>
+      <option value="2">خصومات</option>
+      <option value="1">حوافز</option>
+    </select>
+
+    <select class="ui-input" style="flex: 0 0 150px"
+            [ngModel]="list.form().type" (ngModelChange)="list.set('type', $event, true)">
+      <option value="">كل الانواع</option>
+      @for (t of types; track t.value) { <option [value]="t.value">{{ t.label }}</option> }
+    </select>
+
+    <label>من <input type="date" class="ui-input"
+           [ngModel]="list.form().dateFrom" (ngModelChange)="list.set('dateFrom', $event, true)" /></label>
+    <label>الى <input type="date" class="ui-input"
+           [ngModel]="list.form().dateTo" (ngModelChange)="list.set('dateTo', $event, true)" /></label>
+
+    <button type="button" class="ui-btn ui-btn-primary" (click)="list.search()">بحث</button>
+    <button type="button" class="ui-btn ui-btn-outline sm" (click)="list.reset()">مسح الفلاتر</button>
+  </div>
+
+  @if (actionError()) {
+    <div class="ui-alert" role="alert" style="margin-bottom: 16px">
+      <span>{{ actionError() }}</span>
+      <button type="button" class="ui-alert-close" (click)="actionError.set(null)" aria-label="إغلاق">×</button>
+    </div>
+  }
+
+  @if (list.error()) {
+    <div class="ui-alert"><span>{{ list.error() }}</span>
+      <button class="ui-btn ui-btn-danger sm" (click)="list.reload()">اعادة المحاولة</button></div>
+  } @else {
+    <div class="ui-card" [style.opacity]="list.loading() ? 0.55 : 1">
+      <div class="ui-table-wrap">
+        <table class="ui-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>تاريخ العملية</th>
+              <th>الموظف</th>
+              <th>النوع</th>
+              <th>المبلغ</th>
+              <th>السبب</th>
+              <th>تاريخ الاضافة</th>
+              <th>المسجل</th>
+              <th class="end">الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (a of list.items(); track a.id) {
+              <tr>
+                <td class="strong">{{ a.id }}</td>
+                <td>{{ a.operation_date | date:'yyyy-MM-dd' }}</td>
+                <td class="strong">{{ a.employee_name }}</td>
+                <td>
+                  <span [style.color]="a.kind === 1 ? '#2e9e4f' : 'crimson'">
+                    {{ a.kind === 1 ? 'حافز' : 'خصم' }}
+                  </span>
+                  <small class="ui-muted"> - {{ typeLabel(a.type) }}</small>
+                </td>
+                <td class="strong" [style.color]="a.kind === 1 ? '#2e9e4f' : 'crimson'">
+                  {{ a.kind === 1 ? '+' : '−' }}{{ a.amount | number:'1.2-2' }}
+                </td>
+                <td class="ui-muted">{{ a.reason }}</td>
+                <td class="ui-muted">{{ a.created_at_utc | date:'yyyy-MM-dd HH:mm' }}</td>
+                <td class="ui-muted">{{ a.approved_by_name }}</td>
+                <td class="end nowrap">
+                  @if (a.from_loan) {
+                    <small class="ui-muted">من سلفة</small>
+                  } @else {
+                    <a [routerLink]="['/payroll-adjustments', a.id, 'edit']" class="ui-btn ui-btn-outline sm">تعديل</a>
+                    <button class="ui-btn ui-btn-danger sm" [disabled]="deletingId() === a.id" (click)="remove(a)">
+                      {{ deletingId() === a.id ? 'جاري الحذف...' : 'حذف' }}
+                    </button>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="8" class="center ui-muted" style="padding: 28px">
+                {{ list.loading() ? 'جاري التحميل...' : 'لا توجد سجلات.' }}
+              </td></tr>
+            }
+          </tbody>
+          @if (list.summary(); as s) {
+            <tfoot>
+              <tr style="font-weight: 600">
+                <td colspan="4">اجمالي كل النتائج ({{ list.total() }})</td>
+                <td colspan="4">
+                  حوافز: <span style="color: #2e9e4f">{{ s.total_additions | number:'1.2-2' }}</span>
+                  &nbsp;|&nbsp; خصومات: <span style="color: crimson">{{ s.total_deductions | number:'1.2-2' }}</span>
+                </td>
+              </tr>
+            </tfoot>
+          }
+        </table>
+      </div>
+
+      <app-pager [page]="list.page()" [pageSize]="list.size()" [total]="list.total()"
+                 (pageChange)="list.goTo($event)" (sizeChange)="list.setSize($event)" />
+    </div>
+  }
+</div>

@@ -11,6 +11,7 @@ import { SearchSelect } from '../../../shared/components/search-select/search-se
 import { Pager } from '../../../shared/components/pager/pager';
 import { pagedList } from '../../../shared/utils/paged-list';
 import { today } from '../../../shared/utils/date';
+import { exportFile } from '../../../shared/utils/download';
 
 @Component({
   selector: 'app-store-moves',
@@ -21,6 +22,9 @@ export class StoreMoves {
   private service = inject(StockService);
   private qp = inject(ActivatedRoute).snapshot.queryParamMap;
   lookup = inject(LookupService);
+  exporting = signal(false);
+  exportError = signal<string | null>(null);
+
 
   operations = OPERATION_TYPES;
   opLabel = operationLabel;
@@ -61,5 +65,10 @@ export class StoreMoves {
       },
       error: () => this.storesLoaded.set(true),
     });
+  }
+
+  exportExcel() {
+    exportFile(this.service.exportStoreMoves(this.list.applied()), `store-moves-${today()}.xlsx`,
+      { busy: this.exporting, error: this.exportError });
   }
 }

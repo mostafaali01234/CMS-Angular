@@ -20,7 +20,16 @@
 
     <button type="button" class="ui-btn ui-btn-primary" (click)="list.search()">بحث</button>
     <button type="button" class="ui-btn ui-btn-outline sm" (click)="list.reset()">مسح الفلاتر</button>
+    <button type="button" class="ui-btn ui-btn-success" [disabled]="exporting() || list.loading()" (click)="exportExcel()">
+      {{ exporting() ? 'جاري التصدير...' : 'تصدير Excel' }}
+    </button>
   </div>
+    @if (exportError()) {
+      <div class="ui-alert" role="alert" style="margin-bottom: 16px">
+        <span>{{ exportError() }}</span>
+        <button type="button" class="ui-alert-close" (click)="exportError.set(null)" aria-label="إغلاق">×</button>
+      </div>
+    }
 
   @if (list.error()) {
     <div class="ui-alert"><span>{{ list.error() }}</span>

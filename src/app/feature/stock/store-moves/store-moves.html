@@ -37,7 +37,16 @@
       <button type="button" class="ui-btn ui-btn-primary" (click)="list.search()">بحث</button>
       <button type="button" class="ui-btn ui-btn-outline" (click)="list.patch({ dateFrom: '', dateTo: '' }, true)">كل الفترات</button>
       <button type="button" class="ui-btn ui-btn-outline sm" (click)="list.reset()">اليوم / مسح الفلاتر</button>
+      <button type="button" class="ui-btn ui-btn-success" [disabled]="exporting() || list.loading()" (click)="exportExcel()">
+        {{ exporting() ? 'جاري التصدير...' : 'تصدير Excel' }}
+      </button>
     </div>
+    @if (exportError()) {
+      <div class="ui-alert" role="alert" style="margin-bottom: 16px">
+        <span>{{ exportError() }}</span>
+        <button type="button" class="ui-alert-close" (click)="exportError.set(null)" aria-label="إغلاق">×</button>
+      </div>
+    }
 
     @if (showingToday()) {
       <p class="ui-muted" style="margin-bottom: 8px">يتم عرض حركات اليوم فقط.</p>

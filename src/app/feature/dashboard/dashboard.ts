@@ -63,8 +63,8 @@ export class Dashboard implements OnInit {
       ...(isAdmin ? [{
         title: 'المأموريات', tone: 'warning',
         items: [
-          { icon: '🚚', label: 'المأموريات', link: null as string | null }, // add route when ready
-          { icon: '🗓️', label: 'المأموريات باليوم', link: null as string | null },
+          { icon: '🚚', label: 'المأموريات', link: '/shifts/board' },
+          { icon: '🗓️', label: 'المأموريات باليوم', link: '/shifts/day' },
         ],
       }] : []),
       {

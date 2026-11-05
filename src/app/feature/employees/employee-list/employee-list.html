@@ -1,0 +1,89 @@
+<!-- employee-list/employee-list.html -->
+<div class="ui-page" style="max-width: none">
+  <div class="ui-page-header">
+    <h2 class="ui-title">الموظفون</h2>
+    <a routerLink="/employees/new" class="ui-btn ui-btn-primary">+ موظف جديد</a>
+  </div>
+
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px"
+       (keydown.enter)="list.search()">
+    <input type="search" class="ui-input" style="flex: 1 1 220px" placeholder="الاسم او الهاتف..."
+           [ngModel]="list.form().search" (ngModelChange)="list.set('search', $event)" />
+
+    <div style="flex: 0 0 200px">
+      <app-lookup-select [ngModel]="list.form().departmentId" (ngModelChange)="list.set('departmentId', $event, true)"
+                         [loader]="lookup.departments" placeholder="كل الاقسام" />
+    </div>
+    <div style="flex: 0 0 200px">
+      <app-lookup-select [ngModel]="list.form().jobId" (ngModelChange)="list.set('jobId', $event, true)"
+                         [loader]="lookup.jobs" placeholder="كل الوظائف" />
+    </div>
+
+    <select class="ui-input" style="flex: 0 0 140px"
+            [ngModel]="list.form().active" (ngModelChange)="list.set('active', $event, true)">
+      <option value="">كل الحالات</option>
+      <option value="true">نشط</option>
+      <option value="false">غير نشط</option>
+    </select>
+
+    <button type="button" class="ui-btn ui-btn-primary" (click)="list.search()">بحث</button>
+    <button type="button" class="ui-btn ui-btn-outline sm" (click)="list.reset()">مسح الفلاتر</button>
+  </div>
+
+  @if (actionError()) {
+    <div class="ui-alert" role="alert" style="margin-bottom: 16px">
+      <span>{{ actionError() }}</span>
+      <button type="button" class="ui-alert-close" (click)="actionError.set(null)" aria-label="إغلاق">×</button>
+    </div>
+  }
+
+  @if (list.error()) {
+    <div class="ui-alert"><span>{{ list.error() }}</span>
+      <button class="ui-btn ui-btn-danger sm" (click)="list.reload()">اعادة المحاولة</button></div>
+  } @else {
+    <div class="ui-card" [style.opacity]="list.loading() ? 0.55 : 1">
+      <div class="ui-table-wrap">
+        <table class="ui-table">
+          <thead>
+            <tr>
+              <th>#</th><th>الاسم</th><th>الهاتف</th><th>القسم</th><th>مدير القسم</th>
+              <th>الراتب الاساسي</th><th>تاريخ التعيين</th><th>الوظيفة</th><th>الحالة</th>
+              <th class="end">الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (e of list.items(); track e.id) {
+              <tr>
+                <td class="strong">{{ e.id }}</td>
+                <td class="strong">{{ e.name }}</td>
+                <td>{{ e.phone }}</td>
+                <td>{{ e.department_name }}</td>
+                <td class="ui-muted">{{ e.manager_name }}</td>
+                <td>{{ e.salary | number:'1.2-2' }}</td>
+                <td>{{ e.hire_date | date:'yyyy-MM-dd' }}</td>
+                <td>{{ e.job_name }}</td>
+                <td class="strong" [style.color]="e.active ? '#2e9e4f' : 'crimson'">
+                  {{ e.active ? 'نشط' : 'غير نشط' }}
+                </td>
+                <td class="end nowrap">
+                  <a [routerLink]="['/employees', e.id, 'edit']" class="ui-btn ui-btn-outline sm">تعديل</a>
+                  <a [routerLink]="['/employees', e.id, 'balance']" class="ui-btn ui-btn-outline sm">الرصيد</a>
+                  <button class="ui-btn ui-btn-danger sm" [disabled]="deletingId() === e.id" (click)="remove(e)">
+                    {{ deletingId() === e.id ? 'جاري الحذف...' : 'حذف' }}
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="10" class="center ui-muted" style="padding: 28px">
+                {{ list.loading() ? 'جاري التحميل...' : 'لا يوجد موظفون.' }}
+              </td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <app-pager [page]="list.page()" [pageSize]="list.size()" [total]="list.total()"
+                 (pageChange)="list.goTo($event)" (sizeChange)="list.setSize($event)" />
+    </div>
+  }
+</div>

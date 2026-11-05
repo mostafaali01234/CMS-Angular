@@ -52,6 +52,7 @@ export interface StoreOption extends LookupItem {
   active: boolean;
   city_id: number;
   manager_id: number;
+  manager_name?: string;
 }
 
 export interface SupplierOption extends LookupItem {

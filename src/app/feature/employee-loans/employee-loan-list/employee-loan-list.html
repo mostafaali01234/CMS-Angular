@@ -1,0 +1,104 @@
+<!-- employee-loan-list/employee-loan-list.html -->
+<div class="ui-page" style="max-width: none">
+  <div class="ui-page-header">
+    <h2 class="ui-title">سلف الموظفين</h2>
+    <a routerLink="/employee-loans/new" class="ui-btn ui-btn-primary">+ سلفة جديدة</a>
+  </div>
+
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px"
+       (keydown.enter)="list.search()">
+    <input type="search" class="ui-input" style="flex: 1 1 200px" placeholder="اسم الموظف..."
+           [ngModel]="list.form().search" (ngModelChange)="list.set('search', $event)" />
+
+    <div style="flex: 0 0 220px">
+      <app-lookup-select [ngModel]="list.form().employeeId" (ngModelChange)="list.set('employeeId', $event, true)"
+                         [loader]="lookup.employees" placeholder="كل الموظفين" />
+    </div>
+
+    <select class="ui-input" style="flex: 0 0 170px"
+            [ngModel]="list.form().mode" (ngModelChange)="list.set('mode', $event, true)">
+      <option value="">كل الانواع</option>
+      <option value="installments">اقساط على المرتب</option>
+      <option value="safe">من الخزنة</option>
+    </select>
+
+    <label>من <input type="date" class="ui-input"
+           [ngModel]="list.form().dateFrom" (ngModelChange)="list.set('dateFrom', $event, true)" /></label>
+    <label>الى <input type="date" class="ui-input"
+           [ngModel]="list.form().dateTo" (ngModelChange)="list.set('dateTo', $event, true)" /></label>
+
+    <button type="button" class="ui-btn ui-btn-primary" (click)="list.search()">بحث</button>
+    <button type="button" class="ui-btn ui-btn-outline sm" (click)="list.reset()">مسح الفلاتر</button>
+  </div>
+
+  @if (actionError()) {
+    <div class="ui-alert" role="alert" style="margin-bottom: 16px">
+      <span>{{ actionError() }}</span>
+      <button type="button" class="ui-alert-close" (click)="actionError.set(null)" aria-label="إغلاق">×</button>
+    </div>
+  }
+
+  @if (list.error()) {
+    <div class="ui-alert"><span>{{ list.error() }}</span>
+      <button class="ui-btn ui-btn-danger sm" (click)="list.reload()">اعادة المحاولة</button></div>
+  } @else {
+    <div class="ui-card" [style.opacity]="list.loading() ? 0.55 : 1">
+      <div class="ui-table-wrap">
+        <table class="ui-table">
+          <thead>
+            <tr>
+              <th>#</th><th>الموظف</th><th>المبلغ</th><th>النوع</th><th>تاريخ البداية/السلفة</th>
+              <th>الاقساط المخصومة</th><th>المتبقي</th><th>تاريخ الاضافة</th><th>اعتمد بواسطة</th><th>المشروع</th>
+              <th class="end">الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (l of list.items(); track l.id) {
+              <tr>
+                <td class="strong">{{ l.id }}</td>
+                <td class="strong">{{ l.employee_name }}</td>
+                <td>{{ l.amount | number:'1.2-2' }}</td>
+                <td>
+                  @if (l.money_safe_name) { من خزنة: {{ l.money_safe_name }} }
+                  @else { {{ l.installment_count }} قسط }
+                </td>
+                <td>{{ l.start_date | date:'yyyy-MM-dd' }}</td>
+                <td>
+                  @if (l.money_safe_name) { — }
+                  @else {
+                    {{ l.deducted_count }} / {{ l.installment_count }}
+                    @if (l.skipped_count > 0) { <small class="ui-muted"> (تخطي {{ l.skipped_count }})</small> }
+                  }
+                </td>
+                <td [class.strong]="l.pending_amount > 0">
+                  @if (l.money_safe_name) { — } @else { {{ l.pending_amount | number:'1.2-2' }} }
+                </td>
+                <td class="ui-muted">{{ l.created_at_utc | date:'yyyy-MM-dd HH:mm' }}</td>
+                <td class="ui-muted">{{ l.approved_by_name }}</td>
+                <td class="ui-muted">{{ l.project_name }}</td>
+                <td class="end nowrap">
+                  <a [routerLink]="['/employee-loans', l.id, 'edit']" class="ui-btn ui-btn-outline sm">
+                    {{ canEdit(l) ? 'تعديل' : 'عرض' }}
+                  </a>
+                  <button class="ui-btn ui-btn-danger sm"
+                          [disabled]="!canDelete(l) || deletingId() === l.id"
+                          [title]="canDelete(l) ? '' : 'تم خصم اقساط من هذه السلفة'"
+                          (click)="remove(l)">
+                    {{ deletingId() === l.id ? 'جاري الحذف...' : 'حذف' }}
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="10" class="center ui-muted" style="padding: 28px">
+                {{ list.loading() ? 'جاري التحميل...' : 'لا توجد سلف.' }}
+              </td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <app-pager [page]="list.page()" [pageSize]="list.size()" [total]="list.total()"
+                 (pageChange)="list.goTo($event)" (sizeChange)="list.setSize($event)" />
+    </div>
+  }
+</div>

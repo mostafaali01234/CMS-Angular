@@ -15,7 +15,8 @@ import { AuthService } from '../../core/services/AuthService/auth';
 export type LookupKey = 'states' | 'cities' | 'employees' | 'productCategories'
                          | 'customers' | 'units' | 'products' | 'moneySafeCategories' 
                          | 'moneySafeTypes' | 'moneySafes' | 'stores' | 'suppliers'
-                         | 'projects' | 'expenseCategories' | 'expenseTypes' | 'cars';
+                         | 'projects' | 'expenseCategories' | 'expenseTypes' | 'cars'
+                         | 'departments' | 'jobs';
 
 const byName = <T extends LookupItem>(list: T[]) =>
   [...list].sort((a, b) => a.name.localeCompare(b.name, 'ar'));
@@ -115,4 +116,6 @@ readonly projects = () => this.cached<LookupItem>('projects', 'project', byName)
 readonly expenseCategories = () => this.getExpenseCategories();
 readonly expenseTypes = () => this.getExpenseTypes();
 readonly cars = () => this.cached<LookupItem>('cars', 'car', byName);
+readonly departments = () => this.cached<LookupItem>('departments', 'department', byName);
+readonly jobs = () => this.cached<LookupItem>('jobs', 'job', byName);
 }
