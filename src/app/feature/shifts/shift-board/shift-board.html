@@ -7,14 +7,16 @@
 
   <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px"
     (keydown.enter)="search()">
+      <button class="ui-btn ui-btn-primary" (click)="shiftDate(1)">+</button>
     <label>التاريخ <input type="date" class="ui-input" [ngModel]="date()" (ngModelChange)="date.set($event)" /></label>
+      <button class="ui-btn ui-btn-danger ml-2" style="margin-left:2rem;" (click)="shiftDate(-1)">-</button>
     <label>المخزن
       <select class="ui-input" style="min-width: 200px" [ngModel]="storeId()" (ngModelChange)="storeId.set(+$event)">
         <option [ngValue]="0">اختر</option>
         @for (s of stores(); track s.id) { <option [ngValue]="s.id">{{ s.manager_name }} - {{ s.name }}</option> }
       </select>
     </label>
-    <button class="ui-btn ui-btn-primary" [disabled]="loading()" (click)="search()">بحث</button>
+    <button class="ui-btn ui-btn-primary"  style="margin-right:2rem;"  [disabled]="loading()" (click)="search()">بحث</button>
   </div>
 
   @if (error()) { <div class="ui-alert" role="alert" style="margin-bottom: 16px">{{ error() }}</div> }
@@ -28,7 +30,7 @@
       </h3>
 
       @let readOnly = !!shift() && !editing();
-      <div class="ui-grid">
+      <div class="ui-grid-4">
         <div class="ui-field"><label class="ui-label">السيارة</label>
           <select class="ui-input" [disabled]="readOnly" [ngModel]="form().car_id"
             (ngModelChange)="setForm('car_id', +$event)">
@@ -82,13 +84,13 @@
 
   <!-- ===== money summary ===== -->
   <div class="ui-card" style="margin-bottom: 16px">
-    <div class="ui-card-body" style="display: flex; gap: 24px; flex-wrap: wrap">
+    <div class="ui-card-body" style="display: flex; gap: 24px; flex-wrap: wrap;justify-content: space-around;">
       <span>اجمالي الفواتير: <b>{{ t.revenue | number:'1.0-2' }}</b></span>
       <span>الدفعات: <b>{{ t.paid | number:'1.0-2' }}</b></span>
       <span>العهدة: <b>{{ t.custody | number:'1.0-2' }}</b></span>
       <span>المصروف: <b [style.color]="'crimson'">{{ t.expenses | number:'1.0-2' }}</b></span>
       <span>السلف: <b [style.color]="'crimson'">{{ t.loans | number:'1.0-2' }}</b></span>
-      <span>الصافي: <b [style.color]="t.net < 0 ? 'crimson' : 'inherit'">{{ t.net | number:'1.0-2' }}</b></span>
+      <span>الصافي: <b [style.color]="t.net < 0 ? 'crimson' : 'green'">{{ t.net | number:'1.0-2' }}</b></span>
       <span>المورد: <b>{{ t.delivered | number:'1.0-2' }}</b></span>
       <span class="ui-muted">خزنة {{ b.primary_tech_name }}: {{ b.money_safe_name }}</span>
     </div>

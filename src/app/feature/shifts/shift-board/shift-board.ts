@@ -111,6 +111,12 @@ export class ShiftBoardPage {
 
   selectedOrder = computed(() => (this.board()?.open_orders ?? []).find(o => o.id === this.orderId()) ?? null);
 
+  
+  shiftDate(days: number) {
+    const d = new Date(this.date()); d.setDate(d.getDate() + days);
+    this.date.set(d.toISOString().slice(0, 10));
+  }
+
   pickOrder(o: { id: number }) {
     this.orderId.set(o.id);
     this.orderSearch.set('');
