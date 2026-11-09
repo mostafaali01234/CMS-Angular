@@ -70,9 +70,9 @@ export class Sidebar {
         { label: 'كشف الموظفين', icon: '•', path: '/employees' },
         { label: 'الخصومات/الحوافز', icon: '•', path: '/payroll-adjustments' },
         { label: 'السلف', icon: '•', path: '/employee-loans' },
-        { label: 'حساب المرتبات', icon: '•', path: '/floors' },
-        { label: 'المرتبات المعتمدة', icon: '•', path: '/floors' },
-        { label: 'المرتبات المصروفة', icon: '•', path: '/floors' },
+        { label: 'العمولات الخاصة', icon: '•', path: '/sales-managers' },
+        { label: 'حساب المرتبات', icon: '•', path: '/payroll/review' },
+        { label: 'المرتبات المعتمدة/المصروفة', icon: '•', path: '/payroll' },
       ]
     },
     {

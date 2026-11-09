@@ -1,0 +1,39 @@
+<!-- payroll-withdraw/payroll-withdraw.html -->
+<div class="ui-page narrow">
+  <div class="ui-page-header"><h2 class="ui-title">صرف مرتب</h2></div>
+
+  @if (loading()) {
+    <p class="ui-muted">جاري التحميل...</p>
+  } @else if (payroll(); as p) {
+    <div class="ui-card">
+      <div class="ui-card-body">
+        <p><b>{{ p.employee_name }}</b> - {{ p.month }}/{{ p.year }}</p>
+        <p style="margin: 8px 0">الصافي: <b style="color: #2e9e4f">{{ p.net_total | number:'1.0-2' }}</b>
+          <span class="ui-muted"> ({{ statusLabel(p.status) }})</span></p>
+
+        @if (p.status === 'Withdrawn') {
+          <div class="ui-alert" role="alert">تم صرف هذا المرتب من خزنة {{ p.money_safe_name }}.</div>
+        } @else {
+          <div class="ui-grid" style="margin-top: 12px">
+            <app-lookup-select [ngModel]="moneySafeId()" (ngModelChange)="moneySafeId.set($event)"
+                               [loader]="lookup.moneySafes" [filter]="activeOnly"
+                               label="الخزنة" placeholder="اختر الخزنة" error="اختر الخزنة" />
+            <div class="ui-field">
+              <label class="ui-label">تاريخ الصرف</label>
+              <input type="date" class="ui-input" [ngModel]="date()" (ngModelChange)="date.set($event)" />
+            </div>
+          </div>
+        }
+        @if (error()) { <div class="ui-alert" role="alert" style="margin-top: 16px">{{ error() }}</div> }
+      </div>
+      <div class="ui-card-footer">
+        <a routerLink="/payroll" class="ui-btn ui-btn-outline">رجوع</a>
+        @if (p.status !== 'Withdrawn') {
+          <button class="ui-btn ui-btn-primary" [disabled]="saving()" (click)="save()">{{ saving() ? 'جاري الصرف...' : 'صرف المرتب' }}</button>
+        }
+      </div>
+    </div>
+  } @else if (error()) {
+    <div class="ui-alert" role="alert">{{ error() }}</div>
+  }
+</div>

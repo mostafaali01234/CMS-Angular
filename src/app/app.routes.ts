@@ -132,8 +132,14 @@ export const routes: Routes = [
     path: 'shifts', canActivate: [authGuard],
     loadChildren: () => import('./feature/shifts/shifts.routes').then(m => m.SHIFT_ROUTES) 
   },
-
-
+  { 
+    path: 'sales-managers', canActivate: [authGuard],
+    loadChildren: () => import('./feature/sales-managers/sales-managers.routes').then(m => m.SALES_MANAGER_ROUTES) 
+  },
+  { 
+    path: 'payroll', canActivate: [authGuard],
+    loadChildren: () => import('./feature/payroll/payroll.routes').then(m => m.PAYROLL_ROUTES) 
+  },
 
   { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
   { path: '**', redirectTo: 'dashboard' }

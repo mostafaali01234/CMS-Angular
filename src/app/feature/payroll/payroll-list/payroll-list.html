@@ -1,0 +1,69 @@
+<!-- payroll-list/payroll-list.html -->
+<div class="ui-page" style="max-width: none">
+  <div class="ui-page-header">
+    <h2 class="ui-title">المرتبات</h2>
+    <a routerLink="/payroll/review" class="ui-btn ui-btn-primary">مراجعة مرتب</a>
+  </div>
+
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px" (keydown.enter)="list.search()">
+    <label>الشهر <input type="month" class="ui-input" [ngModel]="list.form().period" (ngModelChange)="list.set('period', $event, true)" /></label>
+    <select class="ui-input" style="min-width: 220px" [ngModel]="list.form().employeeId" (ngModelChange)="list.set('employeeId', +$event, true)">
+      <option [ngValue]="0">كل الموظفين</option>
+      @for (e of employees(); track e.id) { <option [ngValue]="e.id">{{ e.name }}</option> }
+    </select>
+    <select class="ui-input" style="flex: 0 0 160px" [ngModel]="list.form().status" (ngModelChange)="list.set('status', $event, true)">
+      <option value="">كل الحالات</option>
+      <option value="Revised">تم الاعتماد</option>
+      <option value="Withdrawn">تم الصرف</option>
+    </select>
+    <button type="button" class="ui-btn ui-btn-outline sm" (click)="list.reset()">مسح الفلاتر</button>
+  </div>
+
+  @if (actionError()) {
+    <div class="ui-alert" role="alert" style="margin-bottom: 16px">
+      <span>{{ actionError() }}</span>
+      <button type="button" class="ui-alert-close" (click)="actionError.set(null)" aria-label="إغلاق">×</button>
+    </div>
+  }
+
+  @if (list.error()) {
+    <div class="ui-alert"><span>{{ list.error() }}</span>
+      <button class="ui-btn ui-btn-danger sm" (click)="list.reload()">اعادة المحاولة</button></div>
+  } @else {
+    <div class="ui-card" [style.opacity]="list.loading() ? 0.55 : 1">
+      <div class="ui-table-wrap">
+        <table class="ui-table">
+          <thead><tr>
+            <th>الموظف</th><th>الشهر</th><th>الراتب الاساسي</th><th>عمولات</th><th>الحوافز</th><th>الخصومات</th>
+            <th>السلف</th><th>الغدا</th><th>الصافي</th><th>الحالة</th><th>الخزنة / تاريخ الصرف</th><th class="end">الإجراءات</th>
+          </tr></thead>
+          <tbody>
+            @for (p of list.items(); track p.id) {
+              <tr>
+                <td class="strong">{{ p.employee_name }}</td><td>{{ p.month }}/{{ p.year }}</td>
+                <td>{{ p.base_salary | number:'1.0-2' }}</td>
+                <td>{{ p.sales_commission_total + p.tech_commission_total + p.manager_commission_total | number:'1.0-2' }}</td>
+                <td>{{ p.bonus_total | number:'1.0-2' }}</td><td>{{ p.deductions_total | number:'1.0-2' }}</td>
+                <td>{{ p.loans_total | number:'1.0-2' }}</td><td>{{ p.lunch_total | number:'1.0-2' }}</td>
+                <td class="strong">{{ p.net_total | number:'1.0-2' }}</td>
+                <td>{{ statusLabel(p.status) }}</td>
+                <td class="ui-muted">@if (p.withdrawn_at) { {{ p.money_safe_name }} - {{ p.withdrawn_at | date:'yyyy-MM-dd' }} }</td>
+                <td class="end nowrap">
+                  @if (p.status === 'Revised') {
+                    <a [routerLink]="['/payroll', p.id, 'withdraw']" class="ui-btn ui-btn-primary sm">صرف</a>
+                    <button class="ui-btn ui-btn-danger sm" [disabled]="deletingId() === p.id" (click)="remove(p)">حذف</button>
+                  }
+                  <a routerLink="/payroll/review" class="ui-btn ui-btn-outline sm">التفاصيل</a>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="12" class="center ui-muted" style="padding: 28px">{{ list.loading() ? 'جاري التحميل...' : 'لا توجد مرتبات.' }}</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <app-pager [page]="list.page()" [pageSize]="list.size()" [total]="list.total()"
+                 (pageChange)="list.goTo($event)" (sizeChange)="list.setSize($event)" />
+    </div>
+  }
+</div>

@@ -1,0 +1,73 @@
+<!-- sales-manager-form/sales-manager-form.html -->
+<div class="ui-page narrow">
+  <div class="ui-page-header">
+    <h2 class="ui-title">{{ id() ? 'تعديل مجموعة #' + id() : 'مجموعة جديدة' }}</h2>
+  </div>
+
+  @if (loading()) {
+    <p class="ui-muted">جاري التحميل...</p>
+  } @else {
+    <form class="ui-card" (ngSubmit)="save()">
+      <div class="ui-card-body">
+        <div class="ui-grid">
+          <div class="ui-field">
+            <label class="ui-label">المدير</label>
+            <select class="ui-input" name="manager" [ngModel]="managerId()" (ngModelChange)="managerId.set(+$event)">
+              <option [ngValue]="0">اختر</option>
+              @for (e of employees(); track e.id) { <option [ngValue]="e.id">{{ e.name }}</option> }
+            </select>
+          </div>
+
+          <div class="ui-field">
+            <label class="ui-label">نسبة المدير % (من اجمالي المنتجات المحددة)</label>
+            <input type="number" step="any" class="ui-input" name="percent" [ngModel]="percent()" (ngModelChange)="percent.set(+$event)" />
+          </div>
+
+          <div class="ui-field">
+            <label><input type="checkbox" name="active" [ngModel]="active()" (ngModelChange)="active.set($event)" /> مفعلة</label>
+          </div>
+
+          <div class="ui-field full">
+            <label class="ui-label">ملاحظات</label>
+            <textarea rows="2" class="ui-input" name="notes" [ngModel]="notes()" (ngModelChange)="notes.set($event)"></textarea>
+          </div>
+        </div>
+
+        <h3 class="ui-title" style="margin: 24px 0 8px">البائعون تحت هذا المدير</h3>
+        <div style="display: flex; gap: 8px; margin-bottom: 8px">
+          <select class="ui-input" style="flex: 1" name="pickSeller" [ngModel]="pickSeller()" (ngModelChange)="pickSeller.set(+$event)">
+            <option [ngValue]="0">اختر بائعا</option>
+            @for (e of freeEmployees(); track e.id) { <option [ngValue]="e.id">{{ e.name }}</option> }
+          </select>
+          <button type="button" class="ui-btn ui-btn-outline" [disabled]="!pickSeller()" (click)="addSeller()">+ اضافة</button>
+        </div>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap">
+          @for (s of sellers(); track s.id) {
+            <button type="button" class="ui-btn ui-btn-outline sm" (click)="removeSeller(s.id)">{{ s.name }} ×</button>
+          } @empty { <span class="ui-muted">لا يوجد بائعون</span> }
+        </div>
+
+        <h3 class="ui-title" style="margin: 24px 0 8px">المنتجات المحسوبة</h3>
+        <div style="margin-bottom: 8px">
+          <app-search-select name="pickProduct" [ngModel]="pickProduct()" (ngModelChange)="addProduct(+$event)"
+                             [loader]="lookup.products" [filter]="activeOnly" [display]="productText"
+                             placeholder="ابحث بالاسم أو الباركود لاضافة منتج..." />
+        </div>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap">
+          @for (p of chosenProducts(); track p.id) {
+            <button type="button" class="ui-btn ui-btn-outline sm" (click)="removeProduct(p.id)">{{ p.name }} ×</button>
+          } @empty { <span class="ui-muted">لا توجد منتجات</span> }
+        </div>
+
+        @if (error()) { <div class="ui-alert" role="alert" style="margin-top: 16px">{{ error() }}</div> }
+      </div>
+
+      <div class="ui-card-footer">
+        <a routerLink="/sales-managers" class="ui-btn ui-btn-outline">الغاء</a>
+        <button type="submit" class="ui-btn ui-btn-primary" [disabled]="saving()">
+          {{ saving() ? 'جاري الحفظ...' : (id() ? 'حفظ' : 'اضافة') }}
+        </button>
+      </div>
+    </form>
+  }
+</div>

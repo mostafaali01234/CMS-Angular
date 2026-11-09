@@ -1,0 +1,56 @@
+<!-- sales-manager-list/sales-manager-list.html -->
+<div class="ui-page">
+  <div class="ui-page-header">
+    <h2 class="ui-title">عمولة مدراء المبيعات</h2>
+    <a routerLink="/sales-managers/new" class="ui-btn ui-btn-primary">+ مجموعة جديدة</a>
+  </div>
+
+  @if (actionError()) {
+    <div class="ui-alert" role="alert" style="margin-bottom: 16px">
+      <span>{{ actionError() }}</span>
+      <button type="button" class="ui-alert-close" (click)="actionError.set(null)" aria-label="إغلاق">×</button>
+    </div>
+  }
+
+  @if (error()) {
+    <div class="ui-alert"><span>{{ error() }}</span>
+      <button class="ui-btn ui-btn-danger sm" (click)="load()">اعادة المحاولة</button></div>
+  } @else {
+    <div class="ui-card" [style.opacity]="loading() ? 0.55 : 1">
+      <div class="ui-table-wrap">
+        <table class="ui-table">
+          <thead>
+            <tr><th>المدير</th><th>النسبة %</th><th>البائعون</th><th>المنتجات</th><th>الحالة</th><th class="end">الإجراءات</th></tr>
+          </thead>
+          <tbody>
+            @for (g of groups(); track g.id) {
+              <tr>
+                <td class="strong">{{ g.manager_name }}</td>
+                <td>{{ g.percent | number:'1.0-2' }}</td>
+                <td>
+                  <span class="strong">{{ g.sellers.length }}</span>
+                  <small class="ui-muted"> {{ g.sellers.slice(0, 3).map(s => s.name).join('، ') }}{{ g.sellers.length > 3 ? '...' : '' }}</small>
+                </td>
+                <td>
+                  <span class="strong">{{ g.products.length }}</span>
+                  <small class="ui-muted"> {{ g.products.slice(0, 2).map(p => p.name).join('، ') }}{{ g.products.length > 2 ? '...' : '' }}</small>
+                </td>
+                <td>{{ g.active ? 'مفعلة' : 'متوقفة' }}</td>
+                <td class="end nowrap">
+                  <a [routerLink]="['/sales-managers', g.id, 'edit']" class="ui-btn ui-btn-outline sm">تعديل</a>
+                  <button class="ui-btn ui-btn-danger sm" [disabled]="deletingId() === g.id" (click)="remove(g)">
+                    {{ deletingId() === g.id ? 'جاري الحذف...' : 'حذف' }}
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="6" class="center ui-muted" style="padding: 28px">
+                {{ loading() ? 'جاري التحميل...' : 'لا توجد مجموعات.' }}
+              </td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</div>
