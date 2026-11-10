@@ -1,0 +1,30 @@
+<!-- project-form/project-form.html -->
+<div class="ui-page narrow">
+  <div class="ui-page-header">
+    <h2 class="ui-title">{{ id() ? 'تعديل مشروع' : 'مشروع جديد' }}</h2>
+  </div>
+
+  @if (loading()) {
+    <p class="ui-muted">جاري التحميل...</p>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="save()" class="ui-card">
+      <div class="ui-card-body">
+        <div class="ui-field">
+          <label class="ui-label" for="name">الاسم</label>
+          <input id="name" class="ui-input" formControlName="name" [class.is-invalid]="invalid('name')" />
+        </div>
+        <div class="ui-field">
+          <label class="ui-label" for="notes">ملاحظات</label>
+          <textarea id="notes" rows="3" class="ui-input" formControlName="notes"></textarea>
+        </div>
+        @if (error()) { <div class="ui-alert" role="alert" style="margin-top: 16px">{{ error() }}</div> }
+      </div>
+      <div class="ui-card-footer">
+        <a routerLink="/projects" class="ui-btn ui-btn-outline">الغاء</a>
+        <button type="submit" class="ui-btn ui-btn-primary" [disabled]="saving()">
+          {{ saving() ? 'جاري الحفظ...' : (id() ? 'حفظ' : 'اضافة') }}
+        </button>
+      </div>
+    </form>
+  }
+</div>

@@ -1,0 +1,224 @@
+<!-- project-review/project-review.html -->
+<div class="ui-page" style="max-width: none">
+  <div class="ui-page-header">
+    <h2 class="ui-title">مراجعة المشروع: {{ data()?.project_name }}</h2>
+    <a routerLink="/projects/review" class="ui-btn ui-btn-outline">كل المشاريع</a>
+  </div>
+
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px" (keydown.enter)="load()">
+    <label>من <input type="date" class="ui-input" [ngModel]="from()" (ngModelChange)="from.set($event)" /></label>
+    <label>الى <input type="date" class="ui-input" [ngModel]="to()" (ngModelChange)="to.set($event)" /></label>
+    <button class="ui-btn ui-btn-primary" [disabled]="loading()" (click)="load()">عرض</button>
+    <button class="ui-btn ui-btn-outline" [disabled]="loading()" (click)="thisMonth()">هذا الشهر</button>
+    <button class="ui-btn ui-btn-outline" [disabled]="loading()" (click)="allPeriods()">كل الفترات</button>
+    @if (data()) {
+      <button class="ui-btn ui-btn-success" [disabled]="exporting() || loading()" (click)="exportExcel()">
+        {{ exporting() ? 'جاري التصدير...' : 'تصدير Excel' }}
+      </button>
+    }
+  </div>
+
+  @if (error()) { <div class="ui-alert" role="alert" style="margin-bottom: 16px">{{ error() }}</div> }
+  @if (exportError()) {
+    <div class="ui-alert" role="alert" style="margin-bottom: 16px">
+      <span>{{ exportError() }}</span>
+      <button type="button" class="ui-alert-close" (click)="exportError.set(null)" aria-label="إغلاق">×</button>
+    </div>
+  }
+
+  @if (data(); as d) {
+    <div [style.opacity]="loading() ? 0.55 : 1">
+      @if (d.project_notes) { <p class="ui-muted" style="margin-bottom: 12px">{{ d.project_notes }}</p> }
+
+      <!-- ===== summary ===== -->
+      @let s = d.summary;
+      <div class="ui-card" style="margin-bottom: 16px">
+        <div class="ui-table-wrap">
+          <table class="ui-table">
+            <tbody>
+              <tr><td class="strong">المبيعات</td><td>{{ s.sales_total | number:'1.0-2' }}</td></tr>
+              <tr><td>مرتجع المبيعات</td><td style="color: crimson">− {{ s.sales_returns_total | number:'1.0-2' }}</td></tr>
+              <tr><td class="strong">صافي المبيعات</td><td class="strong">{{ s.net_sales | number:'1.0-2' }}</td></tr>
+              <tr><td class="strong">المشتريات</td><td>{{ s.purchases_total | number:'1.0-2' }}</td></tr>
+              <tr><td>مرتجع المشتريات</td><td style="color: crimson">− {{ s.purchases_returns_total | number:'1.0-2' }}</td></tr>
+              <tr><td class="strong">صافي المشتريات</td><td class="strong">{{ s.net_purchases | number:'1.0-2' }}</td></tr>
+              <tr><td class="strong">المصروفات</td>
+                  <td>{{ s.expenses_total | number:'1.0-2' }}
+                    @if (s.expenses_total_currency) { <small class="ui-muted"> + {{ s.expenses_total_currency | number:'1.0-2' }} عملة</small> }
+                  </td></tr>
+              <tr><td class="strong">اجمالي التكلفة</td><td class="strong">{{ s.total_cost | number:'1.0-2' }}</td></tr>
+              <tr>
+                <td class="strong">الربح</td>
+                <td class="strong" [style.color]="s.profit < 0 ? 'crimson' : '#2e9e4f'">
+                  {{ s.profit | number:'1.0-2' }} <small class="ui-muted">({{ s.margin_percent | number:'1.0-2' }}%)</small>
+                </td>
+              </tr>
+              <tr class="ui-muted"><td>السلف (خارج الربح)</td><td>{{ s.loans_total | number:'1.0-2' }}</td></tr>
+              <tr class="ui-muted"><td>التحويلات (خارج الربح)</td><td>{{ s.transfers_total | number:'1.0-2' }}</td></tr>
+              <tr class="ui-muted"><td>الورديات / الكيلومترات</td><td>{{ s.shifts_count }} / {{ s.km_total | number:'1.0-1' }}</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      @if (d.expenses_by_type.length) {
+        <div class="ui-card" style="margin-bottom: 16px">
+          <div class="ui-card-body strong">المصروفات حسب النوع</div>
+          <div class="ui-table-wrap">
+            <table class="ui-table">
+              <thead><tr><th>النوع</th><th>العدد</th><th>المبلغ</th><th>المبلغ (عملة)</th></tr></thead>
+              <tbody>
+                @for (t of d.expenses_by_type; track t.expense_type) {
+                  <tr>
+                    <td class="strong">{{ t.expense_type }}</td><td>{{ t.count }}</td>
+                    <td>{{ t.amount | number:'1.0-2' }}</td>
+                    <td class="ui-muted">@if (t.amount_currency) { {{ t.amount_currency | number:'1.0-2' }} }</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+
+      <!-- ===== tabs ===== -->
+      <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px">
+        @for (t of tabs(); track t.id) {
+          <button type="button" class="ui-btn sm" [class.ui-btn-primary]="tab() === t.id"
+                  [class.ui-btn-outline]="tab() !== t.id" (click)="tab.set(t.id)">
+            {{ t.label }} ({{ t.count }})
+          </button>
+        }
+      </div>
+
+      <div class="ui-card">
+        <div class="ui-table-wrap">
+
+          @if (tab() === 'sales' || tab() === 'purchases') {
+            @let rows = tab() === 'sales' ? d.sales : d.purchases;
+            <table class="ui-table">
+              <thead>
+                <tr><th>التاريخ</th><th>الفاتورة</th><th>النوع</th><th>الطرف</th><th>المنتج</th><th>ملاحظات</th>
+                    <th>الكمية</th><th>السعر</th><th>الخصم</th><th>الصافي</th></tr>
+              </thead>
+              <tbody>
+                @for (r of rows; track $index) {
+                  <tr>
+                    <td>{{ r.date | date:'yyyy-MM-dd' }}</td>
+                    <td>#{{ r.invoice_number }}</td>
+                    <td>{{ invoiceType(r.type) }}</td>
+                    <td>{{ r.party }}</td>
+                    <td class="strong">{{ r.product }}</td>
+                    <td class="ui-muted">{{ r.notes }}</td>
+                    <td>{{ r.quantity | number:'1.0-3' }}</td>
+                    <td>{{ r.price | number:'1.0-2' }}</td>
+                    <td>{{ r.discount | number:'1.0-2' }}</td>
+                    <td class="strong" [style.color]="r.net_total < 0 ? 'crimson' : 'inherit'">{{ r.net_total | number:'1.0-2' }}</td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="10" class="center ui-muted" style="padding: 24px">لا توجد سجلات.</td></tr>
+                }
+              </tbody>
+              @if (rows.length) {
+                <tfoot><tr style="font-weight: 600">
+                  <td colspan="6">الاجمالي (المرتجعات بالسالب)</td>
+                  <td>{{ sum(rows, x => x.quantity) | number:'1.0-3' }}</td><td></td>
+                  <td>{{ sum(rows, x => x.discount) | number:'1.0-2' }}</td>
+                  <td>{{ sum(rows, x => x.net_total) | number:'1.0-2' }}</td>
+                </tr></tfoot>
+              }
+            </table>
+          }
+
+          @if (tab() === 'expenses') {
+            <table class="ui-table">
+              <thead><tr><th>التاريخ</th><th>النوع</th><th>الخزنة</th><th>ملاحظات</th><th>المبلغ</th><th>المبلغ (عملة)</th></tr></thead>
+              <tbody>
+                @for (e of d.expenses; track e.id) {
+                  <tr>
+                    <td>{{ e.date | date:'yyyy-MM-dd' }}</td><td class="strong">{{ e.expense_type }}</td>
+                    <td>{{ e.money_safe }}</td><td class="ui-muted">{{ e.notes }}</td>
+                    <td>{{ e.amount | number:'1.0-2' }}</td>
+                    <td class="ui-muted">@if (e.amount_currency) { {{ e.amount_currency | number:'1.0-2' }} }</td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="6" class="center ui-muted" style="padding: 24px">لا توجد سجلات.</td></tr>
+                }
+              </tbody>
+              @if (d.expenses.length) {
+                <tfoot><tr style="font-weight: 600"><td colspan="4">الاجمالي</td>
+                  <td>{{ sum(d.expenses, x => x.amount) | number:'1.0-2' }}</td>
+                  <td>{{ sum(d.expenses, x => x.amount_currency) | number:'1.0-2' }}</td></tr></tfoot>
+              }
+            </table>
+          }
+
+          @if (tab() === 'loans') {
+            <table class="ui-table">
+              <thead><tr><th>التاريخ</th><th>الموظف</th><th>الخزنة</th><th>الاقساط</th><th>ملاحظات</th><th>المبلغ</th></tr></thead>
+              <tbody>
+                @for (l of d.loans; track l.id) {
+                  <tr>
+                    <td>{{ l.date | date:'yyyy-MM-dd' }}</td><td class="strong">{{ l.employee }}</td>
+                    <td>{{ l.money_safe || 'خصم على اقساط' }}</td><td>{{ l.installment_count }}</td>
+                    <td class="ui-muted">{{ l.notes }}</td><td>{{ l.amount | number:'1.0-2' }}</td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="6" class="center ui-muted" style="padding: 24px">لا توجد سجلات.</td></tr>
+                }
+              </tbody>
+              @if (d.loans.length) {
+                <tfoot><tr style="font-weight: 600"><td colspan="5">الاجمالي</td>
+                  <td>{{ sum(d.loans, x => x.amount) | number:'1.0-2' }}</td></tr></tfoot>
+              }
+            </table>
+          }
+
+          @if (tab() === 'transactions') {
+            <table class="ui-table">
+              <thead><tr><th>التاريخ</th><th>النوع</th><th>من خزنة</th><th>الى خزنة</th><th>ملاحظات</th><th>المبلغ</th><th>المبلغ (عملة)</th></tr></thead>
+              <tbody>
+                @for (t of d.transactions; track t.id) {
+                  <tr>
+                    <td>{{ t.date | date:'yyyy-MM-dd' }}</td><td>{{ t.transaction_type }}</td>
+                    <td>{{ t.out_money_safe }}</td><td>{{ t.in_money_safe }}</td>
+                    <td class="ui-muted">{{ t.notes }}</td><td>{{ t.amount | number:'1.0-2' }}</td>
+                    <td class="ui-muted">@if (t.amount_currency) { {{ t.amount_currency | number:'1.0-2' }} }</td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="7" class="center ui-muted" style="padding: 24px">لا توجد سجلات.</td></tr>
+                }
+              </tbody>
+              @if (d.transactions.length) {
+                <tfoot><tr style="font-weight: 600"><td colspan="5">الاجمالي</td>
+                  <td>{{ sum(d.transactions, x => x.amount) | number:'1.0-2' }}</td>
+                  <td>{{ sum(d.transactions, x => x.amount_currency) | number:'1.0-2' }}</td></tr></tfoot>
+              }
+            </table>
+          }
+
+          @if (tab() === 'shifts') {
+            <table class="ui-table">
+              <thead><tr><th>التاريخ</th><th>المحافظة</th><th>السيارة</th><th>المخزن</th><th>من كم</th><th>الى كم</th><th>المسافة</th><th>ملاحظات</th></tr></thead>
+              <tbody>
+                @for (x of d.shifts; track x.id) {
+                  <tr>
+                    <td>{{ x.date | date:'yyyy-MM-dd' }}</td><td>{{ x.state }}</td><td>{{ x.car }}</td><td>{{ x.store }}</td>
+                    <td>{{ x.km_start | number:'1.0-1' }}</td><td>{{ x.km_end | number:'1.0-1' }}</td>
+                    <td class="strong">{{ x.km | number:'1.0-1' }}</td><td class="ui-muted">{{ x.notes }}</td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="8" class="center ui-muted" style="padding: 24px">لا توجد سجلات.</td></tr>
+                }
+              </tbody>
+              @if (d.shifts.length) {
+                <tfoot><tr style="font-weight: 600"><td colspan="6">الاجمالي</td>
+                  <td>{{ sum(d.shifts, x => x.km) | number:'1.0-1' }}</td><td></td></tr></tfoot>
+              }
+            </table>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>

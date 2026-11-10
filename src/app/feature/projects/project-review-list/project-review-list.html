@@ -1,0 +1,75 @@
+<!-- project-review-list/project-review-list.html -->
+<div class="ui-page" style="max-width: none">
+  <div class="ui-page-header">
+    <h2 class="ui-title">مراجعة المشاريع</h2>
+    <a routerLink="/projects" class="ui-btn ui-btn-outline">المشاريع</a>
+  </div>
+
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px" (keydown.enter)="load()">
+    <label>من <input type="date" class="ui-input" [ngModel]="from()" (ngModelChange)="from.set($event)" /></label>
+    <label>الى <input type="date" class="ui-input" [ngModel]="to()" (ngModelChange)="to.set($event)" /></label>
+    <button class="ui-btn ui-btn-primary" [disabled]="loading()" (click)="load()">عرض</button>
+    <button class="ui-btn ui-btn-outline" [disabled]="loading()" (click)="thisMonth()">هذا الشهر</button>
+    <button class="ui-btn ui-btn-outline" [disabled]="loading()" (click)="allPeriods()">كل الفترات</button>
+  </div>
+
+  @if (error()) { <div class="ui-alert" role="alert" style="margin-bottom: 16px">{{ error() }}</div> }
+
+  <div class="ui-card" [style.opacity]="loading() ? 0.55 : 1">
+    <div class="ui-table-wrap">
+      <table class="ui-table">
+        <thead>
+          <tr>
+            <th>المشروع</th><th>صافي المبيعات</th><th>صافي المشتريات</th><th>المصروفات</th>
+            <th>اجمالي التكلفة</th><th>الربح</th><th>الهامش %</th>
+            <th>السلف</th><th>التحويلات</th><th>الورديات</th><th>الكيلومترات</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of rows(); track r.project_id) {
+            <tr>
+              <td class="strong">
+                <a [routerLink]="['/projects/review', r.project_id]" [queryParams]="query()">{{ r.project_name }}</a>
+              </td>
+              <td>{{ r.net_sales | number:'1.0-2' }}</td>
+              <td>{{ r.net_purchases | number:'1.0-2' }}</td>
+              <td>{{ r.expenses_total | number:'1.0-2' }}</td>
+              <td>{{ r.total_cost | number:'1.0-2' }}</td>
+              <td class="strong" [style.color]="r.profit < 0 ? 'crimson' : '#2e9e4f'">{{ r.profit | number:'1.0-2' }}</td>
+              <td>{{ r.margin_percent | number:'1.0-2' }}</td>
+              <td class="ui-muted">{{ r.loans_total | number:'1.0-2' }}</td>
+              <td class="ui-muted">{{ r.transfers_total | number:'1.0-2' }}</td>
+              <td>{{ r.shifts_count }}</td>
+              <td>{{ r.km_total | number:'1.0-1' }}</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="11" class="center ui-muted" style="padding: 28px">
+              {{ loading() ? 'جاري التحميل...' : 'لا توجد مشاريع.' }}
+            </td></tr>
+          }
+        </tbody>
+        @if (rows().length) {
+          @let t = totals();
+          <tfoot>
+            <tr style="font-weight: 600">
+              <td>الاجمالي</td>
+              <td>{{ t.net_sales | number:'1.0-2' }}</td>
+              <td>{{ t.net_purchases | number:'1.0-2' }}</td>
+              <td>{{ t.expenses | number:'1.0-2' }}</td>
+              <td>{{ t.total_cost | number:'1.0-2' }}</td>
+              <td [style.color]="t.profit < 0 ? 'crimson' : '#2e9e4f'">{{ t.profit | number:'1.0-2' }}</td>
+              <td>{{ t.margin | number:'1.0-2' }}</td>
+              <td>{{ t.loans | number:'1.0-2' }}</td>
+              <td>{{ t.transfers | number:'1.0-2' }}</td>
+              <td>{{ t.shifts }}</td>
+              <td>{{ t.km | number:'1.0-1' }}</td>
+            </tr>
+          </tfoot>
+        }
+      </table>
+    </div>
+  </div>
+  <p class="ui-muted" style="margin-top: 8px">
+    الربح = صافي المبيعات − (صافي المشتريات + المصروفات). السلف والتحويلات لا تدخل في الربح.
+  </p>
+</div>

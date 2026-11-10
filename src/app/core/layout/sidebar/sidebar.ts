@@ -80,7 +80,7 @@ export class Sidebar {
       children: [
         { label: 'خزنة جديدة', icon: '•', path: '/money-safes/new' },
         { label: 'كشف الخزن', icon: '•', path: '/money-safes' },
-        { label: 'الارصدة الافتتاحية للخزن', icon: '•', path: '/money-safe/opening-balance' },
+        // { label: 'الارصدة الافتتاحية للخزن', icon: '•', path: '/money-safe/opening-balance' },
         { label: 'تحويلات بين الخزن', icon: '•', path: '/money-safe-transactions' },
         { label: 'تصنيفات الخزن', icon: '•', path: '/money-safe-categories' },
       ]
@@ -128,14 +128,20 @@ export class Sidebar {
       ]
     },
     {
+      label: 'المشاريع', icon: '📋', role: 'Admin,SuperAdmin',
+      children: [
+        { label: 'كشف المشاريع', icon: '•', path: '/projects' },
+      ]
+    },
+    {
       label: 'الموردين', icon: '🤝', role: 'Admin,SuperAdmin',
       children: [
         { label: 'مورد جديد', icon: '•', path: '/suppliers/new' },
         { label: 'كشف الموردين', icon: '•', path: '/suppliers' },
         { label: 'ارصدة الموردين', icon: '•', role: 'Admin,SuperAdmin', path: '/balances/suppliers' },
-        { label: 'فواتير الموردين', icon: '•', path: '/suppliers/invoices' },
+        // { label: 'فواتير الموردين', icon: '•', path: '/suppliers/invoices' },
         { label: 'دفعات الموردين', icon: '•', path: '/supplier-payments' },
-        { label: 'الارصدة الافتتاحية للموردين', icon: '•', path: '/suppliers/opening-balance' },
+        // { label: 'الارصدة الافتتاحية للموردين', icon: '•', path: '/suppliers/opening-balance' },
       ]
     },
     {

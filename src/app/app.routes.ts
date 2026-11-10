@@ -148,6 +148,10 @@ export const routes: Routes = [
     path: 'money-safe-moves', canActivate: [authGuard],
     loadComponent: () => import('./feature/money-safe-moves/money-safe-moves/money-safe-moves').then(m => m.MoneySafeMovesPage) 
   },
+  { 
+    path: 'projects', canActivate: [authGuard],
+    loadChildren: () => import('./feature/projects/projects.routes').then(m => m.PROJECT_ROUTES) 
+  },
 
   { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
   { path: '**', redirectTo: 'dashboard' }
