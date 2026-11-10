@@ -34,6 +34,9 @@ export class AuthService {
   claim<T = string>(name: string): T | null {
     return (this.claims()?.[name] as T) ?? null;
   }
+  isAdmin(){
+    return (this.hasRole('Admin') || this.hasRole('SuperAdmin'));
+  }
 
   private _session = signal<Session | null>(this.loadSession());
   private refreshing: Promise<string> | null = null;

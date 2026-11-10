@@ -1,0 +1,100 @@
+<!-- employee-balance/employee-balance.html -->
+<div class="ui-page" style="max-width: none">
+  <div class="ui-page-header">
+    <h2 class="ui-title">{{ isAdmin() ? 'رصيد الموظف' : 'رصيدي' }}</h2>
+  </div>
+
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px" (keydown.enter)="load()">
+    <label>الموظف
+      @if (isAdmin()) {
+        <select class="ui-input" style="min-width: 240px" [ngModel]="employeeId()" (ngModelChange)="employeeId.set(+$event)">
+          <option [ngValue]="0">اختر</option>
+          @for (e of employees(); track e.id) { <option [ngValue]="e.id">{{ e.name }}</option> }
+        </select>
+      } @else {
+        <select class="ui-input" style="min-width: 240px" disabled>
+          <option>{{ data()?.employee_name || '...' }}</option>
+        </select>
+      }
+    </label>
+
+    <label>من <input type="date" class="ui-input" [ngModel]="from()" (ngModelChange)="from.set($event)" /></label>
+    <label>الى <input type="date" class="ui-input" [ngModel]="to()" (ngModelChange)="to.set($event)" /></label>
+
+    <button class="ui-btn ui-btn-primary" [disabled]="loading()" (click)="load()">عرض</button>
+    <button class="ui-btn ui-btn-outline" [disabled]="loading()" (click)="allPeriods()">كل الفترات</button>
+    @if (data()) {
+      <button class="ui-btn ui-btn-success" [disabled]="exporting() || loading()" (click)="exportExcel()">
+        {{ exporting() ? 'جاري التصدير...' : 'تصدير Excel' }}
+      </button>
+    }
+  </div>
+
+  @if (error()) { <div class="ui-alert" role="alert" style="margin-bottom: 16px">{{ error() }}</div> }
+  @if (exportError()) {
+    <div class="ui-alert" role="alert" style="margin-bottom: 16px">
+      <span>{{ exportError() }}</span>
+      <button type="button" class="ui-alert-close" (click)="exportError.set(null)" aria-label="إغلاق">×</button>
+    </div>
+  }
+
+  @if (data(); as d) {
+    <div [style.opacity]="loading() ? 0.55 : 1">
+
+      <!-- ===== summary ===== -->
+      <div class="ui-card" style="margin-bottom: 16px">
+        <div class="ui-table-wrap">
+          <table class="ui-table">
+            <tbody>
+              <tr><td class="strong">رصيد اول المدة</td>
+                  <td [style.color]="d.opening_balance < 0 ? 'crimson' : 'inherit'">{{ d.opening_balance | number:'1.0-2' }}</td></tr>
+              <tr><td class="strong">مرتبات تم اعتمادها</td>
+                  <td style="color: #2e9e4f">+ {{ d.salaries_total | number:'1.0-2' }}</td></tr>
+              <tr><td class="strong">اقساط السلف المخصومة من المرتبات</td>
+                  <td style="color: #2e9e4f">+ {{ d.installments_total | number:'1.0-2' }}</td></tr>
+              <tr><td class="strong">مرتبات تم صرفها</td>
+                  <td style="color: crimson">− {{ d.withdrawn_total | number:'1.0-2' }}</td></tr>
+              <tr><td class="strong">السلف</td>
+                  <td style="color: crimson">− {{ d.loans_total | number:'1.0-2' }}</td></tr>
+              <tr>
+                <td class="strong">الاجمالي (الرصيد)</td>
+                <td class="strong" [style.color]="d.closing_balance < 0 ? 'crimson' : '#2e9e4f'">{{ d.closing_balance | number:'1.0-2' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="ui-card-body ui-muted">
+          الرصيد الموجب مستحق للموظف، والسالب مستحق على الموظف.
+        </div>
+      </div>
+
+      <!-- ===== movements ===== -->
+      <div class="ui-card">
+        <div class="ui-table-wrap">
+          <table class="ui-table">
+            <thead>
+              <tr><th>التاريخ</th><th>النوع</th><th>البيان</th><th>المبلغ</th><th>الرصيد</th></tr>
+            </thead>
+            <tbody>
+              <tr class="ui-muted">
+                <td colspan="4">رصيد اول المدة</td>
+                <td class="strong">{{ d.opening_balance | number:'1.0-2' }}</td>
+              </tr>
+              @for (m of d.movements; track $index) {
+                <tr>
+                  <td>{{ m.date | date:'yyyy-MM-dd' }}</td>
+                  <td>{{ labels[m.kind] }}</td>
+                  <td class="ui-muted">{{ m.description }}</td>
+                  <td class="strong" [style.color]="m.amount < 0 ? 'crimson' : '#2e9e4f'">{{ m.amount | number:'1.0-2' }}</td>
+                  <td [style.color]="m.balance < 0 ? 'crimson' : 'inherit'">{{ m.balance | number:'1.0-2' }}</td>
+                </tr>
+              } @empty {
+                <tr><td colspan="5" class="center ui-muted" style="padding: 24px">لا توجد حركات في هذه الفترة</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  }
+</div>

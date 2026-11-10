@@ -10,6 +10,7 @@ import {
 import { LookupService } from '../../../shared/services/lookup.service';
 import { ConfirmService } from '../../../shared/services/confirm.service';
 import { AuthService } from '../../../core/services/AuthService/auth'; 
+import { exportFile } from '../../../shared/utils/download';
 import { today } from '../../../shared/utils/date';
 import { apiError } from '../../../shared/utils/api';
 
@@ -30,6 +31,9 @@ export class PayrollReview {
   adjLabel = adjLabel;
   typesFor = typesFor;
 
+  // ASSUMPTION: AuthService exposes isAdmin() (Admin or SuperAdmin) and employeeId(). Rename to yours.
+  isAdmin = computed(() => !!this.auth.isAdmin());
+
   employees = signal<{ id: number; name: string }[]>([]);
   period = signal(today().slice(0, 7));          // yyyy-MM
   employeeId = signal(0);
@@ -40,6 +44,10 @@ export class PayrollReview {
   error = signal<string | null>(null);
   commError = signal<string | null>(null);
   adjError = signal<string | null>(null);
+  recalcMessage = signal<string | null>(null);
+
+  exporting = signal(false);
+  exportError = signal<string | null>(null);
 
   // the "اضافي" input of every commission row, by commission id
   extras = signal<Record<number, number>>({});
@@ -53,15 +61,24 @@ export class PayrollReview {
     reason: '',
   });
 
-  // an approved payroll exists for this month: everything is read-only
+  // an approved payroll exists for this month
   locked = computed(() => !!this.p()?.existing_payroll);
+
+  // inspecting only: employees always, admins once the payroll is approved
+  readOnly = computed(() => !this.isAdmin() || this.locked());
 
   setExtraValue(id: number, value: number | string) {
     this.extras.update(m => ({ ...m, [id]: +value }));
   }
 
   constructor() {
-    this.lookup.employees().subscribe(e => this.employees.set(e));
+    if (this.isAdmin()) {
+      this.lookup.employees().subscribe(e => this.employees.set(e));
+    } else {
+      // an employee sees only his own payroll, and the lookups are admin-only anyway
+      this.employeeId.set(Number(this.auth.employeeId()) || 0);
+      this.calc();
+    }
   }
 
   private auditorId() { return Number(this.auth.employeeId()) || 0; }
@@ -71,13 +88,24 @@ export class PayrollReview {
     return { year: y, month: m };
   }
 
+  onPeriod(v: string) {
+    this.period.set(v);
+    if (!this.isAdmin() && v) this.calc();      // an employee has nothing else to choose
+  }
+
+  /** the "حساب المرتب" button */
+  search() {
+    this.recalcMessage.set(null);
+    this.calc();
+  }
+
   calc() {
     if (!this.employeeId()) { this.error.set('اختر الموظف'); return; }
     if (!this.period()) { this.error.set('اختر الشهر'); return; }
 
     const { year, month } = this.ym();
     this.loading.set(true);
-    this.error.set(null); this.commError.set(null); this.adjError.set(null);
+    this.error.set(null); this.commError.set(null); this.adjError.set(null); this.exportError.set(null);
 
     this.service.preview(this.employeeId(), month, year).subscribe({
       next: p => {
@@ -89,12 +117,48 @@ export class PayrollReview {
     });
   }
 
+  // ---------- excel ----------
+  exportExcel() {
+    const p = this.p();
+    if (!p) return;
+    const mm = String(p.month).padStart(2, '0');
+    exportFile(
+      this.service.exportReview(p.employee_id, p.month, p.year),
+      `payroll-${p.employee_id}-${p.year}-${mm}.xlsx`,
+      { busy: this.exporting, error: this.exportError },
+    );
+  }
+
   // ---------- commissions ----------
   setExtra(id: number) {
     this.busy.set(true); this.commError.set(null);
     this.service.setExtra(id, this.extras()[id] ?? 0).subscribe({
       next: () => { this.busy.set(false); this.calc(); },
       error: err => { this.commError.set(apiError(err, 'فشل تعديل العمولة')); this.busy.set(false); },
+    });
+  }
+
+  async recalculate() {
+    const p = this.p();
+    if (!p || this.locked()) return;
+
+    const ok = await this.confirm.confirm({
+      title: 'اعادة حساب العمولات',
+      message: `اعادة حساب عمولات "${p.employee_name}" عن ${p.month}/${p.year} من الفواتير؟ العمولات المعتمدة في مرتبات سابقة لا تتغير.`,
+      confirmText: 'اعادة الحساب',
+    });
+    if (!ok) return;
+
+    this.busy.set(true); this.commError.set(null); this.recalcMessage.set(null);
+    this.service.recalculate(p.employee_id, p.month, p.year).subscribe({
+      next: r => {
+        this.busy.set(false);
+        this.recalcMessage.set(
+          `تمت اعادة حساب ${r.shifts} وردية و ${r.invoices} فاتورة بدون وردية` +
+          (r.skipped ? ` (تم تخطي ${r.skipped} مغلقة بمرتب معتمد)` : ''));
+        this.calc();
+      },
+      error: err => { this.commError.set(apiError(err, 'فشل اعادة حساب العمولات')); this.busy.set(false); },
     });
   }
 

@@ -31,7 +31,7 @@ export interface PayrollPreview {
 }
 
 export interface PayrollFilter { employeeId: number; period: string; status: string; }
-
+export interface RecalcResult { shifts: number; invoices: number; skipped: number; }
 
 export type AdjKind = 'Addition' | 'Deduction';
 export const KIND_LABELS: Record<AdjKind, string> = { Addition: 'اضافة', Deduction: 'خصم' };

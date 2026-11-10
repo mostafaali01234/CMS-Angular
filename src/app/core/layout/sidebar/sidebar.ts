@@ -78,7 +78,7 @@ export class Sidebar {
     {
       label: 'الخزن', icon: '💰', role: 'Admin,SuperAdmin',
       children: [
-        { label: 'خزنة جديدة', icon: '•', path: '/money-safe/new' },
+        { label: 'خزنة جديدة', icon: '•', path: '/money-safes/new' },
         { label: 'كشف الخزن', icon: '•', path: '/money-safes' },
         { label: 'الارصدة الافتتاحية للخزن', icon: '•', path: '/money-safe/opening-balance' },
         { label: 'تحويلات بين الخزن', icon: '•', path: '/money-safe-transactions' },

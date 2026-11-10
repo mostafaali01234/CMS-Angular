@@ -140,6 +140,14 @@ export const routes: Routes = [
     path: 'payroll', canActivate: [authGuard],
     loadChildren: () => import('./feature/payroll/payroll.routes').then(m => m.PAYROLL_ROUTES) 
   },
+  {
+     path: 'employee-balance', canActivate: [authGuard],
+    loadComponent: () => import('./feature/employee-balance/employee-balance/employee-balance').then(m => m.EmployeeBalancePage) 
+  },
+  { 
+    path: 'money-safe-moves', canActivate: [authGuard],
+    loadComponent: () => import('./feature/money-safe-moves/money-safe-moves/money-safe-moves').then(m => m.MoneySafeMovesPage) 
+  },
 
   { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
   { path: '**', redirectTo: 'dashboard' }

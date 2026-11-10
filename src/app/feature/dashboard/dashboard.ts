@@ -70,9 +70,9 @@ export class Dashboard implements OnInit {
       {
         title: 'حساباتي', tone: 'success',
         items: [
-          { icon: '🧾', label: 'كشف حسابي', link: null as string | null },
-          { icon: '💰', label: 'حساب مرتبي', link: null as string | null },
-          { icon: '🏦', label: 'خزنتي', link: null as string | null },
+          { icon: '🧾', label: 'كشف حسابي', link: '/employee-balance' },
+          { icon: '💰', label: 'حساب مرتبي', link: '/payroll/review' },
+          { icon: '🏦', label: 'خزنتي', link: '/money-safe-moves' },
         ],
       },
     ];

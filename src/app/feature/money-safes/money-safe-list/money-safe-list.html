@@ -79,7 +79,7 @@
                   <td>{{ s.active ? 'نشط' : 'غير نشط' }}</td>
                   <td class="end nowrap">
                     <a [routerLink]="['/money-safes', s.id, 'edit']" class="ui-btn ui-btn-success sm">تعديل</a>
-                    <a [routerLink]="['/money-safes', s.id, 'moves']" class="ui-btn ui-btn-info sm">عمليات الخزنة</a>
+                    <a [routerLink]="['/money-safe-moves']" [queryParams]="{ moneySafeId: s.id }"  class="ui-btn ui-btn-info sm">عمليات الخزنة</a>
                     <button class="ui-btn ui-btn-danger sm"
                             [disabled]="deletingId() === s.id"
                             (click)="remove(s)">

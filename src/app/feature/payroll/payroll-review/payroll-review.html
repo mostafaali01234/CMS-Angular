@@ -1,25 +1,49 @@
 <!-- payroll-review/payroll-review.html -->
 <div class="ui-page" style="max-width: none">
   <div class="ui-page-header">
-    <h2 class="ui-title">مراجعة المرتبات</h2>
-    <a routerLink="/payroll" class="ui-btn ui-btn-outline">قائمة المرتبات</a>
+    <h2 class="ui-title">{{ isAdmin() ? 'مراجعة المرتبات' : 'مرتبي' }}</h2>
+    @if (isAdmin()) {
+      <a routerLink="/payroll" class="ui-btn ui-btn-outline">قائمة المرتبات</a>
+    }
   </div>
 
   <!-- ===== employee and month ===== -->
-  <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px" (keydown.enter)="calc()">
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px" (keydown.enter)="search()">
     <label>الشهر
-      <input type="month" class="ui-input" [ngModel]="period()" (ngModelChange)="period.set($event)" />
+      <input type="month" class="ui-input" [ngModel]="period()" (ngModelChange)="onPeriod($event)" />
     </label>
+
     <label>اسم الموظف
-      <select class="ui-input" style="min-width: 240px" [ngModel]="employeeId()" (ngModelChange)="employeeId.set(+$event)">
-        <option [ngValue]="0">اختر</option>
-        @for (e of employees(); track e.id) { <option [ngValue]="e.id">{{ e.name }}</option> }
-      </select>
+      @if (isAdmin()) {
+        <select class="ui-input" style="min-width: 240px" [ngModel]="employeeId()" (ngModelChange)="employeeId.set(+$event)">
+          <option [ngValue]="0">اختر</option>
+          @for (e of employees(); track e.id) { <option [ngValue]="e.id">{{ e.name }}</option> }
+        </select>
+      } @else {
+        <!-- an employee can only see himself -->
+        <select class="ui-input" style="min-width: 240px" disabled>
+          <option>{{ p()?.employee_name || '...' }}</option>
+        </select>
+      }
     </label>
-    <button class="ui-btn ui-btn-primary" [disabled]="loading()" (click)="calc()">حساب المرتب</button>
+
+    <button class="ui-btn ui-btn-primary" [disabled]="loading()" (click)="search()">حساب المرتب</button>
+
+    @if (p()) {
+      <button class="ui-btn ui-btn-success" [disabled]="exporting() || loading()" (click)="exportExcel()">
+        {{ exporting() ? 'جاري التصدير...' : 'تصدير Excel' }}
+      </button>
+    }
   </div>
 
   @if (error()) { <div class="ui-alert" role="alert" style="margin-bottom: 16px">{{ error() }}</div> }
+
+  @if (exportError()) {
+    <div class="ui-alert" role="alert" style="margin-bottom: 16px">
+      <span>{{ exportError() }}</span>
+      <button type="button" class="ui-alert-close" (click)="exportError.set(null)" aria-label="إغلاق">×</button>
+    </div>
+  }
 
   @if (p(); as d) {
     <div [style.opacity]="loading() ? 0.55 : 1">
@@ -34,7 +58,8 @@
                 <tr>
                   <th>الموظف</th><th>الشهر</th><th>الراتب الاساسي</th><th>عمولة المبيعات</th><th>عمولة التركيب</th>
                   <th>عمولة المجموعة</th><th>الحوافز</th><th>الخصومات</th><th>السلف</th><th>الغدا</th>
-                  <th>اجمالي الراتب</th><th>الحالة</th><th></th>
+                  <th>اجمالي الراتب</th><th>الحالة</th>
+                  @if (isAdmin()) { <th></th> }
                 </tr>
               </thead>
               <tbody>
@@ -51,12 +76,14 @@
                   <td>{{ x.lunch_total | number:'1.0-2' }}</td>
                   <td class="strong">{{ x.net_total | number:'1.0-2' }}</td>
                   <td>{{ statusLabel(x.status) }}</td>
-                  <td class="end nowrap">
-                    @if (x.status === 'Revised') {
-                      <a [routerLink]="['/payroll', x.id, 'withdraw']" class="ui-btn ui-btn-primary sm">صرف</a>
-                      <button class="ui-btn ui-btn-danger sm" [disabled]="busy()" (click)="removePayroll()">حذف</button>
-                    }
-                  </td>
+                  @if (isAdmin()) {
+                    <td class="end nowrap">
+                      @if (x.status === 'Revised') {
+                        <a [routerLink]="['/payroll', x.id, 'withdraw']" class="ui-btn ui-btn-primary sm">صرف</a>
+                        <button class="ui-btn ui-btn-danger sm" [disabled]="busy()" (click)="removePayroll()">حذف</button>
+                      }
+                    </td>
+                  }
                 </tr>
               </tbody>
             </table>
@@ -76,7 +103,7 @@
               <tr><td class="strong">الراتب الاساسي</td><td>{{ d.base_salary | number:'1.0-2' }} × 1 شهر</td></tr>
               <tr><td class="strong">الحوافز</td><td>{{ d.bonus_total | number:'1.0-2' }}</td></tr>
               <tr><td class="strong">الخصومات</td><td>{{ d.deductions_total | number:'1.0-2' }}</td></tr>
-              <tr><td class="strong">السلف </td><td>{{ d.loans_total | number:'1.0-2' }}</td></tr>
+              <tr><td class="strong">السلف (اقساط الشهر)</td><td>{{ d.loans_total | number:'1.0-2' }}</td></tr>
               <tr>
                 <td class="strong">الغدا ({{ d.lunch_shifts }} وردية × {{ d.lunch_amount | number:'1.0-2' }})</td>
                 <td>{{ d.lunch_total | number:'1.0-2' }}</td>
@@ -92,22 +119,34 @@
             </tbody>
           </table>
         </div>
-        <div class="ui-card-footer">
-          <button class="ui-btn ui-btn-primary" [disabled]="busy() || locked()" (click)="approve()">
-            {{ locked() ? 'تم الاعتماد' : 'اعتماد المرتب' }}
-          </button>
-        </div>
+        @if (isAdmin()) {
+          <div class="ui-card-footer">
+            <button class="ui-btn ui-btn-primary" [disabled]="busy() || locked()" (click)="approve()">
+              {{ locked() ? 'تم الاعتماد' : 'اعتماد المرتب' }}
+            </button>
+          </div>
+        }
       </div>
 
       <!-- ===== commissions ===== -->
       <div class="ui-card" style="margin-bottom: 16px"><div class="ui-card-body">
-        <h3 class="ui-title" style="margin-bottom: 8px">تفاصيل العمولات</h3>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; flex-wrap: wrap">
+          <h3 class="ui-title">تفاصيل العمولات</h3>
+          @if (isAdmin() && !locked()) {
+            <button class="ui-btn ui-btn-outline sm" [disabled]="busy()" (click)="recalculate()">اعادة حساب العمولات</button>
+          }
+        </div>
+
+        @if (recalcMessage()) {
+          <p style="margin-bottom: 8px; color: #2e9e4f">{{ recalcMessage() }}</p>
+        }
         @if (commError()) {
           <div class="ui-alert" role="alert" style="margin-bottom: 8px">
             <span>{{ commError() }}</span>
             <button type="button" class="ui-alert-close" (click)="commError.set(null)" aria-label="إغلاق">×</button>
           </div>
         }
+
         <div class="ui-table-wrap">
           <table class="ui-table">
             <thead>
@@ -129,15 +168,15 @@
                   <td>{{ c.product_total | number:'1.0-2' }}</td>
                   <td>{{ c.amount | number:'1.0-2' }}</td>
                   <td>
-                    @if (locked()) {
+                    @if (readOnly()) {
                       {{ c.extra_amount | number:'1.0-2' }}
                     } @else {
                       <div style="display: flex; gap: 4px">
                         <!-- <input type="number" class="ui-input" style="width: 80px"
                                [ngModel]="extras()[c.id]" (ngModelChange)="extras.update(m => ({ ...m, [c.id]: +$event }))" /> -->
-                               <input type="number" class="ui-input"
-                                      [ngModel]="extras()[c.id]"
-                                      (ngModelChange)="setExtraValue(c.id, $event)" />
+                        <input type="number" class="ui-input"
+                              [ngModel]="extras()[c.id]"
+                              (ngModelChange)="setExtraValue(c.id, $event)" />
                         <button class="ui-btn ui-btn-outline sm"
                                 [disabled]="busy() || (extras()[c.id] ?? 0) === c.extra_amount"
                                 (click)="setExtra(c.id)">تعديل</button>
@@ -167,7 +206,7 @@
         <div class="ui-table-wrap">
           <table class="ui-table">
             <thead>
-              <tr><th>المدير</th><th>التاريخ</th><th>الفئة</th><th>النوع</th><th>القيمة</th><th>السبب</th><th></th></tr>
+              <tr><th>المدير</th><th>التاريخ</th><th>الفئة</th><th>النوع</th><th>القيمة</th><th>السبب</th>@if (!readOnly()) { <th></th> }</tr>
             </thead>
             <tbody>
               @for (a of d.adjustments; track a.id) {
@@ -178,20 +217,20 @@
                   <td>{{ adjLabel(a.type) }}</td>
                   <td class="strong">{{ a.amount | number:'1.0-2' }}</td>
                   <td class="ui-muted">{{ a.reason }}</td>
-                  <td class="end">
-                    @if (!locked()) {
+                  @if (!readOnly()) {
+                    <td class="end">
                       <button class="ui-btn ui-btn-danger sm" [disabled]="busy()" (click)="removeAdjustment(a)">حذف</button>
-                    }
-                  </td>
+                    </td>
+                  }
                 </tr>
               } @empty {
-                <tr><td colspan="7" class="center ui-muted">لا توجد حوافز او خصومات</td></tr>
+                <tr><td [attr.colspan]="readOnly() ? 6 : 7" class="center ui-muted">لا توجد حوافز او خصومات</td></tr>
               }
             </tbody>
           </table>
         </div>
 
-        @if (!locked()) {
+        @if (!readOnly()) {
           <div style="display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap" hidden>
             <select class="ui-input" [ngModel]="adj().kind" (ngModelChange)="setKind($event)">
               <option value="Deduction">خصم</option>
@@ -206,14 +245,14 @@
                    [ngModel]="adj().amount" (ngModelChange)="adj.update(x => ({ ...x, amount: +$event }))" />
             <input class="ui-input" style="flex: 1" placeholder="السبب"
                    [ngModel]="adj().reason" (ngModelChange)="adj.update(x => ({ ...x, reason: $event }))" />
-            <button class="ui-btn ui-btn-primary sm" [disabled]="busy()" (click)="addAdjustment()">اضافة</button>
+            <button class="ui-btn ui-btn-primary sm" [disabled]="busy()" (click)="addAdjustment()">حافز</button>
           </div>
         }
       </div></div>
 
       <!-- ===== loans ===== -->
       <div class="ui-card"><div class="ui-card-body">
-        <h3 class="ui-title" style="margin-bottom: 8px">تفاصيل السلف </h3>
+        <h3 class="ui-title" style="margin-bottom: 8px">تفاصيل السلف (اقساط هذا الشهر)</h3>
         <div class="ui-table-wrap">
           <table class="ui-table">
             <thead>

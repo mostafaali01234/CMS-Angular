@@ -67,7 +67,7 @@
                 </td>
                 <td class="end nowrap">
                   <a [routerLink]="['/employees', e.id, 'edit']" class="ui-btn ui-btn-outline sm">تعديل</a>
-                  <a [routerLink]="['/employees', e.id, 'balance']" class="ui-btn ui-btn-outline sm">الرصيد</a>
+                  <a [routerLink]="['/employee-balance']" [queryParams]="{ employeeId: e.id }"  class="ui-btn ui-btn-outline sm">كشف حساب</a>
                   <button class="ui-btn ui-btn-danger sm" [disabled]="deletingId() === e.id" (click)="remove(e)">
                     {{ deletingId() === e.id ? 'جاري الحذف...' : 'حذف' }}
                   </button>

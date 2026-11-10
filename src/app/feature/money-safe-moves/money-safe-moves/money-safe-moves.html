@@ -1,0 +1,135 @@
+<!-- money-safe-moves/money-safe-moves.html -->
+<div class="ui-page" style="max-width: none">
+  <div class="ui-page-header">
+    <h2 class="ui-title">حركة الخزنة</h2>
+  </div>
+
+  @if (safesLoaded() && safes().length === 0) {
+    <p class="ui-muted">لا توجد خزن متاحة لك.</p>
+  } @else {
+    <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px"
+         (keydown.enter)="list.search()">
+      <label>الخزنة
+        <select class="ui-input" style="min-width: 260px" [disabled]="single()"
+                [ngModel]="list.form().moneySafeId" (ngModelChange)="list.set('moneySafeId', +$event, true)">
+          @for (s of safes(); track s.id) {
+            <option [ngValue]="s.id">{{ s.name }} ({{ s.balance | number:'1.0-2' }})</option>
+          }
+        </select>
+      </label>
+
+      <label>من <input type="date" class="ui-input"
+             [ngModel]="list.form().dateFrom" (ngModelChange)="list.set('dateFrom', $event, true)" /></label>
+      <label>الى <input type="date" class="ui-input"
+             [ngModel]="list.form().dateTo" (ngModelChange)="list.set('dateTo', $event, true)" /></label>
+
+      <button type="button" class="ui-btn ui-btn-primary" (click)="list.search()">بحث</button>
+      <button type="button" class="ui-btn ui-btn-outline" (click)="list.patch({ dateFrom: '', dateTo: '' }, true)">كل الفترات</button>
+      <button type="button" class="ui-btn ui-btn-outline sm" (click)="list.reset()">اليوم</button>
+      <button type="button" class="ui-btn ui-btn-success" [disabled]="exporting() || list.loading()" (click)="exportExcel()">
+        {{ exporting() ? 'جاري التصدير...' : 'تصدير Excel' }}
+      </button>
+    </div>
+
+    @if (showingToday()) {
+      <p class="ui-muted" style="margin-bottom: 8px">يتم عرض حركات اليوم فقط.</p>
+    }
+
+    @if (exportError()) {
+      <div class="ui-alert" role="alert" style="margin-bottom: 16px">
+        <span>{{ exportError() }}</span>
+        <button type="button" class="ui-alert-close" (click)="exportError.set(null)" aria-label="إغلاق">×</button>
+      </div>
+    }
+    @if (list.error()) {
+      <div class="ui-alert"><span>{{ list.error() }}</span>
+        <button class="ui-btn ui-btn-danger sm" (click)="list.reload()">اعادة المحاولة</button></div>
+    } @else {
+
+      <!-- ===== balances ===== -->
+      @if (list.summary(); as s) {
+        <div class="ui-card" style="margin-bottom: 16px" [style.opacity]="list.loading() ? 0.55 : 1">
+          <div class="ui-table-wrap">
+            <table class="ui-table">
+              <thead>
+                <tr>
+                  <th>{{ s.money_safe_name }}</th>
+                  <th>جنيه</th>
+                  @if (multiCurrency()) { <th>عملة</th> }
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="strong">الرصيد الحالي</td>
+                  <td class="strong" [style.color]="s.current_balance < 0 ? 'crimson' : '#2e9e4f'">{{ s.current_balance | number:'1.0-2' }}</td>
+                  @if (multiCurrency()) { <td class="strong">{{ s.current_balance_currency | number:'1.0-2' }}</td> }
+                </tr>
+                <tr class="ui-muted">
+                  <td>رصيد اول المدة</td>
+                  <td>{{ s.opening_balance | number:'1.0-2' }}</td>
+                  @if (multiCurrency()) { <td>{{ s.opening_balance_currency | number:'1.0-2' }}</td> }
+                </tr>
+                <tr>
+                  <td>اجمالي الوارد</td>
+                  <td style="color: #2e9e4f">{{ s.total_in | number:'1.0-2' }}</td>
+                  @if (multiCurrency()) { <td style="color: #2e9e4f">{{ s.total_in_currency | number:'1.0-2' }}</td> }
+                </tr>
+                <tr>
+                  <td>اجمالي الصادر</td>
+                  <td style="color: crimson">{{ s.total_out | number:'1.0-2' }}</td>
+                  @if (multiCurrency()) { <td style="color: crimson">{{ s.total_out_currency | number:'1.0-2' }}</td> }
+                </tr>
+                <tr>
+                  <td class="strong">رصيد نهاية المدة</td>
+                  <td class="strong" [style.color]="s.closing_balance < 0 ? 'crimson' : 'inherit'">{{ s.closing_balance | number:'1.0-2' }}</td>
+                  @if (multiCurrency()) { <td class="strong">{{ s.closing_balance_currency | number:'1.0-2' }}</td> }
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+
+      <!-- ===== moves ===== -->
+      <div class="ui-card" [style.opacity]="list.loading() ? 0.55 : 1">
+        <div class="ui-table-wrap">
+          <table class="ui-table">
+            <thead>
+              <tr>
+                <th>التاريخ</th><th>العملية</th><th>الطرف</th><th>ملاحظات</th>
+                <th>وارد</th><th>صادر</th>
+                @if (multiCurrency()) { <th>وارد (عملة)</th><th>صادر (عملة)</th> }
+                <th>الرصيد</th>
+                @if (multiCurrency()) { <th>الرصيد (عملة)</th> }
+              </tr>
+            </thead>
+            <tbody>
+              @for (m of list.items(); track m.kind + m.id) {
+                <tr>
+                  <td>{{ m.date | date:'yyyy-MM-dd' }}</td>
+                  <td>{{ labels[m.kind] }}</td>
+                  <td class="strong">{{ m.party }}</td>
+                  <td class="ui-muted">{{ m.notes }}</td>
+                  <td style="color: #2e9e4f">@if (m.in) { {{ m.in | number:'1.0-2' }} }</td>
+                  <td style="color: crimson">@if (m.out) { {{ m.out | number:'1.0-2' }} }</td>
+                  @if (multiCurrency()) {
+                    <td style="color: #2e9e4f">@if (m.in_currency) { {{ m.in_currency | number:'1.0-2' }} }</td>
+                    <td style="color: crimson">@if (m.out_currency) { {{ m.out_currency | number:'1.0-2' }} }</td>
+                  }
+                  <td class="strong" [style.color]="m.balance < 0 ? 'crimson' : 'inherit'">{{ m.balance | number:'1.0-2' }}</td>
+                  @if (multiCurrency()) { <td>{{ m.balance_currency | number:'1.0-2' }}</td> }
+                </tr>
+              } @empty {
+                <tr><td [attr.colspan]="multiCurrency() ? 10 : 7" class="center ui-muted" style="padding: 28px">
+                  {{ list.loading() ? 'جاري التحميل...' : 'لا توجد حركات.' }}
+                </td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <app-pager [page]="list.page()" [pageSize]="list.size()" [total]="list.total()"
+                   (pageChange)="list.goTo($event)" (sizeChange)="list.setSize($event)" />
+      </div>
+    }
+  }
+</div>
