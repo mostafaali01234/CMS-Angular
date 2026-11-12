@@ -121,6 +121,14 @@ export class Sidebar {
       ]
     },
     {
+      label: 'التجميع والتصنيع', icon: '🛠️', role: 'Admin,SuperAdmin',
+      children: [
+        { label: 'عملية تجميع جديدة', icon: '•', path: '/product-assembly/new' },
+        { label: 'كشف عمليات التجميع', icon: '•', path: '/product-assembly' },
+        { label: 'تعريفات التجميع', icon: '•', path: '/product-assembly/definitions' },
+      ]
+    },
+    {
       label: 'السيارات', icon: '🚗', role: 'Admin,SuperAdmin',
       children: [
         { label: 'سيارة جديدة', icon: '•', path: '/cars/new' },

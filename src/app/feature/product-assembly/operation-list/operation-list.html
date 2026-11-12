@@ -1,0 +1,137 @@
+<!-- operation-list/operation-list.html -->
+<div class="ui-page" style="max-width: none;">
+  <div class="ui-page-header">
+    <h2 class="ui-title">عمليات التجميع / التصنيع</h2>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap">
+      <a routerLink="/product-assembly/definitions" class="ui-btn ui-btn-outline">تعريفات التجميع</a>
+      <a routerLink="/product-assembly/new" class="ui-btn ui-btn-primary">+ عملية جديدة</a>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px"
+       (keydown.enter)="list.search()">
+    <input type="search" class="ui-input" style="flex: 1 1 200px" placeholder="المنتج او المخزن او الفني او الملاحظات..."
+           [ngModel]="list.form().search" (ngModelChange)="list.set('search', $event)" />
+
+    <label>من <input type="date" class="ui-input"
+           [ngModel]="list.form().dateFrom" (ngModelChange)="list.set('dateFrom', $event, true)" /></label>
+    <label>الى <input type="date" class="ui-input"
+           [ngModel]="list.form().dateTo" (ngModelChange)="list.set('dateTo', $event, true)" /></label>
+
+    <div style="flex: 0 0 220px">
+      <app-search-select [ngModel]="list.form().productId" (ngModelChange)="list.set('productId', $event, true)"
+                         [loader]="assembledProducts" placeholder="كل المنتجات المجمعة" />
+    </div>
+    <div style="flex: 0 0 180px">
+      <select class="ui-input" [ngModel]="list.form().operationType"
+              (ngModelChange)="list.set('operationType', $event, true)">
+        <option value="">كل الانواع</option>
+        @for (t of types; track t.value) { <option [value]="t.value">{{ t.label }}</option> }
+      </select>
+    </div>
+    <div style="flex: 0 0 180px">
+      <app-lookup-select [ngModel]="list.form().outStoreId" (ngModelChange)="list.set('outStoreId', $event, true)"
+                         [loader]="lookup.stores" placeholder="مخزن المكونات" />
+    </div>
+    <div style="flex: 0 0 180px">
+      <app-lookup-select [ngModel]="list.form().inStoreId" (ngModelChange)="list.set('inStoreId', $event, true)"
+                         [loader]="lookup.stores" placeholder="مخزن المنتج" />
+    </div>
+
+    <button type="button" class="ui-btn ui-btn-primary" (click)="list.search()">بحث</button>
+    <button type="button" class="ui-btn ui-btn-outline" (click)="list.patch({ dateFrom: '', dateTo: '' }, true)">كل الفترات</button>
+    <button type="button" class="ui-btn ui-btn-outline sm" (click)="list.reset()">اليوم / مسح الفلاتر</button>
+  </div>
+
+  @if (showingToday()) {
+    <p class="ui-muted" style="margin-bottom: 8px">يتم عرض عمليات اليوم فقط.</p>
+  }
+
+  @if (actionError()) {
+    <div class="ui-alert" role="alert" style="margin-bottom: 16px">
+      <span>{{ actionError() }}</span>
+      <button type="button" class="ui-alert-close" (click)="actionError.set(null)" aria-label="إغلاق">×</button>
+    </div>
+  }
+
+  @if (list.error()) {
+    <div class="ui-alert"><span>{{ list.error() }}</span>
+      <button class="ui-btn ui-btn-danger sm" (click)="list.reload()">اعادة المحاولة</button></div>
+  } @else {
+    <div class="ui-card" [style.opacity]="list.loading() ? 0.55 : 1">
+      <div class="ui-table-wrap">
+        <table class="ui-table">
+          <thead>
+            <tr>
+              <th>#</th><th>التاريخ</th><th>المنتج</th><th>الكمية</th><th>النوع</th>
+              <th>مخزن المكونات</th><th>مخزن المنتج</th><th>الفنيين</th><th>المكونات</th>
+              <th>ملاحظات</th><th class="end">الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (o of list.items(); track o.id) {
+              <tr>
+                <td class="strong">{{ o.id }}</td>
+                <td>{{ o.operation_date | date:'yyyy-MM-dd' }}</td>
+                <td class="strong">{{ o.out_product_name }}</td>
+                <td class="strong">{{ o.quantity | number:'1.0-3' }}</td>
+                <td><span class="ui-badge">{{ typeLabel(o.operation_type) }}</span></td>
+                <td class="strong" style="color: crimson">{{ o.out_store_name }}</td>
+                <td class="strong" style="color: #2e9e4f">{{ o.in_store_name }}</td>
+                <td class="ui-muted">{{ techs(o) }}</td>
+                <td>
+                  <button type="button" class="ui-btn ui-btn-outline sm" (click)="toggle(o)">
+                    {{ o.items.length }} {{ expandedId() === o.id ? '▲' : '▼' }}
+                  </button>
+                </td>
+                <td class="ui-muted">{{ o.notes }}</td>
+                <td class="end nowrap">
+                  <a [routerLink]="['/product-assembly', o.id, 'edit']" class="ui-btn ui-btn-outline sm">تعديل</a>
+                  <button class="ui-btn ui-btn-danger sm" [disabled]="deletingId() === o.id" (click)="remove(o)">
+                    {{ deletingId() === o.id ? 'جاري الحذف...' : 'حذف' }}
+                  </button>
+                </td>
+              </tr>
+
+              @if (expandedId() === o.id) {
+                <tr>
+                  <td colspan="11" style="padding: 12px 16px">
+                    @if (o.items.length === 0) {
+                      <span class="ui-muted">عملية قديمة: لم تسجل مكوناتها ولا تؤثر على المخزون.</span>
+                    } @else {
+                      <table class="ui-table" style="max-width: 620px">
+                        <thead><tr><th>المكون</th><th>لكل وحدة</th><th>اجمالي المستهلك</th></tr></thead>
+                        <tbody>
+                          @for (i of o.items; track i.product_id) {
+                            <tr>
+                              <td class="strong">{{ i.product_name }}</td>
+                              <td>{{ i.unit_quantity | number:'1.0-3' }}</td>
+                              <td>{{ i.quantity | number:'1.0-3' }}</td>
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    }
+                  </td>
+                </tr>
+              }
+            } @empty {
+              <tr><td colspan="11" class="center ui-muted" style="padding: 28px">
+                {{ list.loading() ? 'جاري التحميل...' : 'لا توجد عمليات تجميع.' }}
+              </td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <app-pager [page]="list.page()" [pageSize]="list.size()" [total]="list.total()"
+                 (pageChange)="list.goTo($event)" (sizeChange)="list.setSize($event)" />
+    </div>
+
+    @if (list.total() > 0) {
+      <p class="ui-muted" style="margin-top: 8px">
+        اجمالي الكميات المجمعة (حسب الفلاتر): <strong>{{ totalQuantity() | number:'1.0-3' }}</strong>
+      </p>
+    }
+  }
+</div>

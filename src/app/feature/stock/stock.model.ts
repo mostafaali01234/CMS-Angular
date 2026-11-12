@@ -3,6 +3,7 @@ export const OPERATION_TYPES = [
   { value: 'store_transaction', label: 'تحويل مخازن' },
   { value: 'buy_invoice', label: 'فاتورة شراء' },
   { value: 'sale_invoice', label: 'فاتورة بيع' },
+  { value: 'product_assembly', label: 'تجميع / تصنيع' },
 ];
 export const operationLabel = (v?: string | null) =>
   OPERATION_TYPES.find(o => o.value === v)?.label ?? (v ?? '');
@@ -54,6 +55,7 @@ export interface MovesFilter {
 export function docLink(m: { operation_type: string; doc_id: number; is_return: boolean }): any[] {
   switch (m.operation_type) {
     case 'store_transaction': return ['/store-transactions', m.doc_id, 'edit'];
+    case 'product_assembly': return ['/product-assembly', m.doc_id, 'edit'];
     case 'buy_invoice':
       return m.is_return ? ['/buy-invoices', 'returns', m.doc_id, 'edit'] : ['/buy-invoices', m.doc_id, 'edit'];
     default:

@@ -5,29 +5,68 @@ export const ROLE_LABELS: Record<string, string> = { Sales: 'بيع', Tech: 'ت�
 export const typeLabel = (t: string) => (t === 'Bonus' ? 'حافز' : 'خصم');
 
 export interface Payroll {
-  id: number; employee_id: number; employee_name: string; month: number; year: number;
-  base_salary: number; sales_commission_total: number; tech_commission_total: number; manager_commission_total: number;
-  loans_total: number; bonus_total: number; deductions_total: number; lunch_total: number; net_total: number;
-  status: PayrollStatus; money_safe_id: number | null; money_safe_name: string;
-  withdrawn_at: string | null; revised_by_name: string;
+  id: number; 
+  employee_id: number; 
+  employee_name: string; 
+  month: number; 
+  year: number;
+  base_salary: number; 
+  sales_commission_total: number; 
+  tech_commission_total: number; 
+  manager_commission_total: number;
+  loans_total: number; 
+  bonus_total: number; 
+  deductions_total: number; 
+  lunch_total: number; 
+  net_total: number;
+  status: PayrollStatus; 
+  money_safe_id: number | null; 
+  money_safe_name: string;
+  withdrawn_at: string | null; 
+  revised_by_name: string;
 }
 
 export interface PayrollCommissionRow {
-  id: number; role: string; order_id: number; invoice_id: number; invoice_number: number;
-  order_type: string; customer_name: string; seller_name: string; product_name: string;
-  product_total: number; amount: number; extra_amount: number; total: number; paid_at: string | null;
+  id: number; 
+  role: string; 
+  order_id: number; 
+  invoice_id: number; 
+  assembly_operation_id?: number | null; 
+  invoice_number: number;
+  order_type: string; 
+  customer_name: string; 
+  seller_name: string; 
+  product_name: string;
+  product_total: number; 
+  amount: number; 
+  extra_amount: number; 
+  total: number; 
+  paid_at: string | null;
 }
 export interface PayrollLoanRow { id:number, loan_id: number; installment_number: number; due_date: string; amount: number; notes: string; }
 
 export interface PayrollPreview {
-  employee_id: number; employee_name: string; month: number; year: number;
-  base_salary: number; invoices_total: number;
-  sales_commission_total: number; tech_commission_total: number; manager_commission_total: number;
-  bonus_total: number; deductions_total: number; loans_total: number;
-  lunch_amount: number; lunch_shifts: number; lunch_total: number;
-  net_total: number; pending_commission_total: number;
+  employee_id: number; 
+  employee_name: string; 
+  month: number; 
+  year: number;
+  base_salary: number; 
+  invoices_total: number;
+  sales_commission_total: number; 
+  tech_commission_total: number; 
+  manager_commission_total: number;
+  bonus_total: number; 
+  deductions_total: number; 
+  loans_total: number;
+  lunch_amount: number; 
+  lunch_shifts: number; 
+  lunch_total: number;
+  net_total: number; 
+  pending_commission_total: number;
   existing_payroll: Payroll | null;
-  commissions: PayrollCommissionRow[]; adjustments: Adjustment[]; loans: PayrollLoanRow[];
+  commissions: PayrollCommissionRow[]; 
+  adjustments: Adjustment[]; 
+  loans: PayrollLoanRow[];
 }
 
 export interface PayrollFilter { employeeId: number; period: string; status: string; }

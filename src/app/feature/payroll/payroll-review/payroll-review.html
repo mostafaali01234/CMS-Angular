@@ -159,9 +159,15 @@
               @for (c of d.commissions; track c.id) {
                 <tr>
                   <td>{{ roleLabel[c.role] }}</td>
-                  <td>{{ c.order_id }}</td>
-                  <td>#{{ c.invoice_number }}</td>
-                  <td>{{ c.order_type.replace('_', ' ') }}</td>
+                  @if (c.assembly_operation_id) {
+                    <td class="ui-muted">-</td>
+                    <td><a [routerLink]="['/product-assembly', c.assembly_operation_id, 'edit']">تجميع #{{ c.assembly_operation_id }}</a></td>
+                    <td class="ui-muted">تجميع / تصنيع</td>
+                  } @else {
+                    <td>{{ c.order_id }}</td>
+                    <td>#{{ c.invoice_number }}</td>
+                    <td>{{ c.order_type.replace('_', ' ') }}</td>
+                  }
                   <td>{{ c.customer_name }}</td>
                   <td>{{ c.seller_name }}</td>
                   <td class="strong">{{ c.product_name }}</td>

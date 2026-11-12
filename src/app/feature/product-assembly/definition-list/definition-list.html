@@ -1,0 +1,102 @@
+<!-- definition-list/definition-list.html -->
+<div class="ui-page" style="max-width: none;">
+  <div class="ui-page-header">
+    <h2 class="ui-title">تعريفات التجميع / التصنيع</h2>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap">
+      <a routerLink="/product-assembly" class="ui-btn ui-btn-outline">عمليات التجميع</a>
+      <a routerLink="/product-assembly/definitions/new" class="ui-btn ui-btn-primary">+ تعريف جديد</a>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px"
+       (keydown.enter)="list.search()">
+    <input type="search" class="ui-input" style="flex: 1 1 240px" placeholder="المنتج او احد مكوناته..."
+           [ngModel]="list.form().search" (ngModelChange)="list.set('search', $event)" />
+
+    <div style="flex: 0 0 200px">
+      <select class="ui-input" [ngModel]="list.form().operationType"
+              (ngModelChange)="list.set('operationType', $event, true)">
+        <option value="">كل الانواع</option>
+        @for (t of types; track t.value) { <option [value]="t.value">{{ t.label }}</option> }
+      </select>
+    </div>
+
+    <button type="button" class="ui-btn ui-btn-primary" (click)="list.search()">بحث</button>
+    <button type="button" class="ui-btn ui-btn-outline sm" (click)="list.reset()">مسح الفلاتر</button>
+  </div>
+
+  @if (actionError()) {
+    <div class="ui-alert" role="alert" style="margin-bottom: 16px">
+      <span>{{ actionError() }}</span>
+      <button type="button" class="ui-alert-close" (click)="actionError.set(null)" aria-label="إغلاق">×</button>
+    </div>
+  }
+
+  @if (list.error()) {
+    <div class="ui-alert"><span>{{ list.error() }}</span>
+      <button class="ui-btn ui-btn-danger sm" (click)="list.reload()">اعادة المحاولة</button></div>
+  } @else {
+    <div class="ui-card" [style.opacity]="list.loading() ? 0.55 : 1">
+      <div class="ui-table-wrap">
+        <table class="ui-table">
+          <thead>
+            <tr>
+              <th>المنتج</th><th>النوع</th><th>المكونات</th>
+              <th>عمولة الفني الاول</th><th>عمولة الفني الثاني</th><th>اخر تعديل</th>
+              <th class="end">الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (d of list.items(); track d.out_product_id) {
+              <tr>
+                <td class="strong">{{ d.out_product_name }}</td>
+                <td><span class="ui-badge">{{ typeLabel(d.operation_type) }}</span></td>
+                <td>
+                  <button type="button" class="ui-btn ui-btn-outline sm" (click)="toggle(d)">
+                    {{ d.in_product_list.length }} {{ expandedId() === d.out_product_id ? '▲' : '▼' }}
+                  </button>
+                </td>
+                <td>{{ d.first_tech_comm | number:'1.0-2' }}</td>
+                <td>{{ d.second_tech_comm | number:'1.0-2' }}</td>
+                <td class="ui-muted">{{ d.updated_by || d.created_by }}</td>
+                <td class="end nowrap">
+                  <a [routerLink]="['/product-assembly/definitions', d.out_product_id, 'edit']"
+                     class="ui-btn ui-btn-outline sm">تعديل</a>
+                  <button class="ui-btn ui-btn-danger sm" [disabled]="deletingId() === d.out_product_id" (click)="remove(d)">
+                    {{ deletingId() === d.out_product_id ? 'جاري الحذف...' : 'حذف' }}
+                  </button>
+                </td>
+              </tr>
+
+              @if (expandedId() === d.out_product_id) {
+                <tr>
+                  <td colspan="7" style="padding: 12px 16px">
+                    <p class="ui-muted" style="margin-bottom: 8px">المطلوب لتجميع وحدة واحدة من "{{ d.out_product_name }}":</p>
+                    <table class="ui-table" style="max-width: 520px">
+                      <thead><tr><th>المكون</th><th>الكمية</th></tr></thead>
+                      <tbody>
+                        @for (i of d.in_product_list; track i.in_product_id) {
+                          <tr>
+                            <td class="strong">{{ i.in_product_name }}</td>
+                            <td>{{ i.in_product_quantity | number:'1.0-3' }}</td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+              }
+            } @empty {
+              <tr><td colspan="7" class="center ui-muted" style="padding: 28px">
+                {{ list.loading() ? 'جاري التحميل...' : 'لا توجد تعريفات تجميع.' }}
+              </td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <app-pager [page]="list.page()" [pageSize]="list.size()" [total]="list.total()"
+                 (pageChange)="list.goTo($event)" (sizeChange)="list.setSize($event)" />
+    </div>
+  }
+</div>

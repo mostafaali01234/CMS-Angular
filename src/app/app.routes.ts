@@ -152,6 +152,10 @@ export const routes: Routes = [
     path: 'projects', canActivate: [authGuard],
     loadChildren: () => import('./feature/projects/projects.routes').then(m => m.PROJECT_ROUTES) 
   },
+  { 
+    path: 'product-assembly', canActivate: [authGuard],
+    loadChildren: () => import('./feature/product-assembly/product-assembly.routes').then(m => m.PRODUCT_ASSEMBLY_ROUTES) 
+  },
 
   { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
   { path: '**', redirectTo: 'dashboard' }

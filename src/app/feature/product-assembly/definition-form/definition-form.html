@@ -1,0 +1,84 @@
+<!-- definition-form/definition-form.html -->
+<div class="ui-page narrow">
+  <div class="ui-page-header">
+    <h2 class="ui-title">{{ productId() ? 'تعديل تعريف تجميع: ' + outProductName() : 'تعريف تجميع / تصنيع جديد' }}</h2>
+  </div>
+
+  @if (loading()) {
+    <p class="ui-muted">جاري التحميل...</p>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="save()" class="ui-card">
+      <div class="ui-card-body">
+        <div class="ui-grid">
+
+          @if (productId()) {
+            <div class="ui-field">
+              <span class="ui-label">المنتج المجمّع</span>
+              <div class="strong" style="padding-top: 8px">{{ outProductName() }}</div>
+            </div>
+          } @else {
+            <app-search-select formControlName="out_product_id" [loader]="lookup.products"
+                               [filter]="selectableOutProduct" [display]="productText"
+                               label="المنتج المجمّع (الناتج)" placeholder="ابحث بالاسم أو الباركود..."
+                               error="اختر المنتج" [invalid]="invalid('out_product_id')" />
+          }
+
+          <div class="ui-field">
+            <label class="ui-label" for="type">نوع العملية</label>
+            <select id="type" class="ui-input" formControlName="operation_type">
+              @for (t of types; track t.value) { <option [value]="t.value">{{ t.label }}</option> }
+            </select>
+          </div>
+
+          @if (showCommissions()) {
+            <div class="ui-field">
+              <label class="ui-label" for="c1">عمولة الفني الاول (اللف)</label>
+              <input id="c1" type="number" step="any" min="0" class="ui-input" formControlName="first_tech_comm"
+                     [class.is-invalid]="invalid('first_tech_comm')" />
+            </div>
+
+            <div class="ui-field">
+              <label class="ui-label" for="c2">عمولة الفني الثاني (التقطيع)</label>
+              <input id="c2" type="number" step="any" min="0" class="ui-input" formControlName="second_tech_comm"
+                     [class.is-invalid]="invalid('second_tech_comm')" />
+            </div>
+          }
+        </div>
+
+        <h3 class="ui-title" style="margin: 24px 0 4px">المكونات</h3>
+        <p class="ui-muted" style="margin-bottom: 12px">الكمية المطلوبة من كل مكون لتجميع وحدة واحدة من المنتج.</p>
+
+        @for (g of rows.controls; track g; let i = $index) {
+          <div class="ui-card" style="margin-bottom: 12px" [formGroup]="g">
+            <div class="ui-card-body">
+              <div class="ui-grid">
+                <app-search-select formControlName="in_product_id" [loader]="lookup.products" [filter]="activeOnly"
+                                   [display]="productText" label="المكون" placeholder="ابحث بالاسم أو الباركود..."
+                                   error="اختر المكون" [invalid]="invalidRow(i, 'in_product_id')" />
+
+                <div class="ui-field">
+                  <label class="ui-label">الكمية لكل وحدة</label>
+                  <input type="number" step="any" class="ui-input" formControlName="in_product_quantity"
+                         [class.is-invalid]="invalidRow(i, 'in_product_quantity')" />
+                </div>
+              </div>
+              <button type="button" class="ui-btn ui-btn-danger sm" style="margin-top: 12px"
+                      [disabled]="rows.length === 1" (click)="removeRow(i)">حذف المكون</button>
+            </div>
+          </div>
+        }
+
+        <button type="button" class="ui-btn ui-btn-outline" (click)="addRow()">+ اضافة مكون</button>
+
+        @if (error()) { <div class="ui-alert" role="alert" style="margin-top: 16px">{{ error() }}</div> }
+      </div>
+
+      <div class="ui-card-footer">
+        <a routerLink="/product-assembly/definitions" class="ui-btn ui-btn-outline">الغاء</a>
+        <button type="submit" class="ui-btn ui-btn-primary" [disabled]="saving()">
+          {{ saving() ? 'جاري الحفظ...' : (productId() ? 'حفظ' : 'اضافة') }}
+        </button>
+      </div>
+    </form>
+  }
+</div>

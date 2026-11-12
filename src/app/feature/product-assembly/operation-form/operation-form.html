@@ -1,0 +1,125 @@
+<!-- operation-form/operation-form.html -->
+<div class="ui-page narrow">
+  <div class="ui-page-header">
+    <h2 class="ui-title">{{ id() ? 'تعديل عملية تجميع #' + id() : 'عملية تجميع / تصنيع جديدة' }}</h2>
+  </div>
+
+  @if (loading()) {
+    <p class="ui-muted">جاري التحميل...</p>
+  } @else {
+    @if (definitionsLoaded() && definitions().length === 0) {
+      <div class="ui-alert" role="alert" style="margin-bottom: 16px">
+        <span>لا توجد تعريفات تجميع بعد. عرّف مكونات المنتج اولا.</span>
+        <a routerLink="/product-assembly/definitions/new" class="ui-btn ui-btn-outline sm">+ تعريف جديد</a>
+      </div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="save()" class="ui-card">
+      <div class="ui-card-body">
+        <div class="ui-grid">
+
+          <app-search-select formControlName="out_product_id" [loader]="productLoader"
+                             label="المنتج المراد تجميعه / تصنيعه" placeholder="ابحث عن المنتج..."
+                             error="اختر منتجا له تعريف تجميع" [invalid]="invalid('out_product_id')" />
+
+          <div class="ui-field">
+            <label class="ui-label" for="qty">الكمية</label>
+            <input id="qty" type="number" step="any" class="ui-input" formControlName="quantity"
+                   [class.is-invalid]="invalid('quantity')" />
+          </div>
+
+          <div class="ui-field">
+            <label class="ui-label" for="date">التاريخ</label>
+            <input id="date" type="date" class="ui-input" formControlName="operation_date"
+                   [class.is-invalid]="invalid('operation_date')" />
+          </div>
+
+          <div class="ui-field">
+            <span class="ui-label">نوع العملية</span>
+            <div style="padding-top: 8px">
+              @if (definition(); as d) {
+                <span class="ui-badge">{{ typeLabel(d.operation_type) }}</span>
+              } @else {
+                <span class="ui-muted">يحدد من تعريف المنتج</span>
+              }
+            </div>
+          </div>
+
+          <app-lookup-select formControlName="out_store_id" [loader]="lookup.stores" [filter]="activeOnly"
+                             label="مخزن المكونات (يُسحب منه)" placeholder="اختر المخزن" error="اختر المخزن"
+                             [invalid]="invalid('out_store_id')" />
+
+          <app-lookup-select formControlName="in_store_id" [loader]="lookup.stores" [filter]="activeOnly"
+                             label="مخزن المنتج (يُضاف اليه)" placeholder="اختر المخزن" error="اختر المخزن"
+                             [invalid]="invalid('in_store_id')" />
+
+          @if (showTechs()) {
+            <app-lookup-select formControlName="first_tech_id" [loader]="lookup.employees" [filter]="activeOnly"
+                               label="الفني الاول" placeholder="بدون" />
+
+            <app-lookup-select formControlName="second_tech_id" [loader]="lookup.employees" [filter]="activeOnly"
+                               label="الفني الثاني" placeholder="بدون" />
+          }
+
+          <div class="ui-field full">
+            <label class="ui-label" for="notes">ملاحظات</label>
+            <textarea id="notes" rows="2" class="ui-input" formControlName="notes"
+                      [class.is-invalid]="invalid('notes')"></textarea>
+          </div>
+        </div>
+
+        @if (missingDefinition()) {
+          <div class="ui-alert" role="alert" style="margin-top: 16px">
+            <span>هذا المنتج ليس له تعريف تجميع حاليا، لذلك لا يمكن حفظ العملية.</span>
+            <a [routerLink]="['/product-assembly/definitions/new']" class="ui-btn ui-btn-outline sm">+ تعريف جديد</a>
+          </div>
+        }
+
+        @if (components().length > 0) {
+          <h3 class="ui-title" style="margin: 24px 0 12px">المكونات المستهلكة</h3>
+          <div class="ui-table-wrap">
+            <table class="ui-table">
+              <thead><tr><th>المكون</th><th>لكل وحدة</th><th>اجمالي المستهلك</th></tr></thead>
+              <tbody>
+                @for (c of components(); track $index) {
+                  <tr>
+                    <td class="strong">{{ c.name }}</td>
+                    <td>{{ c.unit | number:'1.0-3' }}</td>
+                    <td>{{ c.total | number:'1.0-3' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          @if (usesSnapshot()) {
+            <p class="ui-muted" style="margin-top: 8px">
+              المكونات المسجلة وقت اجراء العملية، ولا تتغير بتعديل تعريف المنتج.
+            </p>
+          }
+        }
+
+        @if (commissions().length > 0) {
+          <h3 class="ui-title" style="margin: 24px 0 12px">عمولة الفنيين (تقديرية)</h3>
+          <div class="ui-table-wrap">
+            <table class="ui-table" style="max-width: 360px">
+              <tbody>
+                @for (c of commissions(); track c.label) {
+                  <tr><td class="strong">{{ c.label }}</td><td>{{ c.amount | number:'1.0-2' }}</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+
+        @if (error()) { <div class="ui-alert" role="alert" style="margin-top: 16px">{{ error() }}</div> }
+      </div>
+
+      <div class="ui-card-footer">
+        <a routerLink="/product-assembly" class="ui-btn ui-btn-outline">الغاء</a>
+        <button type="submit" class="ui-btn ui-btn-primary" [disabled]="saving()">
+          {{ saving() ? 'جاري الحفظ...' : (id() ? 'حفظ' : 'اضافة') }}
+        </button>
+      </div>
+    </form>
+  }
+</div>
