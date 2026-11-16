@@ -137,11 +137,10 @@
   background: var(--text);
   border-radius: 2px;
 }
-
+/* 
 @media (max-width: 768px) {
-  /* sidebar is icon-only on small screens, so the toggle has no effect */
   .sidebar-toggle { display: none; }
-}
+} */
 
 @media (max-width: 640px) {
   .menu-toggle { display: flex; }

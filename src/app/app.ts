@@ -16,7 +16,9 @@ import { NotificationService } from './core/services/NotificationService/notific
 export class App {
   auth = inject(AuthService);
   collapsed = signal(false);
+  mobileNav = signal(false);
   private notifications = inject(NotificationService);
+
 
   constructor() {
     // open the live line when a user is logged in (also after a page reload or a login in another tab), close it on logout

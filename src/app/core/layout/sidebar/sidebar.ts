@@ -1,4 +1,4 @@
-import { Component, inject, computed, model, signal, effect } from '@angular/core';
+import { Component, inject, computed, model, signal, effect, untracked, DestroyRef } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { filter, map, startWith } from 'rxjs';
@@ -17,13 +17,21 @@ interface NavItem {
   standalone: true,
   imports: [RouterLink, RouterLinkActive],
   templateUrl: './sidebar.html',
-  styleUrl: './sidebar.css'
+  styleUrl: './sidebar.css',
+  host: { '(document:keydown.escape)': 'mobileOpen.set(false)' },
 })
 export class Sidebar {
   auth = inject(AuthService);
   private router = inject(Router);
 
   collapsed = model(false);
+  /** phones: the sidebar is a drawer, opened from the header */
+  mobileOpen = model(false);
+
+  private mq = typeof window.matchMedia === 'function' ? window.matchMedia('(max-width: 768px)') : null;
+  private isMobile = signal(this.mq?.matches ?? false);
+  /** icon-only mode is a desktop feature; the drawer always shows the labels */
+  compact = computed(() => this.collapsed() && !this.isMobile());
 
   private items: NavItem[] = [
     {
@@ -197,6 +205,13 @@ export class Sidebar {
   private openGroups = signal<ReadonlySet<string>>(new Set());
 
   constructor() {
+    const onChange = (e: MediaQueryListEvent) => {
+      this.isMobile.set(e.matches);
+      if (!e.matches) this.mobileOpen.set(false);   // grew to desktop width: no drawer
+    };
+    this.mq?.addEventListener('change', onChange);
+    inject(DestroyRef).onDestroy(() => this.mq?.removeEventListener('change', onChange));
+
     // open the group that contains the current page (also runs on refresh)
     effect(() => {
       const url = this.url();

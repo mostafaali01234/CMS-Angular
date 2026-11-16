@@ -24,6 +24,7 @@ export class Header {
 
   // two-way bound with the parent: <app-header [(collapsed)]="collapsed" />
   collapsed = model(false);
+  mobileNavOpen = model(false);
 
   menuOpen = signal(false);
   theme = signal<Theme>(initialTheme());
@@ -39,7 +40,9 @@ export class Header {
   }
 
   toggle() {
-    this.collapsed.update(v => !v);
+    if (window.matchMedia('(max-width: 768px)').matches) this.mobileNavOpen.update(v => !v);
+    else this.collapsed.update(v => !v);
+    // this.collapsed.update(v => !v);
   }
 
   toggleTheme() {

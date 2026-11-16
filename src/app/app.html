@@ -1,8 +1,9 @@
-<app-header [(collapsed)]="collapsed" />
+<app-header [(collapsed)]="collapsed" [(mobileNavOpen)]="mobileNav" />
+
 
 @if (auth.isLoggedIn()) {
   <div class="layout">
-    <app-sidebar [(collapsed)]="collapsed" />
+    <app-sidebar [(collapsed)]="collapsed" [(mobileOpen)]="mobileNav" />
     <main class="content">
       <router-outlet />
     </main>

@@ -1,4 +1,4 @@
-<aside class="sidebar" [class.collapsed]="collapsed()">
+<aside class="sidebar" [class.collapsed]="compact()" [class.mobile-open]="mobileOpen()">
   <nav>
     @for (item of navItems(); track item.label) {
 
@@ -6,11 +6,11 @@
         <!-- group -->
         <button type="button" class="group-btn"
                 [class.group-active]="isGroupActive(item)"
-                [attr.aria-expanded]="isOpen(item) && !collapsed()"
+                [attr.aria-expanded]="isOpen(item) && !compact()"
                 [title]="item.label"
                 (click)="toggleGroup(item)">
           <span class="icon">{{ item.icon }}</span>
-          @if (!collapsed()) {
+          @if (!compact()) {
             <span class="label">{{ item.label }}</span>
             <svg class="chevron" [class.open]="isOpen(item)" viewBox="0 0 24 24" width="16" height="16"
                  fill="none" stroke="currentColor" stroke-width="2"
@@ -20,11 +20,12 @@
           }
         </button>
 
-        @if (isOpen(item) && !collapsed()) {
+        @if (isOpen(item) && !compact()) {
           <div class="submenu">
             @for (child of item.children; track child.path) {
               <a [routerLink]="child.path" routerLinkActive="active"
-                 [routerLinkActiveOptions]="{ exact: true }">
+                 [routerLinkActiveOptions]="{ exact: true }"
+                 (click)="mobileOpen.set(false)">
                 <span class="label">{{ child.label }}</span>
               </a>
             }
@@ -33,12 +34,17 @@
 
       } @else {
         <!-- single link -->
-        <a [routerLink]="item.path" routerLinkActive="active" [title]="item.label">
+        <a [routerLink]="item.path" routerLinkActive="active" [title]="item.label"
+           (click)="mobileOpen.set(false)">
           <span class="icon">{{ item.icon }}</span>
-          @if (!collapsed()) { <span class="label">{{ item.label }}</span> }
+          @if (!compact()) { <span class="label">{{ item.label }}</span> }
         </a>
       }
 
     }
   </nav>
 </aside>
+
+@if (mobileOpen()) {
+  <div class="backdrop" (click)="mobileOpen.set(false)"></div>
+}
