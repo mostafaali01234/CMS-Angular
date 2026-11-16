@@ -30,6 +30,8 @@ export class Sidebar {
       label: 'الرئيسية', icon: '🏠',
       path: '/dashboard'
     },
+    { label: 'الرسائل', icon: '💬', path: '/messages' },
+    { label: 'الاشعارات', icon: '🔔', path: '/notifications' },
     {
       label: 'العملاء', icon: '👥',
       children: [
@@ -155,17 +157,17 @@ export class Sidebar {
     {
       label: 'التقارير', icon: '📊', role: 'Admin,SuperAdmin',
       children: [
-        { label: 'اوردرات غير تامة بفواتير', icon: '•', path: '/bookings/calendar' },
-        { label: 'اوردرات مدفوعة بدون فواتير', icon: '•', path: '/bookings/calendar' },
-        { label: 'تقرير الفواتير غير المسددة', icon: '•', path: '/bookings/calendar' },
-        { label: 'تقرير المبيعات الشهرية', icon: '•', path: '/bookings/new' },
-        { label: 'المبيعات بالمحافظات(اوردرات)', icon: '•', path: '/bookings/new' },
-        { label: 'المبيعات بالمحافظات(فواتير)', icon: '•', path: '/bookings/new' },
-        { label: 'مبيعات الموظفين(اوردرات)', icon: '•', path: '/bookings/new' },
-        { label: 'مبيعات الموظفين(فواتير)', icon: '•', path: '/bookings/new' },
-        { label: 'تركيبات الفنيين(الاوردرات)', icon: '•', path: '/bookings/new' },
-        { label: 'تركيبات الفنيين(الفواتير)', icon: '•', path: '/bookings/new' },
-        { label: 'تقرير الصيانات اقل من شهر للتركيب', icon: '•', path: '/bookings/new' },
+        { label: 'اوردرات غير تامة بفواتير', icon: '•', path: '/reports/unfinished-orders' },
+        { label: 'اوردرات مدفوعة بدون فواتير', icon: '•', path: '/reports/advance-orders' },
+        { label: 'تقرير الفواتير غير المسددة', icon: '•', path: '/reports/unpaid-invoices' },
+        { label: 'تقرير المبيعات الشهرية', icon: '•', path: '/reports/monthly-sales' },
+        { label: 'المبيعات بالمحافظات(اوردرات)', icon: '•', path: '/reports/orders-by-state' },
+        { label: 'المبيعات بالمحافظات(فواتير)', icon: '•', path: '/reports/invoices-by-state' },
+        { label: 'مبيعات الموظفين(اوردرات)', icon: '•', path: '/reports/orders-by-seller' },
+        { label: 'مبيعات الموظفين(فواتير)', icon: '•', path: '/reports/invoices-by-seller' },
+        { label: 'تركيبات الفنيين(الاوردرات)', icon: '•', path: '/reports/orders-by-tech' },
+        { label: 'تركيبات الفنيين(الفواتير)', icon: '•', path: '/reports/invoices-by-tech' },
+        { label: 'تقرير الصيانات اقل من شهر للتركيب', icon: '•', path: '/reports/maintenance' },
         { label: 'تقرير المصروفات الشهرية', icon: '•', path: '/bookings/new' },
       ]
     },

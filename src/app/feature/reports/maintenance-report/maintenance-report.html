@@ -1,0 +1,75 @@
+<!-- maintenance-report/maintenance-report.html -->
+<div class="ui-page" style="max-width: none">
+  <div class="ui-page-header">
+    <h2 class="ui-title">تقرير الصيانات اقل من شهر للتركيب</h2>
+    <button class="ui-btn ui-btn-success" [disabled]="exporting() || loading()" (click)="exportExcel()">
+      {{ exporting() ? 'جاري التصدير...' : 'تصدير Excel' }}
+    </button>
+  </div>
+
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px" (keydown.enter)="load()">
+    <label>من (تاريخ انشاء الاوردر الاصلي) <input type="date" class="ui-input" [ngModel]="from()" (ngModelChange)="from.set($event)" /></label>
+    <label>الى <input type="date" class="ui-input" [ngModel]="to()" (ngModelChange)="to.set($event)" /></label>
+    <button class="ui-btn ui-btn-primary" [disabled]="loading()" (click)="load()">عرض</button>
+    <button class="ui-btn ui-btn-outline" [disabled]="loading()" (click)="thisMonth()">هذا الشهر</button>
+    <button class="ui-btn ui-btn-outline" [disabled]="loading()" (click)="thisYear()">هذه السنة</button>
+    <button class="ui-btn ui-btn-outline" [disabled]="loading()" (click)="allPeriods()">كل الفترات</button>
+  </div>
+
+  @if (error()) { <div class="ui-alert" role="alert" style="margin-bottom: 16px">{{ error() }}</div> }
+  @if (exportError()) {
+    <div class="ui-alert" role="alert" style="margin-bottom: 16px">
+      <span>{{ exportError() }}</span>
+      <button type="button" class="ui-alert-close" (click)="exportError.set(null)" aria-label="إغلاق">×</button>
+    </div>
+  }
+
+  <div class="ui-card" [style.opacity]="loading() ? 0.55 : 1">
+    <div class="ui-table-wrap">
+      <table class="ui-table">
+        <thead>
+          <tr>
+            <th>الفني</th><th class="center">عدد الصيانات</th><th>ارقام اوردرات الصيانة</th><th>ارقام الاوردرات الاصلية</th>
+            <th class="center">اجمالي الاوردرات التامة</th><th>ارقام الاوردرات التامة</th><th class="center">نسبة الصيانة %</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of data()?.rows ?? []; track r.tech_id) {
+            <tr>
+              <td class="strong nowrap" [class.ui-muted]="r.tech_id === 0">{{ r.tech_name }}</td>
+              <td class="center strong">{{ r.maintenance_count }}</td>
+              <td><div style="max-height: 6.5em; overflow: auto; min-width: 160px">{{ r.maintenance_order_ids.join('، ') || '-' }}</div></td>
+              <td><div style="max-height: 6.5em; overflow: auto; min-width: 160px">{{ r.original_order_ids.join('، ') || '-' }}</div></td>
+              <td class="center">{{ r.done_count }}</td>
+              <td><div style="max-height: 6.5em; overflow: auto; min-width: 220px">{{ r.done_order_ids.join('، ') || '-' }}</div></td>
+              <td class="center strong">{{ r.percent | number: '1.0-2' }}</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="7" class="center ui-muted" style="padding: 28px">
+              {{ loading() ? 'جاري التحميل...' : 'لا توجد بيانات في هذه الفترة.' }}
+            </td></tr>
+          }
+        </tbody>
+        @if (data(); as d) {
+          @if (d.rows.length) {
+            <tfoot>
+              <tr style="font-weight: 600">
+                <td>الاجمالي</td>
+                <td class="center">{{ d.total.maintenance_count }}</td>
+                <td></td><td></td>
+                <td class="center">{{ d.total.done_count }}</td>
+                <td></td>
+                <td class="center">{{ d.total.percent | number: '1.0-2' }}</td>
+              </tr>
+            </tfoot>
+          }
+        }
+      </table>
+    </div>
+  </div>
+  <p class="ui-muted" style="margin-top: 8px">
+    الفترة بتاريخ انشاء الاوردر الاصلي، والفني هو الفني الحالي للاوردر الاصلي. الصيانة تُحسب اذا انشئت قبل مرور
+    {{ data()?.window_days ?? 30 }} يوم على انشاء الاوردر الاصلي (بدون الملغي). الاوردرات التامة = اوردرات التركيب التامة فقط
+    (بدون الصيانة والشحن والجملة). النسبة = عدد الصيانات ÷ عدد الاوردرات التامة × 100.
+  </p>
+</div>

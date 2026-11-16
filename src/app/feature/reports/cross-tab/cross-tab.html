@@ -1,0 +1,41 @@
+<!-- cross-tab/cross-tab.html -->
+@let d = data();
+@if (d) {
+  <div class="ui-card">
+    <div class="ui-table-wrap">
+      <table class="ui-table">
+        <thead>
+          <tr>
+            <th>{{ d.row_label }}</th>
+            @for (c of d.columns; track $index) { <th class="center">{{ c }}</th> }
+            <th class="center">الاجمالي</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of d.rows; track r.id + ':' + r.name) {
+            <tr>
+              <td class="strong nowrap" [class.ui-muted]="r.id === 0">{{ r.name }}</td>
+              @for (v of r.values; track $index) {
+                <td class="center" [class.ui-muted]="!v">{{ v ? (v | number: digits()) : '-' }}</td>
+              }
+              <td class="center strong">{{ r.total | number: digits() }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td [attr.colspan]="d.columns.length + 2" class="center ui-muted" style="padding: 28px">لا توجد بيانات في هذه الفترة.</td>
+            </tr>
+          }
+        </tbody>
+        @if (d.rows.length) {
+          <tfoot>
+            <tr style="font-weight: 600">
+              <td>الاجمالي</td>
+              @for (t of d.column_totals; track $index) { <td class="center">{{ t | number: digits() }}</td> }
+              <td class="center">{{ d.grand_total | number: digits() }}</td>
+            </tr>
+          </tfoot>
+        }
+      </table>
+    </div>
+  </div>
+}

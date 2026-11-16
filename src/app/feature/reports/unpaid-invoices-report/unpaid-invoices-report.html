@@ -1,0 +1,79 @@
+<!-- unpaid-invoices-report/unpaid-invoices-report.html -->
+<div class="ui-page" style="max-width: none">
+  <div class="ui-page-header">
+    <h2 class="ui-title">تقرير الفواتير غير المسددة</h2>
+    <button class="ui-btn ui-btn-success" [disabled]="exporting() || loading()" (click)="exportExcel()">
+      {{ exporting() ? 'جاري التصدير...' : 'تصدير Excel' }}
+    </button>
+  </div>
+
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px" (keydown.enter)="load()">
+    <label>من (تاريخ الفاتورة) <input type="date" class="ui-input" [ngModel]="from()" (ngModelChange)="from.set($event)" /></label>
+    <label>الى <input type="date" class="ui-input" [ngModel]="to()" (ngModelChange)="to.set($event)" /></label>
+    <button class="ui-btn ui-btn-primary" [disabled]="loading()" (click)="load()">عرض</button>
+    <button class="ui-btn ui-btn-outline" [disabled]="loading()" (click)="thisMonth()">هذا الشهر</button>
+    <button class="ui-btn ui-btn-outline" [disabled]="loading()" (click)="allPeriods()">كل الفترات</button>
+  </div>
+
+  @if (error()) { <div class="ui-alert" role="alert" style="margin-bottom: 16px">{{ error() }}</div> }
+  @if (exportError()) {
+    <div class="ui-alert" role="alert" style="margin-bottom: 16px">
+      <span>{{ exportError() }}</span>
+      <button type="button" class="ui-alert-close" (click)="exportError.set(null)" aria-label="إغلاق">×</button>
+    </div>
+  }
+
+  <div class="ui-card" [style.opacity]="loading() ? 0.55 : 1">
+    <div class="ui-table-wrap">
+      <table class="ui-table">
+        <thead>
+          <tr>
+            <th>رقم الفاتورة</th><th>التاريخ</th><th>العمر (يوم)</th><th>العميل</th><th>رقم الاوردر</th><th>البائع</th>
+            <th>صافي الفاتورة</th><th>المرتجع</th><th>المسدد</th><th>المتبقي</th><th>صافي (عملة)</th><th>المتبقي (عملة)</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of rows(); track r.invoice_id) {
+            <tr>
+              <td class="strong"><a [routerLink]="['/sale-invoices', r.invoice_id, 'edit']">{{ r.number }}</a></td>
+              <td class="nowrap">{{ r.date | date: 'yyyy-MM-dd' }}</td>
+              <td class="center">{{ r.age_days }}</td>
+              <td>{{ r.customer_name }}<div class="ui-muted">{{ r.customer_phone }}</div></td>
+              <td>
+                @if (r.order_id) { <a [routerLink]="['/orders', r.order_id, 'edit']">{{ r.order_id }}</a> } @else { - }
+              </td>
+              <td>{{ r.seller_name || '-' }}</td>
+              <td>{{ r.net_total | number: '1.0-2' }}</td>
+              <td class="ui-muted">{{ r.returned_total | number: '1.0-2' }}</td>
+              <td>{{ r.paid_total | number: '1.0-2' }}</td>
+              <td class="strong" style="color: crimson">{{ r.remaining | number: '1.0-2' }}</td>
+              <td>{{ r.net_total_currency ? (r.net_total_currency | number: '1.0-2') : '-' }}</td>
+              <td [style.color]="r.remaining_currency ? 'crimson' : null">{{ r.remaining_currency ? (r.remaining_currency | number: '1.0-2') : '-' }}</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="12" class="center ui-muted" style="padding: 28px">
+              {{ loading() ? 'جاري التحميل...' : 'لا توجد فواتير غير مسددة.' }}
+            </td></tr>
+          }
+        </tbody>
+        @if (rows().length) {
+          @let t = totals();
+          <tfoot>
+            <tr style="font-weight: 600">
+              <td colspan="6">الاجمالي ({{ rows().length }} فاتورة)</td>
+              <td>{{ t.net | number: '1.0-2' }}</td>
+              <td>{{ t.returned | number: '1.0-2' }}</td>
+              <td>{{ t.paid | number: '1.0-2' }}</td>
+              <td style="color: crimson">{{ t.remaining | number: '1.0-2' }}</td>
+              <td>{{ t.net_cur | number: '1.0-2' }}</td>
+              <td>{{ t.remaining_cur | number: '1.0-2' }}</td>
+            </tr>
+          </tfoot>
+        }
+      </table>
+    </div>
+  </div>
+  <p class="ui-muted" style="margin-top: 8px">
+    المتبقي = صافي الفاتورة − المرتجع − المسدد (المردودات النقدية لا تُعد تسديدا). الاقدم اولا.
+  </p>
+</div>

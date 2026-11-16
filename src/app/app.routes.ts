@@ -156,6 +156,19 @@ export const routes: Routes = [
     path: 'product-assembly', canActivate: [authGuard],
     loadChildren: () => import('./feature/product-assembly/product-assembly.routes').then(m => m.PRODUCT_ASSEMBLY_ROUTES) 
   },
+  {
+    path: 'reports',
+    canActivate: [authGuard],
+    loadChildren: () => import('./feature/reports/reports.routes').then(m => m.REPORT_ROUTES),
+  },
+  {
+    path: 'messages', canActivate: [authGuard],
+    loadComponent: () => import('./feature/messages/messages/messages').then(m => m.Messages)
+  },
+  {
+    path: 'notifications', canActivate: [authGuard],
+    loadComponent: () => import('./feature/notifications/notifications').then(m => m.Notifications)
+  },
 
   { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
   { path: '**', redirectTo: 'dashboard' }

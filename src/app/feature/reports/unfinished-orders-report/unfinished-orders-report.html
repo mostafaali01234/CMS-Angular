@@ -1,0 +1,77 @@
+<!-- unfinished-orders-report/unfinished-orders-report.html -->
+<div class="ui-page" style="max-width: none">
+  <div class="ui-page-header">
+    <h2 class="ui-title">اوردرات غير تامة بفواتير</h2>
+    <button class="ui-btn ui-btn-success" [disabled]="exporting() || loading()" (click)="exportExcel()">
+      {{ exporting() ? 'جاري التصدير...' : 'تصدير Excel' }}
+    </button>
+  </div>
+
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px" (keydown.enter)="load()">
+    <label>من (تاريخ الانشاء) <input type="date" class="ui-input" [ngModel]="from()" (ngModelChange)="from.set($event)" /></label>
+    <label>الى <input type="date" class="ui-input" [ngModel]="to()" (ngModelChange)="to.set($event)" /></label>
+    <button class="ui-btn ui-btn-primary" [disabled]="loading()" (click)="load()">عرض</button>
+    <button class="ui-btn ui-btn-outline" [disabled]="loading()" (click)="thisMonth()">هذا الشهر</button>
+    <button class="ui-btn ui-btn-outline" [disabled]="loading()" (click)="allPeriods()">كل الفترات</button>
+  </div>
+
+  @if (error()) { <div class="ui-alert" role="alert" style="margin-bottom: 16px">{{ error() }}</div> }
+  @if (exportError()) {
+    <div class="ui-alert" role="alert" style="margin-bottom: 16px">
+      <span>{{ exportError() }}</span>
+      <button type="button" class="ui-alert-close" (click)="exportError.set(null)" aria-label="إغلاق">×</button>
+    </div>
+  }
+
+  <div class="ui-card" [style.opacity]="loading() ? 0.55 : 1">
+    <div class="ui-table-wrap">
+      <table class="ui-table">
+        <thead>
+          <tr>
+            <th>رقم الاوردر</th><th>تاريخ الانشاء</th><th>الحالة</th><th>النوع</th><th>العميل</th>
+            <th>المحافظة</th><th>البائع</th><th>الفني</th><th>صافي الاوردر</th>
+            <th>عدد الفواتير</th><th>ارقام الفواتير</th><th>اجمالي الفواتير</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of rows(); track r.order_id) {
+            <tr>
+              <td class="strong"><a [routerLink]="['/orders', r.order_id, 'edit']">{{ r.order_id }}</a></td>
+              <td class="nowrap">{{ r.created_at | date: 'yyyy-MM-dd' }}</td>
+              <td><app-order-status [status]="r.status" /></td>
+              <td>{{ label(r.type) }}</td>
+              <td>{{ r.customer_name }}<div class="ui-muted">{{ r.customer_phone }}</div></td>
+              <td>{{ r.state_name }}</td>
+              <td>{{ r.seller_name }}</td>
+              <td>{{ r.tech_name || '-' }}</td>
+              <td>{{ r.order_net_total | number: '1.0-2' }}</td>
+              <td class="center">{{ r.invoices_count }}</td>
+              <td>{{ r.invoice_numbers.join('، ') }}</td>
+              <td>{{ r.invoices_net_total | number: '1.0-2' }}</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="12" class="center ui-muted" style="padding: 28px">
+              {{ loading() ? 'جاري التحميل...' : 'لا توجد اوردرات غير تامة لها فواتير.' }}
+            </td></tr>
+          }
+        </tbody>
+        @if (rows().length) {
+          @let t = totals();
+          <tfoot>
+            <tr style="font-weight: 600">
+              <td colspan="8">الاجمالي ({{ rows().length }} اوردر)</td>
+              <td>{{ t.order_net | number: '1.0-2' }}</td>
+              <td class="center">{{ t.invoices }}</td>
+              <td></td>
+              <td>{{ t.invoices_net | number: '1.0-2' }}</td>
+            </tr>
+          </tfoot>
+        }
+      </table>
+    </div>
+  </div>
+  <p class="ui-muted" style="margin-top: 8px">
+    اوردرات حالتها ليست «تام» ولا «ملغي» ولها فاتورة بيع واحدة على الاقل. انشاء فاتورة بيع مرتبطة بالاوردر يجعله «تام» تلقائيا،
+    فالاوردرات هنا عادة اعيد فتحها او لم تُغلق بعد الفاتورة.
+  </p>
+</div>

@@ -1,0 +1,85 @@
+<!-- messages/messages.html -->
+<div class="chat" [class.chat-open]="activeId()">
+
+  <!-- ====== chats list ====== -->
+  <aside class="side ui-card">
+    <div class="side-head">
+      <h2 class="ui-title">الرسائل</h2>
+      <select #pick class="ui-input" aria-label="محادثة جديدة" (change)="onPick(pick)">
+        <option value="">+ محادثة جديدة...</option>
+        @for (c of pickable(); track c.user_id) { <option [value]="c.user_id">{{ c.name }}</option> }
+      </select>
+      <input type="search" class="ui-input" placeholder="بحث في المحادثات"
+             [ngModel]="search()" (ngModelChange)="search.set($event)" />
+    </div>
+
+    <div class="side-list">
+      @for (c of shown(); track c.user_id) {
+        <button type="button" class="conv" [class.active]="c.user_id === activeId()" (click)="open(c.user_id)">
+          <span class="avatar">{{ (c.user_name || '?').charAt(0) }}</span>
+          <span class="conv-text">
+            <span class="conv-top">
+              <strong>{{ c.user_name || 'مستخدم' }}</strong>
+              @if (c.last_message) { <small>{{ timeAgo(c.last_message.created_at) }}</small> }
+            </span>
+            <span class="conv-last">
+              @if (c.last_message) {
+                {{ c.last_message.is_mine ? 'أنت: ' : '' }}{{ c.last_message.body }}
+              }
+            </span>
+          </span>
+          @if (c.unread_count > 0) { <span class="count">{{ c.unread_count }}</span> }
+        </button>
+      } @empty {
+        <div class="ui-muted pad">لا توجد محادثات بعد. ابدأ محادثة جديدة من القائمة بالأعلى.</div>
+      }
+    </div>
+  </aside>
+
+  <!-- ====== one chat ====== -->
+  <section class="main ui-card">
+    @if (activeId()) {
+      <header class="main-head">
+        <button type="button" class="back ui-btn ui-btn-outline sm" (click)="close()" aria-label="رجوع">→</button>
+        <span class="avatar">{{ (activeName() || '?').charAt(0) }}</span>
+        <strong>{{ activeName() || 'محادثة' }}</strong>
+      </header>
+
+      <div class="scroller" #scroller>
+        @if (hasMore()) {
+          <button type="button" class="ui-btn ui-btn-outline sm older" [disabled]="loadingThread()" (click)="loadOlder()">
+            {{ loadingThread() ? 'جاري التحميل...' : 'تحميل رسائل أقدم' }}
+          </button>
+        }
+
+        @for (m of messages(); track m.id) {
+          <div class="bubble" [class.mine]="m.is_mine">
+            @if (m.order_id) {
+              <a class="order-chip" [routerLink]="['/orders', m.order_id, 'edit']">اوردر #{{ m.order_id }}</a>
+            }
+            <div class="text">{{ m.body }}</div>
+            <small [title]="m.created_at | date:'yyyy-MM-dd HH:mm'">{{ m.created_at | date:'HH:mm' }}</small>
+          </div>
+        } @empty {
+          <div class="ui-muted pad center">{{ loadingThread() ? 'جاري التحميل...' : 'لا توجد رسائل. اكتب أول رسالة.' }}</div>
+        }
+      </div>
+
+      @if (error()) {
+        <div class="ui-alert" role="alert" style="margin: 0 12px 8px">
+          <span>{{ error() }}</span>
+          <button type="button" class="ui-alert-close" (click)="error.set(null)" aria-label="إغلاق">×</button>
+        </div>
+      }
+
+      <form class="composer" (submit)="$event.preventDefault(); send()">
+        <textarea class="ui-input" rows="1" placeholder="اكتب رسالة... (Enter للإرسال، Shift+Enter لسطر جديد)"
+                  [ngModel]="draft()" (ngModelChange)="draft.set($event)" name="draft"
+                  (keydown.enter)="onEnter($event)"></textarea>
+        <button type="submit" class="ui-btn ui-btn-primary" [disabled]="sending() || !draft().trim()">ارسال</button>
+      </form>
+    } @else {
+      <div class="ui-muted pad center placeholder1">اختر محادثة من القائمة أو ابدأ محادثة جديدة.</div>
+    }
+  </section>
+</div>

@@ -1,6 +1,7 @@
 import { Component, computed, effect, inject, model, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../services/AuthService/auth';
+import { NotificationBell } from '../notification-bell/notification-bell';
 
 type Theme = 'light' | 'dark';
 
@@ -14,7 +15,7 @@ function initialTheme(): Theme {
 
 @Component({
   selector: 'app-header',
-  imports: [RouterLink, RouterLinkActive],
+  imports: [RouterLink, RouterLinkActive, NotificationBell],
   templateUrl: './header.html',
   styleUrl: './header.css',
 })

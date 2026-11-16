@@ -1,0 +1,11 @@
+<div class="toasts" aria-live="polite">
+  @for (t of toasts.toasts(); track t.id) {
+    <div class="toast" role="status">
+      <button type="button" class="toast-main" (click)="open(t)">
+        <strong>{{ t.title }}</strong>
+        @if (t.body) { <span>{{ t.body }}</span> }
+      </button>
+      <button type="button" class="toast-x" aria-label="إغلاق" (click)="toasts.dismiss(t.id)">×</button>
+    </div>
+  }
+</div>

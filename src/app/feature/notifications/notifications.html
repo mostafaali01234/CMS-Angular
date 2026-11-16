@@ -1,0 +1,46 @@
+<!-- notifications/notifications.html -->
+<div class="ui-page narrow">
+  <div class="ui-page-header">
+    <h2 class="ui-title">الاشعارات</h2>
+    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap">
+      <select class="ui-input" style="width: auto"
+              [ngModel]="list.form().unreadOnly" (ngModelChange)="list.set('unreadOnly', $event, true)">
+        <option [ngValue]="false">الكل</option>
+        <option [ngValue]="true">غير المقروءة فقط</option>
+      </select>
+      <button type="button" class="ui-btn ui-btn-outline" [disabled]="busy()" (click)="markAll()">
+        تحديد الكل كمقروء
+      </button>
+    </div>
+  </div>
+
+  @if (list.error()) {
+    <div class="ui-alert"><span>{{ list.error() }}</span>
+      <button class="ui-btn ui-btn-danger sm" (click)="list.reload()">اعادة المحاولة</button></div>
+  } @else {
+    <div class="ui-card" [style.opacity]="list.loading() ? 0.55 : 1">
+      @for (n of list.items(); track n.id) {
+        <button type="button" (click)="open(n)"
+                [style.background]="n.is_read ? 'transparent' : 'color-mix(in srgb, var(--primary) 7%, transparent)'"
+                style="display: flex; gap: 12px; align-items: flex-start; width: 100%; padding: 14px 18px;
+                       text-align: start; font: inherit; color: inherit; cursor: pointer;
+                       border: 0; border-bottom: 1px solid var(--border)">
+          <span style="font-size: 1.3rem" aria-hidden="true">{{ icon(n) }}</span>
+          <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+            <strong [style.fontWeight]="n.is_read ? 500 : 700">{{ n.title }}</strong>
+            @if (n.body) { <span class="ui-muted" style="overflow-wrap: anywhere">{{ n.body }}</span> }
+          </span>
+          <small class="ui-muted" style="white-space: nowrap">{{ timeAgo(n.created_at) }}</small>
+          @if (!n.is_read) { <span class="ui-badge on">جديد</span> }
+        </button>
+      } @empty {
+        <div class="ui-muted" style="padding: 36px; text-align: center">
+          {{ list.loading() ? 'جاري التحميل...' : 'لا توجد اشعارات.' }}
+        </div>
+      }
+
+      <app-pager [page]="list.page()" [pageSize]="list.size()" [total]="list.total()"
+                 (pageChange)="list.goTo($event)" (sizeChange)="list.setSize($event)" />
+    </div>
+  }
+</div>

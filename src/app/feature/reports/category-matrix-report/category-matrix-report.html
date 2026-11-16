@@ -1,0 +1,65 @@
+<!-- category-matrix-report/category-matrix-report.html -->
+<div class="ui-page" style="max-width: none">
+  <div class="ui-page-header">
+    <h2 class="ui-title">{{ title }}</h2>
+    <button class="ui-btn ui-btn-success" [disabled]="exporting() || loading()" (click)="exportExcel()">
+      {{ exporting() ? 'جاري التصدير...' : 'تصدير Excel' }}
+    </button>
+  </div>
+
+  <div (keydown.enter)="load()">
+    <div class="row mb-3">
+      <label class="col-6 col-md-3">من
+        <input type="date" class="ui-input" [ngModel]="from()" (ngModelChange)="from.set($event)" />
+      </label>
+      <label class="col-6 col-md-3">الى
+        <input type="date" class="ui-input" [ngModel]="to()" (ngModelChange)="to.set($event)" />
+      </label>
+      <label class="col-6 col-md-3">نوع الاوردر
+        <select class="ui-input" [ngModel]="kind()" (ngModelChange)="kind.set($event)">
+          @for (k of kinds; track k.value) { <option [value]="k.value">{{ k.label }}</option> }
+        </select>
+      </label>
+      @if (rowBy === 'seller') {
+        <div class="col-6 col-md-3">البائع
+          <app-lookup-select [ngModel]="sellerId()" (ngModelChange)="sellerId.set($event)"
+                             [loader]="lookup.employees" placeholder="كل البائعين" />
+        </div>
+      }
+    </div>
+
+    <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px">
+      <label>القيمة المعروضة
+        <select class="ui-input" [ngModel]="measure()" (ngModelChange)="measure.set($event)">
+          <option value="count">{{ countLabel }}</option>
+          <option value="amount">صافي القيمة (جنيه)</option>
+        </select>
+      </label>
+      @if (source === 'orders') {
+        <label class="ui-check">
+          <input type="checkbox" [ngModel]="includeCancelled()" (ngModelChange)="includeCancelled.set($event)" />
+          شامل الاوردرات الملغية
+        </label>
+      }
+      <button class="ui-btn ui-btn-primary" [disabled]="loading()" (click)="load()">عرض</button>
+      <button class="ui-btn ui-btn-outline" [disabled]="loading()" (click)="thisMonth()">هذا الشهر</button>
+      <button class="ui-btn ui-btn-outline" [disabled]="loading()" (click)="thisYear()">هذه السنة</button>
+    </div>
+  </div>
+
+  @if (error()) { <div class="ui-alert" role="alert" style="margin-bottom: 16px">{{ error() }}</div> }
+  @if (exportError()) {
+    <div class="ui-alert" role="alert" style="margin-bottom: 16px">
+      <span>{{ exportError() }}</span>
+      <button type="button" class="ui-alert-close" (click)="exportError.set(null)" aria-label="إغلاق">×</button>
+    </div>
+  }
+
+  <div [style.opacity]="loading() ? 0.55 : 1">
+    <app-cross-tab [data]="data()" />
+  </div>
+  <p class="ui-muted" style="margin-top: 8px">
+    {{ note() }}
+    @if (source === 'orders') { التاريخ هو تاريخ انشاء الاوردر. } @else { التاريخ هو تاريخ الفاتورة، والبائع/الفني هما بائع وفني الاوردر المرتبط بالفاتورة. }
+  </p>
+</div>

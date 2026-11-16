@@ -1,0 +1,80 @@
+<!-- advance-orders-report/advance-orders-report.html -->
+<div class="ui-page" style="max-width: none">
+  <div class="ui-page-header">
+    <h2 class="ui-title">اوردرات مدفوعة بدون فواتير</h2>
+    <button class="ui-btn ui-btn-success" [disabled]="exporting() || loading()" (click)="exportExcel()">
+      {{ exporting() ? 'جاري التصدير...' : 'تصدير Excel' }}
+    </button>
+  </div>
+
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px" (keydown.enter)="load()">
+    <label>من (تاريخ الانشاء) <input type="date" class="ui-input" [ngModel]="from()" (ngModelChange)="from.set($event)" /></label>
+    <label>الى <input type="date" class="ui-input" [ngModel]="to()" (ngModelChange)="to.set($event)" /></label>
+    <button class="ui-btn ui-btn-primary" [disabled]="loading()" (click)="load()">عرض</button>
+    <button class="ui-btn ui-btn-outline" [disabled]="loading()" (click)="thisMonth()">هذا الشهر</button>
+    <button class="ui-btn ui-btn-outline" [disabled]="loading()" (click)="allPeriods()">كل الفترات</button>
+  </div>
+
+  @if (error()) { <div class="ui-alert" role="alert" style="margin-bottom: 16px">{{ error() }}</div> }
+  @if (exportError()) {
+    <div class="ui-alert" role="alert" style="margin-bottom: 16px">
+      <span>{{ exportError() }}</span>
+      <button type="button" class="ui-alert-close" (click)="exportError.set(null)" aria-label="إغلاق">×</button>
+    </div>
+  }
+
+  <div class="ui-card" [style.opacity]="loading() ? 0.55 : 1">
+    <div class="ui-table-wrap">
+      <table class="ui-table">
+        <thead>
+          <tr>
+            <th>رقم الاوردر</th><th>تاريخ الانشاء</th><th>الحالة</th><th>النوع</th><th>العميل</th>
+            <th>المحافظة</th><th>البائع</th><th>صافي الاوردر</th><th>عدد الدفعات</th>
+            <th>الدفعات المقدمة</th><th>الدفعات (عملة)</th><th>اول دفعة</th><th>اخر دفعة</th><th>فواتير بيع للاوردر</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of rows(); track r.order_id) {
+            <tr>
+              <td class="strong"><a [routerLink]="['/orders', r.order_id, 'edit']">{{ r.order_id }}</a></td>
+              <td class="nowrap">{{ r.created_at | date: 'yyyy-MM-dd' }}</td>
+              <td><app-order-status [status]="r.status" /></td>
+              <td>{{ label(r.type) }}</td>
+              <td>{{ r.customer_name }}<div class="ui-muted">{{ r.customer_phone }}</div></td>
+              <td>{{ r.state_name }}</td>
+              <td>{{ r.seller_name }}</td>
+              <td>{{ r.order_net_total | number: '1.0-2' }}</td>
+              <td class="center">{{ r.advance_count }}</td>
+              <td class="strong">{{ r.advance_total | number: '1.0-2' }}</td>
+              <td>{{ r.advance_total_currency ? (r.advance_total_currency | number: '1.0-2') : '-' }}</td>
+              <td class="nowrap">{{ r.first_advance_date | date: 'yyyy-MM-dd' }}</td>
+              <td class="nowrap">{{ r.last_advance_date | date: 'yyyy-MM-dd' }}</td>
+              <td class="center">{{ r.sale_invoices_count }}</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="14" class="center ui-muted" style="padding: 28px">
+              {{ loading() ? 'جاري التحميل...' : 'لا توجد دفعات مقدمة بدون فاتورة.' }}
+            </td></tr>
+          }
+        </tbody>
+        @if (rows().length) {
+          @let t = totals();
+          <tfoot>
+            <tr style="font-weight: 600">
+              <td colspan="7">الاجمالي ({{ rows().length }} اوردر)</td>
+              <td>{{ t.order_net | number: '1.0-2' }}</td>
+              <td class="center">{{ t.count }}</td>
+              <td>{{ t.advance | number: '1.0-2' }}</td>
+              <td>{{ t.advance_cur | number: '1.0-2' }}</td>
+              <td colspan="3"></td>
+            </tr>
+          </tfoot>
+        }
+      </table>
+    </div>
+  </div>
+  <p class="ui-muted" style="margin-top: 8px">
+    اوردرات لها دفعة مقدمة غير مرتبطة بأي فاتورة بيع (تُربط تلقائيا بأول فاتورة بيع للاوردر). عمود «فواتير بيع للاوردر» يوضح
+    هل للاوردر فواتير بيع ام لا. الاوردرات الملغية تظهر ايضا لان الدفعة المقدمة ما زالت مع الشركة.
+  </p>
+</div>

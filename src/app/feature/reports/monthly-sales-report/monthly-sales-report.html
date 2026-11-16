@@ -1,0 +1,44 @@
+<!-- monthly-sales-report/monthly-sales-report.html -->
+<div class="ui-page" style="max-width: none">
+  <div class="ui-page-header">
+    <h2 class="ui-title">تقرير المبيعات الشهرية</h2>
+    <button class="ui-btn ui-btn-success" [disabled]="exporting() || loading()" (click)="exportExcel()">
+      {{ exporting() ? 'جاري التصدير...' : 'تصدير Excel' }}
+    </button>
+  </div>
+
+  <div class="row mb-3" (keydown.enter)="load()">
+    <label class="col-6 col-md-2">السنة
+      <input type="number" class="ui-input" min="2000" max="2100" [ngModel]="year()" (ngModelChange)="year.set($event)" />
+    </label>
+    <label class="col-6 col-md-4">الفترة
+      <select class="ui-input" [ngModel]="half()" (ngModelChange)="half.set($event)">
+        @for (h of halves; track h.value) { <option [value]="h.value">{{ h.label }}</option> }
+      </select>
+    </label>
+    <div class="col-6 col-md-3">البائع
+      <app-lookup-select [ngModel]="sellerId()" (ngModelChange)="sellerId.set($event)"
+                         [loader]="lookup.employees" placeholder="كل البائعين" />
+    </div>
+    <div class="col-6 col-md-3" style="align-self: flex-end">
+      <button class="ui-btn ui-btn-primary" [disabled]="loading()" (click)="load()">عرض</button>
+    </div>
+  </div>
+
+  @if (error()) { <div class="ui-alert" role="alert" style="margin-bottom: 16px">{{ error() }}</div> }
+  @if (exportError()) {
+    <div class="ui-alert" role="alert" style="margin-bottom: 16px">
+      <span>{{ exportError() }}</span>
+      <button type="button" class="ui-alert-close" (click)="exportError.set(null)" aria-label="إغلاق">×</button>
+    </div>
+  }
+
+  @if (data(); as d) { <h3 style="margin: 8px 0 12px">{{ d.title }}</h3> }
+  <div [style.opacity]="loading() ? 0.55 : 1">
+    <app-cross-tab [data]="data()" />
+  </div>
+  <p class="ui-muted" style="margin-top: 8px">
+    صافي المبيعات بالجنيه = فواتير البيع − مرتجعات البيع حسب تاريخ الفاتورة. البائع هو بائع الاوردر المرتبط بالفاتورة،
+    والفواتير بدون اوردر تظهر في صف «بدون بائع».
+  </p>
+</div>

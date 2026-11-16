@@ -32,6 +32,8 @@
         }
       </nav>
 
+      @if (auth.isLoggedIn()) { <app-notification-bell /> }
+
       <button class="icon-btn" type="button"
               [attr.aria-label]="theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
               [title]="theme() === 'dark' ? 'Light theme' : 'Dark theme'"

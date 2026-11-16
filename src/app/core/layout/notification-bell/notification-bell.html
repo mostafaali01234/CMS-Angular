@@ -1,0 +1,45 @@
+<button class="icon-btn" type="button" aria-haspopup="true"
+        [attr.aria-expanded]="open()"
+        [attr.aria-label]="notifications.unread() ? 'الاشعارات (' + notifications.unread() + ' غير مقروءة)' : 'الاشعارات'"
+        title="الاشعارات"
+        (click)="toggle()">
+  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+       stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
+    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+  </svg>
+  @if (notifications.unread() > 0) {
+    <span class="badge">{{ badge() }}</span>
+  }
+</button>
+
+@if (open()) {
+  <div class="panel" role="dialog" aria-label="الاشعارات">
+    <div class="panel-head">
+      <strong>الاشعارات</strong>
+      <button type="button" class="link-btn" [disabled]="notifications.unread() === 0" (click)="markAll()">
+        تحديد الكل كمقروء
+      </button>
+    </div>
+
+    <div class="panel-list">
+      @for (n of notifications.latest(); track n.id) {
+        <button type="button" class="item" [class.unread]="!n.is_read" (click)="go(n)">
+          <span class="dot" aria-hidden="true"></span>
+          <span class="item-text">
+            <strong>{{ n.title }}</strong>
+            @if (n.body) { <span class="body">{{ n.body }}</span> }
+            <small>{{ timeAgo(n.created_at) }}</small>
+          </span>
+        </button>
+      } @empty {
+        <div class="empty">لا توجد اشعارات</div>
+      }
+    </div>
+
+    <div class="panel-foot">
+      <a routerLink="/notifications" (click)="open.set(false)">كل الاشعارات</a>
+      <a routerLink="/messages" (click)="open.set(false)">الرسائل</a>
+    </div>
+  </div>
+}
