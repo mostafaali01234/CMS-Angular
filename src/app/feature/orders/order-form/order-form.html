@@ -50,7 +50,7 @@
           </select>
         </div>
 
-        <app-lookup-select formControlName="seller_id" [loader]="lookup.employees" [filter]="activeOnly" label="البائع"
+        <app-lookup-select formControlName="seller_id" [loader]="lookup.employees" [filter]="sellerFilter" label="البائع"
           placeholder="اختر البائع" error="اختر البائع" [invalid]="invalid('seller_id')" />
 
         <!-- <app-lookup-select
@@ -125,6 +125,23 @@
       }
 
       <button type="button" class="ui-btn ui-btn-outline" (click)="addItem()">+ اضافة منتج</button>
+
+      <h3 class="ui-title" style="margin: 24px 0 12px">فنيو المعاينة</h3>
+
+      @for (g of inspectionTechs.controls; track g; let i = $index) {
+      <div class="ui-grid" style="margin-bottom: 8px" [formGroup]="g">
+        <app-lookup-select formControlName="tech_id" [loader]="lookup.employees" [filter]="activeOnly"
+          label="الفني" placeholder="اختر الفني" error="اختر الفني" [invalid]="invalidTechAt(i)" />
+        <div class="ui-field">
+          <button type="button" class="ui-btn ui-btn-danger sm" style="margin-top: 28px"
+            (click)="removeInspectionTech(i)">حذف الفني</button>
+        </div>
+      </div>
+      } @empty {
+      <p class="ui-muted">لا يوجد فنيو معاينة.</p>
+      }
+
+      <button type="button" class="ui-btn ui-btn-outline" (click)="addInspectionTech()">+ اضافة فني معاينة</button>
 
       <div style="margin-top: 20px">
         <div>الاجمالي: <strong>{{ total | number:'1.2-2' }}</strong></div>

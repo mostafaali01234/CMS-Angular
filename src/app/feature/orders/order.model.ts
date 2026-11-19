@@ -10,6 +10,11 @@ export interface OrderItem {
   product_net_total?: number;
 }
 
+export interface InspectionTech {
+  tech_id: number;
+  tech_name: string;
+}
+
 export interface Order {
   id: number;
   old_order_id: number;
@@ -41,6 +46,7 @@ export interface Order {
   attachment_image: string;
   items: OrderItem[];
   notes?: OrderNote[];
+  inspection_techs?: InspectionTech[];
   created_at_utc?: string | null;
 }
 
@@ -65,6 +71,7 @@ export interface SaveOrder {
   auditor_id: number;
   attachment_image: string;
   items: SaveOrderItem[];
+  inspection_techs: InspectionTech[];
 }
 
 // the backend sends and accepts enum names

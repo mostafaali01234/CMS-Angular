@@ -6,11 +6,11 @@ import { FormBuilder, NonNullableFormBuilder, ReactiveFormsModule, Validators } 
 import { Observable } from 'rxjs';
 import { OrderService } from '../order.service';
 import {
-  enumLabel, ORDER_SOURCES, ORDER_TYPES, OrderItem, SaveOrder,
+  enumLabel, InspectionTech, ORDER_SOURCES, ORDER_TYPES, OrderItem, SaveOrder,
 } from '../order.model';
 import { LookupService } from '../../../shared/services/lookup.service';
 import {
-  activeOnly, CustomerOption, ProductOption,
+  activeOnly, CustomerOption, EmployeeOption, ProductOption,
 } from '../../../shared/models/lookup.model';
 import { LookupSelect } from '../../../shared/components/lookup-select/lookup-select';
 import { SearchSelect } from '../../../shared/components/search-select/search-select';
@@ -29,6 +29,13 @@ const buildItemGroup = (fb: NonNullableFormBuilder, i?: OrderItem) =>
   });
 
 type ItemGroup = ReturnType<typeof buildItemGroup>;
+
+const buildTechGroup = (fb: NonNullableFormBuilder, techId = 0) =>
+  fb.group({
+    tech_id: [techId, [Validators.min(1)]],
+  });
+
+type TechGroup = ReturnType<typeof buildTechGroup>;
 
 @Component({
   selector: 'app-order-form',
@@ -73,7 +80,25 @@ export class OrderForm implements OnInit {
     shipping: [false],
     location_notes: ['', [Validators.maxLength(2000)]],
     items: this.fb.array<ItemGroup>([]),
+    inspection_techs: this.fb.array<TechGroup>([]),
   });
+
+  get inspectionTechs() {
+    return this.form.controls.inspection_techs;
+  }
+
+  addInspectionTech(techId = 0) {
+    this.inspectionTechs.push(buildTechGroup(this.fb.nonNullable, techId));
+  }
+
+  removeInspectionTech(i: number) {
+    this.inspectionTechs.removeAt(i);
+  }
+
+  invalidTechAt(i: number) {
+    const c = this.inspectionTechs.at(i).get('tech_id');
+    return !!c && c.invalid && (c.touched || c.dirty);
+  }
 
   get items() {
     return this.form.controls.items;
@@ -108,6 +133,12 @@ export class OrderForm implements OnInit {
   get netTotal() {
     return round2(this.total - this.discount);
   }
+  private employees: EmployeeOption[] = [];
+
+  // non Admin/SuperAdmin can only pick themselves as the seller
+  private myId = Number(this.auth.employeeId()) || 0;
+  sellerFilter = (e: EmployeeOption) =>
+    this.auth.isAdmin() ? e.active : e.id === this.myId;
   private locationPicker = viewChild(StateCitySelect);
 
   onCustomerPicked(c: CustomerOption) {
@@ -116,9 +147,13 @@ export class OrderForm implements OnInit {
   }
 
   ngOnInit() {
+    // the backend needs tech_name next to tech_id, so keep the employee list around
+    this.lookup.employees().subscribe(list => (this.employees = list));
+
     const idParam = this.route.snapshot.paramMap.get('id');
     if (!idParam) {
-      this.auditorId = Number(this.auth.employeeId()) || 0;
+      this.auditorId = this.myId;
+      if (!this.auth.isAdmin()) this.form.controls.seller_id.setValue(this.myId);
       this.addItem();
       return;
     }
@@ -143,6 +178,8 @@ export class OrderForm implements OnInit {
         this.auditorId = o.auditor_id;
         this.attachmentImage = o.attachment_image ?? '';
         o.items.forEach(i => this.addItem(i));
+        // the server replaces all inspection techs on update, so they must be sent back
+        (o.inspection_techs ?? []).forEach(z => this.addInspectionTech(z.tech_id));
         this.loading.set(false);
       },
       error: err => {
@@ -175,6 +212,20 @@ export class OrderForm implements OnInit {
       return;
     }
 
+    const techIds = v.inspection_techs.map(z => z.tech_id);
+    if (techIds.some(id => !id)) {
+      this.error.set('اختر فني المعاينة أو احذف الصف الفارغ');
+      return;
+    }
+    if (new Set(techIds).size !== techIds.length) {
+      this.error.set('لا يمكن تكرار نفس فني المعاينة');
+      return;
+    }
+    const inspection_techs: InspectionTech[] = techIds.map(id => ({
+      tech_id: id,
+      tech_name: this.employees.find(e => e.id === id)?.name ?? '',
+    }));
+
     this.saving.set(true);
     this.error.set(null);
 
@@ -192,6 +243,7 @@ export class OrderForm implements OnInit {
       auditor_id: this.auditorId,
       attachment_image: this.attachmentImage,
       items: v.items,
+      inspection_techs,
     };
 
     const request$: Observable<unknown> = this.id()
